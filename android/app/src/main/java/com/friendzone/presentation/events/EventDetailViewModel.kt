@@ -3,6 +3,7 @@ package com.example.friendzone.presentation.events
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.friendzone.data.location.LocationTracker
 import com.example.friendzone.data.remote.websocket.EventSocketManager
 import com.example.friendzone.data.remote.websocket.SocketEventType
 import com.example.friendzone.domain.model.Event
@@ -25,6 +26,7 @@ import com.example.friendzone.domain.util.isLive
 import com.example.friendzone.presentation.components.FriendRowUi
 import com.example.friendzone.presentation.components.PillVariant
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -35,6 +37,13 @@ data class ParticipantSectionUi(
     val title: String,
     val count: Int,
     val rows: List<FriendRowUi>,
+)
+
+data class ParticipantLocationUi(
+    val displayName: String,
+    val latitude: Double,
+    val longitude: Double,
+    val arrived: Boolean,
 )
 
 data class InvitedGuestUi(
@@ -52,6 +61,10 @@ sealed class EventDetailUiState {
         val isLive: Boolean,
         val canInviteGuests: Boolean,
         val pendingInviteCount: Int,
+        val eventLatitude: Double,
+        val eventLongitude: Double,
+        val eventLocationLabel: String?,
+        val participantLocations: List<ParticipantLocationUi>,
         val arrived: ParticipantSectionUi,
         val inTransit: ParticipantSectionUi,
         val delayed: ParticipantSectionUi,
@@ -74,10 +87,12 @@ class EventDetailViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val friendRepository: FriendRepository,
     private val invitationRepository: InvitationRepository,
+    private val locationTracker: LocationTracker,
 ) : ViewModel() {
     private val eventId: String = checkNotNull(savedStateHandle["eventId"])
 
     private var currentUserId: String? = null
+    private var locationJob: Job? = null
 
     private val _uiState = MutableStateFlow<EventDetailUiState>(EventDetailUiState.Loading)
     val uiState: StateFlow<EventDetailUiState> = _uiState.asStateFlow()
@@ -96,6 +111,12 @@ class EventDetailViewModel @Inject constructor(
 
     private val _inviteSubmitState = MutableStateFlow<InviteSubmitState>(InviteSubmitState.Idle)
     val inviteSubmitState: StateFlow<InviteSubmitState> = _inviteSubmitState.asStateFlow()
+
+    private val _isSharingLocation = MutableStateFlow(false)
+    val isSharingLocation: StateFlow<Boolean> = _isSharingLocation.asStateFlow()
+
+    private val _sharingMessage = MutableStateFlow<String?>(null)
+    val sharingMessage: StateFlow<String?> = _sharingMessage.asStateFlow()
 
     init {
         viewModelScope.launch {
@@ -122,21 +143,30 @@ class EventDetailViewModel @Inject constructor(
 
     fun loadDetail() {
         viewModelScope.launch {
-            _uiState.value = EventDetailUiState.Loading
+            // Refresco silencioso: si ya mostramos datos (p. ej. por una
+            // actualizacion de ubicacion via socket) no volvemos a "Loading"
+            // para no cerrar el mapa ni hacer parpadear la pantalla.
+            val hadData = _uiState.value is EventDetailUiState.Data
+            if (!hadData) _uiState.value = EventDetailUiState.Loading
             when (val eventResult = eventRepository.getById(eventId)) {
                 is ApiResult.Error -> {
-                    _uiState.value = EventDetailUiState.Error(eventResult.error.displayMessage())
+                    if (!hadData) {
+                        _uiState.value = EventDetailUiState.Error(eventResult.error.displayMessage())
+                    }
                 }
                 is ApiResult.Success -> {
                     val event = eventResult.data
                     val invitations = loadInvitationsIfOrganizer(event)
                     when (val participantsResult = locationRepository.getParticipants(eventId)) {
                         is ApiResult.Error -> {
-                            _uiState.value = EventDetailUiState.Error(
-                                participantsResult.error.displayMessage(),
-                            )
+                            if (!hadData) {
+                                _uiState.value = EventDetailUiState.Error(
+                                    participantsResult.error.displayMessage(),
+                                )
+                            }
                         }
                         is ApiResult.Success -> {
+                            syncMySharingState(participantsResult.data)
                             _uiState.value = buildUiState(
                                 event = event,
                                 participants = participantsResult.data,
@@ -149,6 +179,68 @@ class EventDetailViewModel @Inject constructor(
                 ApiResult.Loading -> Unit
             }
         }
+    }
+
+    /**
+     * Activa o desactiva el compartir mi ubicacion para este evento. Al
+     * activarlo, ademas de avisar al backend, empieza a enviar mi posicion
+     * periodicamente para que el resto me vea en el mapa.
+     */
+    fun setLocationSharing(enabled: Boolean) {
+        viewModelScope.launch {
+            if (enabled) {
+                when (val result = locationRepository.updateSharing(eventId, true)) {
+                    is ApiResult.Success -> {
+                        _isSharingLocation.value = true
+                        startLocationUpdates(notifyIfNoPermission = true)
+                    }
+                    is ApiResult.Error -> {
+                        _isSharingLocation.value = false
+                        _sharingMessage.value = result.error.displayMessage()
+                    }
+                    ApiResult.Loading -> Unit
+                }
+            } else {
+                stopLocationUpdates()
+                _isSharingLocation.value = false
+                locationRepository.updateSharing(eventId, false)
+            }
+        }
+    }
+
+    fun consumeSharingMessage() {
+        _sharingMessage.value = null
+    }
+
+    private fun syncMySharingState(participants: List<ParticipantWithUser>) {
+        val me = participants.find { it.participant.userId == currentUserId } ?: return
+        _isSharingLocation.value = me.participant.sharingLocation
+        if (me.participant.sharingLocation) {
+            startLocationUpdates(notifyIfNoPermission = false)
+        } else {
+            stopLocationUpdates()
+        }
+    }
+
+    private fun startLocationUpdates(notifyIfNoPermission: Boolean) {
+        if (locationJob?.isActive == true) return
+        if (!locationTracker.hasPermission()) {
+            if (notifyIfNoPermission) {
+                _sharingMessage.value =
+                    "Activa el permiso de ubicacion para compartir tu posicion"
+            }
+            return
+        }
+        locationJob = viewModelScope.launch {
+            locationTracker.locationUpdates().collect { location ->
+                locationRepository.updateLocation(eventId, location.latitude, location.longitude)
+            }
+        }
+    }
+
+    private fun stopLocationUpdates() {
+        locationJob?.cancel()
+        locationJob = null
     }
 
     fun openInviteSheet() {
@@ -292,12 +384,34 @@ class EventDetailViewModel @Inject constructor(
 
         val pendingCount = invitations.count { it.status == InvitationStatus.PENDING }
 
+        // Participantes (excepto yo) que comparten su ubicacion y tienen una
+        // posicion conocida. Mi propia posicion se muestra con el GPS del dispositivo.
+        val participantLocations = participants.mapNotNull { item ->
+            val p = item.participant
+            val lat = p.lastLatitude
+            val lng = p.lastLongitude
+            if (p.sharingLocation && lat != null && lng != null && p.userId != currentUserId) {
+                ParticipantLocationUi(
+                    displayName = item.user.displayName,
+                    latitude = lat,
+                    longitude = lng,
+                    arrived = p.arrived,
+                )
+            } else {
+                null
+            }
+        }
+
         return EventDetailUiState.Data(
             title = event.title,
             dateText = formatEventDate(event.startsAt),
             isLive = event.isLive(),
             canInviteGuests = canInviteGuests(event),
             pendingInviteCount = pendingCount,
+            eventLatitude = event.latitude,
+            eventLongitude = event.longitude,
+            eventLocationLabel = event.address,
+            participantLocations = participantLocations,
             arrived = ParticipantSectionUi("Arrived", arrived.size, arrived),
             inTransit = ParticipantSectionUi("In transit", inTransit.size, inTransit),
             delayed = ParticipantSectionUi("Delayed", delayed.size, delayed),
@@ -305,6 +419,7 @@ class EventDetailViewModel @Inject constructor(
     }
 
     override fun onCleared() {
+        stopLocationUpdates()
         eventSocketManager.leaveEvent(eventId)
         super.onCleared()
     }
