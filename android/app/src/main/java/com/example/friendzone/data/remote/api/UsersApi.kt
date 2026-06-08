@@ -14,6 +14,9 @@ interface UsersApi {
     @GET("users/me")
     suspend fun getMe(): UserDto
 
+    @GET("users/me/friends")
+    suspend fun getMyFriends(): List<UserDto>
+
     @PATCH("users/me")
     suspend fun updateProfile(@Body body: UpdateProfileRequest): UserDto
 
@@ -25,4 +28,7 @@ interface UsersApi {
 
     @GET("users/search")
     suspend fun search(@Query("q") query: String): List<UserDto>
+
+    @GET("users/lookup")
+    suspend fun lookup(@Query("q") query: String): UserDto
 }

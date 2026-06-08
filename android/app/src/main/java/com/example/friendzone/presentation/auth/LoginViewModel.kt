@@ -17,7 +17,6 @@ data class LoginUiState(
     val password: String = "",
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
-    val isLoggedIn: Boolean = false,
 )
 
 @HiltViewModel
@@ -26,14 +25,6 @@ class LoginViewModel @Inject constructor(
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(LoginUiState())
     val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
-
-    init {
-        viewModelScope.launch {
-            authRepository.isLoggedIn.collect { loggedIn ->
-                _uiState.value = _uiState.value.copy(isLoggedIn = loggedIn)
-            }
-        }
-    }
 
     fun onEmailOrUsernameChange(value: String) {
         _uiState.value = _uiState.value.copy(emailOrUsername = value, errorMessage = null)
@@ -56,7 +47,7 @@ class LoginViewModel @Inject constructor(
                 val result = authRepository.login(state.emailOrUsername.trim(), state.password)
             ) {
                 is ApiResult.Success -> {
-                    _uiState.value = _uiState.value.copy(isLoading = false, isLoggedIn = true)
+                    _uiState.value = _uiState.value.copy(isLoading = false)
                 }
                 is ApiResult.Error -> {
                     _uiState.value = _uiState.value.copy(

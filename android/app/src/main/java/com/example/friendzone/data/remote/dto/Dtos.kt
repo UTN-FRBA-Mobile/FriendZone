@@ -77,6 +77,7 @@ data class CreateEventRequest(
     val address: String? = null,
     val startsAt: String,
     val arrivalThresholdM: Int? = null,
+    val trackingLeadMinutes: Int? = null,
 )
 
 @Serializable
@@ -88,6 +89,7 @@ data class UpdateEventRequest(
     val address: String? = null,
     val startsAt: String? = null,
     val arrivalThresholdM: Int? = null,
+    val trackingLeadMinutes: Int? = null,
 )
 
 @Serializable
@@ -101,6 +103,7 @@ data class EventDto(
     val address: String? = null,
     val status: String,
     val arrivalThresholdM: Int,
+    val trackingLeadMinutes: Int = 30,
     val startsAt: String,
     val completedAt: String? = null,
     val createdAt: String,
@@ -181,6 +184,32 @@ data class ParticipantWithUserDto(
 )
 
 @Serializable
+data class CreateFriendRequestBody(
+    val emailOrUsername: String,
+)
+
+@Serializable
+data class RespondFriendRequestBody(
+    val status: String,
+)
+
+@Serializable
+data class FriendRequestDto(
+    val id: String,
+    val requesterId: String,
+    val addresseeId: String,
+    val status: String,
+    val createdAt: String,
+    val respondedAt: String? = null,
+    val requester: UserDto,
+)
+
+@Serializable
+data class FriendRequestCountDto(
+    val count: Int,
+)
+
+@Serializable
 data class SuccessResponseDto(
     val success: Boolean,
 )
@@ -190,4 +219,21 @@ data class ApiErrorDto(
     val statusCode: Int,
     val message: String,
     val timestamp: String? = null,
+)
+
+@Serializable
+data class InboxNotificationDto(
+    val id: String,
+    val type: String,
+    val title: String,
+    val body: String,
+    val createdAt: String,
+    val actionable: Boolean,
+    val read: Boolean,
+    val data: Map<String, String> = emptyMap(),
+)
+
+@Serializable
+data class NotificationBadgeCountDto(
+    val count: Int,
 )

@@ -33,6 +33,7 @@ data class Event(
     val address: String?,
     val status: EventStatus,
     val arrivalThresholdM: Int,
+    val trackingLeadMinutes: Int = 30,
     val startsAt: String,
     val completedAt: String?,
     val createdAt: String,
@@ -77,6 +78,22 @@ data class ParticipantWithUser(
     val user: User,
 )
 
+enum class FriendRequestStatus {
+    PENDING,
+    ACCEPTED,
+    REJECTED,
+}
+
+data class FriendRequest(
+    val id: String,
+    val requesterId: String,
+    val addresseeId: String,
+    val status: FriendRequestStatus,
+    val createdAt: String,
+    val respondedAt: String?,
+    val requester: User,
+)
+
 data class ProximityResult(
     val arrived: Boolean,
     val eventCompleted: Boolean,
@@ -85,4 +102,22 @@ data class ProximityResult(
 data class LocationUpdateResult(
     val participant: EventParticipant,
     val proximity: ProximityResult,
+)
+
+enum class AppNotificationType {
+    FRIEND_REQUEST,
+    INVITATION_CREATED,
+    PARTICIPANT_ARRIVED,
+    EVENT_COMPLETED,
+}
+
+data class InboxNotification(
+    val id: String,
+    val type: AppNotificationType,
+    val title: String,
+    val body: String,
+    val createdAt: String,
+    val actionable: Boolean,
+    val read: Boolean,
+    val data: Map<String, String>,
 )

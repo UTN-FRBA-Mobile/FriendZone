@@ -23,6 +23,7 @@ class EventRepositoryImpl @Inject constructor(
         address: String?,
         startsAt: String,
         arrivalThresholdM: Int?,
+        trackingLeadMinutes: Int,
     ): ApiResult<Event> = safeApiCall {
         DtoMapper.toEvent(
             eventsApi.create(
@@ -34,6 +35,7 @@ class EventRepositoryImpl @Inject constructor(
                     address = address,
                     startsAt = startsAt,
                     arrivalThresholdM = arrivalThresholdM,
+                    trackingLeadMinutes = trackingLeadMinutes,
                 ),
             ),
         )

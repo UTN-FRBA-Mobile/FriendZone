@@ -4,6 +4,7 @@ import com.example.friendzone.data.remote.dto.AuthResponseDto
 import com.example.friendzone.data.remote.dto.AuthUserDto
 import com.example.friendzone.data.remote.dto.EventDto
 import com.example.friendzone.data.remote.dto.EventParticipantDto
+import com.example.friendzone.data.remote.dto.FriendRequestDto
 import com.example.friendzone.data.remote.dto.InvitationDto
 import com.example.friendzone.data.remote.dto.LocationUpdateResponseDto
 import com.example.friendzone.data.remote.dto.ParticipantWithUserDto
@@ -12,6 +13,8 @@ import com.example.friendzone.data.remote.dto.UserDto
 import com.example.friendzone.domain.model.AuthSession
 import com.example.friendzone.domain.model.Event
 import com.example.friendzone.domain.model.EventParticipant
+import com.example.friendzone.domain.model.FriendRequest
+import com.example.friendzone.domain.model.FriendRequestStatus
 import com.example.friendzone.domain.model.EventStatus
 import com.example.friendzone.domain.model.Invitation
 import com.example.friendzone.domain.model.InvitationStatus
@@ -58,6 +61,7 @@ object DtoMapper {
         address = dto.address,
         status = toEventStatus(dto.status),
         arrivalThresholdM = dto.arrivalThresholdM,
+        trackingLeadMinutes = dto.trackingLeadMinutes,
         startsAt = dto.startsAt,
         completedAt = dto.completedAt,
         createdAt = dto.createdAt,
@@ -135,9 +139,52 @@ object DtoMapper {
         else -> ParticipantRole.PARTICIPANT
     }
 
+    fun toFriendRequest(dto: FriendRequestDto): FriendRequest = FriendRequest(
+        id = dto.id,
+        requesterId = dto.requesterId,
+        addresseeId = dto.addresseeId,
+        status = toFriendRequestStatus(dto.status),
+        createdAt = dto.createdAt,
+        respondedAt = dto.respondedAt,
+        requester = toUser(dto.requester),
+    )
+
+    fun toFriendRequestStatus(value: String): FriendRequestStatus = when (value.lowercase()) {
+        "accepted" -> FriendRequestStatus.ACCEPTED
+        "rejected" -> FriendRequestStatus.REJECTED
+        else -> FriendRequestStatus.PENDING
+    }
+
+    fun friendRequestStatusToApi(status: FriendRequestStatus): String = when (status) {
+        FriendRequestStatus.ACCEPTED -> "accepted"
+        FriendRequestStatus.REJECTED -> "rejected"
+        FriendRequestStatus.PENDING -> "pending"
+    }
+
     fun invitationStatusToApi(status: InvitationStatus): String = when (status) {
         InvitationStatus.ACCEPTED -> "accepted"
         InvitationStatus.REJECTED -> "rejected"
         InvitationStatus.PENDING -> "pending"
     }
+
+    fun toInboxNotification(dto: com.example.friendzone.data.remote.dto.InboxNotificationDto) =
+        com.example.friendzone.domain.model.InboxNotification(
+            id = dto.id,
+            type = toAppNotificationType(dto.type),
+            title = dto.title,
+            body = dto.body,
+            createdAt = dto.createdAt,
+            actionable = dto.actionable,
+            read = dto.read,
+            data = dto.data,
+        )
+
+    fun toAppNotificationType(value: String): com.example.friendzone.domain.model.AppNotificationType =
+        when (value) {
+            "friend.request" -> com.example.friendzone.domain.model.AppNotificationType.FRIEND_REQUEST
+            "invitation.created" -> com.example.friendzone.domain.model.AppNotificationType.INVITATION_CREATED
+            "participant.arrived" -> com.example.friendzone.domain.model.AppNotificationType.PARTICIPANT_ARRIVED
+            "event.completed" -> com.example.friendzone.domain.model.AppNotificationType.EVENT_COMPLETED
+            else -> com.example.friendzone.domain.model.AppNotificationType.EVENT_COMPLETED
+        }
 }

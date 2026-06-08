@@ -7,7 +7,6 @@ import com.example.friendzone.data.remote.dto.UpdateLocationSharingRequest
 import com.example.friendzone.data.remote.dto.UpdateProfileRequest
 import com.example.friendzone.data.remote.safeApiCall
 import com.example.friendzone.domain.model.User
-import com.example.friendzone.domain.repository.NotificationRepository
 import com.example.friendzone.domain.repository.UserRepository
 import com.example.friendzone.domain.result.ApiResult
 import javax.inject.Inject
@@ -19,6 +18,10 @@ class UserRepositoryImpl @Inject constructor(
 ) : UserRepository {
     override suspend fun getMe(): ApiResult<User> = safeApiCall {
         DtoMapper.toUser(usersApi.getMe())
+    }
+
+    override suspend fun getFriends(): ApiResult<List<User>> = safeApiCall {
+        usersApi.getMyFriends().map(DtoMapper::toUser)
     }
 
     override suspend fun updateProfile(displayName: String): ApiResult<User> = safeApiCall {
@@ -36,13 +39,9 @@ class UserRepositoryImpl @Inject constructor(
     override suspend fun search(query: String): ApiResult<List<User>> = safeApiCall {
         usersApi.search(query).map(DtoMapper::toUser)
     }
-}
 
-@Singleton
-class NotificationRepositoryImpl @Inject constructor(
-    private val usersApi: UsersApi,
-) : NotificationRepository {
-    override suspend fun registerFcmToken(token: String): ApiResult<User> = safeApiCall {
-        DtoMapper.toUser(usersApi.updateFcmToken(UpdateFcmTokenRequest(token)))
+    override suspend fun lookup(query: String): ApiResult<User> = safeApiCall {
+        DtoMapper.toUser(usersApi.lookup(query))
     }
 }
+

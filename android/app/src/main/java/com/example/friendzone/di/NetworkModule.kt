@@ -3,7 +3,9 @@ package com.example.friendzone.di
 import com.example.friendzone.BuildConfig
 import com.example.friendzone.data.remote.api.AuthApi
 import com.example.friendzone.data.remote.api.EventsApi
+import com.example.friendzone.data.remote.api.FriendsApi
 import com.example.friendzone.data.remote.api.InvitationsApi
+import com.example.friendzone.data.remote.api.NotificationsInboxApi
 import com.example.friendzone.data.remote.api.LocationsApi
 import com.example.friendzone.data.remote.api.UsersApi
 import com.example.friendzone.data.remote.interceptor.AuthInterceptor
@@ -108,6 +110,10 @@ object NetworkModule {
 
     @Provides
     @Singleton
+    fun provideFriendsApi(retrofit: Retrofit): FriendsApi = retrofit.create(FriendsApi::class.java)
+
+    @Provides
+    @Singleton
     fun provideInvitationsApi(retrofit: Retrofit): InvitationsApi =
         retrofit.create(InvitationsApi::class.java)
 
@@ -115,4 +121,9 @@ object NetworkModule {
     @Singleton
     fun provideLocationsApi(retrofit: Retrofit): LocationsApi =
         retrofit.create(LocationsApi::class.java)
+
+    @Provides
+    @Singleton
+    fun provideNotificationsInboxApi(retrofit: Retrofit): NotificationsInboxApi =
+        retrofit.create(NotificationsInboxApi::class.java)
 }
