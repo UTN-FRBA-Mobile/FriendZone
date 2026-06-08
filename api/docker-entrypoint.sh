@@ -2,7 +2,7 @@
 set -e
 
 echo "Running database migrations..."
-node dist/drizzle/migrate.js
+node dist/src/drizzle/migrate.js
 
 echo "Starting application..."
-exec node dist/main.js
+exec node dist/src/main.js
