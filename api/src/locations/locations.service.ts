@@ -22,12 +22,28 @@ export class LocationsService {
     private readonly eventsGateway: EventsGateway,
   ) {}
 
+  private assertTrackingWindow(event: {
+    startsAt: Date;
+    trackingLeadMinutes: number;
+  }): void {
+    const trackingStartsAt = new Date(
+      event.startsAt.getTime() - event.trackingLeadMinutes * 60_000,
+    );
+    if (new Date() < trackingStartsAt) {
+      throw new BadRequestException('Location tracking has not started yet');
+    }
+  }
+
   async updateSharing(
     eventId: string,
     userId: string,
     dto: UpdateSharingDto,
   ) {
-    await this.eventsService.assertParticipant(eventId, userId);
+    const event = await this.eventsService.assertParticipant(eventId, userId);
+
+    if (dto.enabled) {
+      this.assertTrackingWindow(event);
+    }
 
     const user = await this.usersRepository.findById(userId);
     if (!user) {
@@ -63,6 +79,8 @@ export class LocationsService {
     if (event.status === 'completed' || event.status === 'cancelled') {
       throw new BadRequestException('Event is no longer active');
     }
+
+    this.assertTrackingWindow(event);
 
     const user = await this.usersRepository.findById(userId);
     if (!user) {

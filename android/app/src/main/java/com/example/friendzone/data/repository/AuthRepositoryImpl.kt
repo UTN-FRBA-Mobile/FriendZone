@@ -8,6 +8,7 @@ import com.example.friendzone.data.remote.dto.RefreshTokenRequest
 import com.example.friendzone.data.remote.dto.RegisterRequest
 import com.example.friendzone.data.remote.safeApiCall
 import com.example.friendzone.domain.model.AuthSession
+import com.example.friendzone.domain.model.User
 import com.example.friendzone.domain.repository.AuthRepository
 import com.example.friendzone.domain.result.ApiResult
 import kotlinx.coroutines.flow.Flow
@@ -19,7 +20,9 @@ class AuthRepositoryImpl @Inject constructor(
     private val authApi: AuthApi,
     private val tokenManager: TokenManager,
 ) : AuthRepository {
-    override val isLoggedIn: Flow<Boolean> = tokenManager.isLoggedIn()
+    override val isLoggedIn: Flow<Boolean> = tokenManager.isLoggedIn
+
+    override val currentUser: Flow<User?> = tokenManager.currentUser
 
     override suspend fun register(
         email: String,
@@ -35,7 +38,7 @@ class AuthRepositoryImpl @Inject constructor(
                 tokenManager.saveSession(
                     session.accessToken,
                     session.refreshToken,
-                    session.user.id,
+                    session.user,
                 )
                 ApiResult.Success(session)
             }
@@ -54,7 +57,7 @@ class AuthRepositoryImpl @Inject constructor(
                     tokenManager.saveSession(
                         session.accessToken,
                         session.refreshToken,
-                        session.user.id,
+                        session.user,
                     )
                     ApiResult.Success(session)
                 }

@@ -37,6 +37,7 @@ export class EventsService {
       address: dto.address,
       startsAt: new Date(dto.startsAt),
       arrivalThresholdM: dto.arrivalThresholdM ?? defaultThreshold,
+      trackingLeadMinutes: dto.trackingLeadMinutes ?? 30,
       status: 'scheduled',
     });
 

@@ -59,6 +59,21 @@ export class UsersController {
     return this.usersService.updateFcmToken(user.id, dto.token);
   }
 
+  @Get('me/friends')
+  @ApiOperation({ summary: 'List confirmed friends' })
+  getMyFriends(@CurrentUser() user: SafeUser): Promise<SafeUser[]> {
+    return this.usersService.getFriends(user.id);
+  }
+
+  @Get('lookup')
+  @ApiOperation({ summary: 'Look up a user by exact email or username' })
+  lookup(
+    @CurrentUser() user: SafeUser,
+    @Query() query: SearchUsersQueryDto,
+  ): Promise<SafeUser> {
+    return this.usersService.lookup(user.id, query.q ?? '');
+  }
+
   @Get('search')
   @ApiOperation({ summary: 'Search users by email or username prefix' })
   search(@Query() query: SearchUsersQueryDto): Promise<SafeUser[]> {

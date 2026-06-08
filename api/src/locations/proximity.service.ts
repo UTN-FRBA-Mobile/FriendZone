@@ -80,6 +80,7 @@ export class ProximityService {
         event.organizerId,
         user.displayName,
         event.id,
+        event.title,
       );
 
       if (updated) {

@@ -1,6 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsDateString,
+  IsInt,
   IsNumber,
   IsOptional,
   IsString,
@@ -51,6 +52,13 @@ export class CreateEventDto {
   @Min(50)
   @Max(5000)
   arrivalThresholdM?: number;
+
+  @ApiPropertyOptional({ example: 30, description: 'Minutes before startsAt when location tracking opens' })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(1440)
+  trackingLeadMinutes?: number;
 }
 
 export class UpdateEventDto {
@@ -98,4 +106,11 @@ export class UpdateEventDto {
   @Min(50)
   @Max(5000)
   arrivalThresholdM?: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(1440)
+  trackingLeadMinutes?: number;
 }

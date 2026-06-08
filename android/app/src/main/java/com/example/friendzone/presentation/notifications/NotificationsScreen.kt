@@ -1,0 +1,251 @@
+package com.example.friendzone.presentation.notifications
+
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.friendzone.domain.model.AppNotificationType
+import com.example.friendzone.domain.model.InboxNotification
+import com.example.friendzone.presentation.components.CreateEventHeader
+import com.example.friendzone.presentation.components.FriendZoneOutlineButton
+import com.example.friendzone.presentation.components.FriendZonePrimaryButton
+import com.example.friendzone.presentation.components.PillBadge
+import com.example.friendzone.presentation.components.PillVariant
+import com.example.friendzone.ui.theme.FzBackground
+import com.example.friendzone.ui.theme.FzBorder
+import com.example.friendzone.ui.theme.FzInk
+import com.example.friendzone.ui.theme.FzInk3
+import com.example.friendzone.ui.theme.FzSurface
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun NotificationsScreen(
+    onBack: () -> Unit,
+    onActionFinished: () -> Unit,
+    viewModel: NotificationsViewModel = hiltViewModel(),
+) {
+    BackHandler(onBack = onBack)
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val actionFinished by viewModel.actionFinished.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+    LaunchedEffect(Unit) {
+        viewModel.loadInbox()
+    }
+
+    LaunchedEffect(uiState.snackbarMessage) {
+        uiState.snackbarMessage?.let { message ->
+            snackbarHostState.showSnackbar(message)
+            viewModel.clearSnackbar()
+        }
+    }
+
+    LaunchedEffect(actionFinished) {
+        if (actionFinished) {
+            viewModel.resetActionFinished()
+            onActionFinished()
+        }
+    }
+
+    uiState.selectedNotification?.let { notification ->
+        ModalBottomSheet(
+            onDismissRequest = { viewModel.dismissSheet() },
+            sheetState = sheetState,
+        ) {
+            NotificationActionSheet(
+                notification = notification,
+                subtitle = viewModel.detailSubtitle(notification),
+                isLoading = uiState.isActionLoading,
+                onAccept = { viewModel.acceptSelected() },
+                onReject = { viewModel.rejectSelected() },
+            )
+        }
+    }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(FzBackground),
+        ) {
+            CreateEventHeader(title = "Notifications", onBackClick = onBack)
+
+            when {
+                uiState.isLoading -> {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(48.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        CircularProgressIndicator(color = FzInk)
+                    }
+                }
+                uiState.errorMessage != null -> {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(32.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        Text(uiState.errorMessage!!, color = FzInk3)
+                        TextButton(onClick = { viewModel.loadInbox() }) {
+                            Text("Retry", color = FzInk)
+                        }
+                    }
+                }
+                uiState.items.isEmpty() -> {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(48.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text("No notifications", color = FzInk3)
+                    }
+                }
+                else -> {
+                    LazyColumn(modifier = Modifier.fillMaxSize()) {
+                        items(uiState.items, key = { it.id }) { item ->
+                            NotificationRow(
+                                item = item,
+                                onClick = { viewModel.selectNotification(item) },
+                            )
+                            HorizontalDivider(
+                                color = FzBorder,
+                                modifier = Modifier.padding(horizontal = 16.dp),
+                            )
+                        }
+                    }
+                }
+            }
+        }
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(16.dp),
+        )
+    }
+}
+
+@Composable
+private fun NotificationRow(
+    item: InboxNotification,
+    onClick: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(item.title, style = MaterialTheme.typography.labelLarge, color = FzInk)
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(item.body, style = MaterialTheme.typography.bodySmall, color = FzInk3)
+        }
+        if (item.actionable) {
+            Spacer(modifier = Modifier.padding(start = 8.dp))
+            PillBadge("Action", PillVariant.Light)
+        }
+    }
+}
+
+@Composable
+private fun NotificationActionSheet(
+    notification: InboxNotification,
+    subtitle: String?,
+    isLoading: Boolean,
+    onAccept: () -> Unit,
+    onReject: () -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .padding(bottom = 24.dp),
+    ) {
+        Text(
+            notification.title,
+            style = MaterialTheme.typography.titleMedium,
+            color = FzInk,
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            notification.body,
+            style = MaterialTheme.typography.bodyMedium,
+            color = FzInk3,
+        )
+        if (!subtitle.isNullOrBlank()) {
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(subtitle, style = MaterialTheme.typography.bodySmall, color = FzInk3)
+        }
+        if (notification.type == AppNotificationType.INVITATION_CREATED) {
+            notification.data["eventTitle"]?.let { eventTitle ->
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    eventTitle,
+                    style = MaterialTheme.typography.labelLarge,
+                    color = FzInk,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(FzSurface)
+                        .padding(12.dp),
+                )
+            }
+        }
+        Spacer(modifier = Modifier.height(24.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            FriendZoneOutlineButton(
+                text = if (isLoading) "..." else "Decline",
+                onClick = onReject,
+                modifier = Modifier.weight(1f),
+            )
+            FriendZonePrimaryButton(
+                text = when {
+                    isLoading -> "..."
+                    notification.type == AppNotificationType.INVITATION_CREATED -> "Accept invite"
+                    else -> "Accept"
+                },
+                onClick = onAccept,
+                enabled = !isLoading,
+                modifier = Modifier.weight(1f),
+            )
+        }
+    }
+}

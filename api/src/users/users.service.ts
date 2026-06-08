@@ -46,6 +46,22 @@ export class UsersService {
     return toSafeUser(user);
   }
 
+  async getFriends(userId: string): Promise<SafeUser[]> {
+    const friends = await this.usersRepository.findFriends(userId);
+    return friends.map(toSafeUser);
+  }
+
+  async lookup(userId: string, query: string): Promise<SafeUser> {
+    const user = await this.usersRepository.findByEmailOrUsername(query);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    if (user.id === userId) {
+      throw new NotFoundException('User not found');
+    }
+    return toSafeUser(user);
+  }
+
   async search(query: string): Promise<SafeUser[]> {
     const users = await this.usersRepository.search(query);
     return users.map(toSafeUser);

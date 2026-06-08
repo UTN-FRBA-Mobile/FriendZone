@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.Flow
 
 interface AuthRepository {
     val isLoggedIn: Flow<Boolean>
+    val currentUser: Flow<User?>
     suspend fun register(
         email: String,
         username: String,
@@ -19,10 +20,23 @@ interface AuthRepository {
 
 interface UserRepository {
     suspend fun getMe(): ApiResult<User>
+    suspend fun getFriends(): ApiResult<List<User>>
     suspend fun updateProfile(displayName: String): ApiResult<User>
     suspend fun updateLocationSharing(enabled: Boolean): ApiResult<User>
     suspend fun updateFcmToken(token: String): ApiResult<User>
     suspend fun search(query: String): ApiResult<List<User>>
+    suspend fun lookup(query: String): ApiResult<User>
+}
+
+interface FriendRepository {
+    suspend fun getFriends(): ApiResult<List<User>>
+    suspend fun getIncomingRequests(): ApiResult<List<com.example.friendzone.domain.model.FriendRequest>>
+    suspend fun getPendingIncomingCount(): ApiResult<Int>
+    suspend fun sendRequest(emailOrUsername: String): ApiResult<com.example.friendzone.domain.model.FriendRequest>
+    suspend fun respondToRequest(
+        requestId: String,
+        status: com.example.friendzone.domain.model.FriendRequestStatus,
+    ): ApiResult<Unit>
 }
 
 interface EventRepository {
@@ -33,7 +47,8 @@ interface EventRepository {
         longitude: Double,
         address: String?,
         startsAt: String,
-        arrivalThresholdM: Int?,
+        arrivalThresholdM: Int? = null,
+        trackingLeadMinutes: Int = 30,
     ): ApiResult<com.example.friendzone.domain.model.Event>
     suspend fun getMine(): ApiResult<List<com.example.friendzone.domain.model.Event>>
     suspend fun getById(id: String): ApiResult<com.example.friendzone.domain.model.Event>
@@ -71,4 +86,7 @@ interface LocationRepository {
 
 interface NotificationRepository {
     suspend fun registerFcmToken(token: String): ApiResult<User>
+    suspend fun getInbox(): ApiResult<List<com.example.friendzone.domain.model.InboxNotification>>
+    suspend fun getBadgeCount(): ApiResult<Int>
+    suspend fun markRead(notificationId: String): ApiResult<com.example.friendzone.domain.model.InboxNotification>
 }
