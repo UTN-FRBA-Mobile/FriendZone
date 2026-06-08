@@ -5,6 +5,7 @@ import { ConfigModule } from './config/config.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { DrizzleModule } from './drizzle/drizzle.module';
+import { FriendsModule } from './friends/friends.module';
 import { EventsModule } from './events/events.module';
 import { InvitationsModule } from './invitations/invitations.module';
 import { LocationsModule } from './locations/locations.module';
@@ -18,6 +19,7 @@ import { WebsocketModule } from './websocket/websocket.module';
     DrizzleModule,
     AuthModule,
     UsersModule,
+    FriendsModule,
     EventsModule,
     InvitationsModule,
     LocationsModule,

@@ -7,6 +7,7 @@ import {
   NotFoundException,
   forwardRef,
 } from '@nestjs/common';
+import { FriendsService } from '../friends/friends.service';
 import { EventsRepository } from '../events/events.repository';
 import { EventsService } from '../events/events.service';
 import { NotificationsService } from '../notifications/notifications.service';
@@ -26,6 +27,7 @@ export class InvitationsService {
     private readonly eventsRepository: EventsRepository,
     private readonly eventsService: EventsService,
     private readonly usersRepository: UsersRepository,
+    private readonly friendsService: FriendsService,
     private readonly notificationsService: NotificationsService,
     @Inject(forwardRef(() => EventsGateway))
     private readonly eventsGateway: EventsGateway,
@@ -49,6 +51,8 @@ export class InvitationsService {
       throw new BadRequestException('Cannot invite yourself');
     }
 
+    await this.friendsService.assertFriends(organizerId, invitee.id);
+
     const existing = await this.invitationsRepository.findByEventAndInvitee(
       eventId,
       invitee.id,
@@ -64,10 +68,14 @@ export class InvitationsService {
       status: 'pending',
     });
 
+    const organizer = await this.usersRepository.findById(organizerId);
     await this.notificationsService.notifyInvitation(
       invitee.id,
       event.title,
       event.id,
+      invitation.id,
+      event.startsAt.toISOString(),
+      organizer?.displayName ?? 'Organizer',
     );
 
     return invitation;
@@ -154,6 +162,11 @@ export class InvitationsService {
         });
       }
     }
+
+    await this.notificationsService.resolveInvitationNotification(
+      userId,
+      invitationId,
+    );
 
     return updated;
   }

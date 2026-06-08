@@ -52,6 +52,7 @@ export class EventsRepository {
         | 'status'
         | 'completedAt'
         | 'arrivalThresholdM'
+        | 'trackingLeadMinutes'
       >
     >,
   ): Promise<Event | undefined> {

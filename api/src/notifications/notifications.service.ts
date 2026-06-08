@@ -5,6 +5,7 @@ import {
   NotificationType,
 } from './notification.provider';
 import type { NotificationProvider } from './notification.provider';
+import { UserNotificationsRepository } from './user-notifications.repository';
 
 @Injectable()
 export class NotificationsService {
@@ -14,6 +15,7 @@ export class NotificationsService {
     @Inject(NOTIFICATION_PROVIDER)
     private readonly notificationProvider: NotificationProvider,
     private readonly usersRepository: UsersRepository,
+    private readonly userNotificationsRepository: UserNotificationsRepository,
   ) {}
 
   async notifyUser(
@@ -23,6 +25,14 @@ export class NotificationsService {
     type: NotificationType,
     data?: Record<string, string>,
   ): Promise<void> {
+    const notification = await this.userNotificationsRepository.create({
+      userId,
+      type,
+      title,
+      body,
+      data,
+    });
+
     const user = await this.usersRepository.findById(userId);
     if (!user?.fcmToken) {
       this.logger.debug(`No FCM token for user ${userId}`);
@@ -32,7 +42,7 @@ export class NotificationsService {
     await this.notificationProvider.send(user.fcmToken, {
       title,
       body,
-      data: { type, ...data },
+      data: { type, notificationId: notification.id, ...data },
     });
   }
 
@@ -50,17 +60,40 @@ export class NotificationsService {
     );
   }
 
+  async notifyFriendRequest(
+    addresseeId: string,
+    requesterDisplayName: string,
+    requestId: string,
+  ): Promise<void> {
+    await this.notifyUser(
+      addresseeId,
+      'New Friend Request',
+      `${requesterDisplayName} wants to be your friend`,
+      NotificationType.FRIEND_REQUEST,
+      { requestId, requesterDisplayName },
+    );
+  }
+
   async notifyInvitation(
     inviteeId: string,
     eventTitle: string,
     eventId: string,
+    invitationId: string,
+    eventStartsAt: string,
+    organizerDisplayName: string,
   ): Promise<void> {
     await this.notifyUser(
       inviteeId,
       'New Event Invitation',
       `You have been invited to "${eventTitle}"`,
       NotificationType.INVITATION_CREATED,
-      { eventId },
+      {
+        eventId,
+        invitationId,
+        eventTitle,
+        eventStartsAt,
+        organizerDisplayName,
+      },
     );
   }
 
@@ -68,13 +101,14 @@ export class NotificationsService {
     organizerId: string,
     participantName: string,
     eventId: string,
+    eventTitle: string,
   ): Promise<void> {
     await this.notifyUser(
       organizerId,
       'Participant Arrived',
       `${participantName} has arrived at the event location`,
       NotificationType.PARTICIPANT_ARRIVED,
-      { eventId },
+      { eventId, eventTitle, participantName },
     );
   }
 
@@ -88,7 +122,27 @@ export class NotificationsService {
       'Event Completed',
       `Everyone has arrived at "${eventTitle}"!`,
       NotificationType.EVENT_COMPLETED,
-      { eventId },
+      { eventId, eventTitle },
+    );
+  }
+
+  async resolveFriendRequestNotification(
+    userId: string,
+    requestId: string,
+  ): Promise<void> {
+    await this.userNotificationsRepository.resolveByRequestId(
+      userId,
+      requestId,
+    );
+  }
+
+  async resolveInvitationNotification(
+    userId: string,
+    invitationId: string,
+  ): Promise<void> {
+    await this.userNotificationsRepository.resolveByInvitationId(
+      userId,
+      invitationId,
     );
   }
 }

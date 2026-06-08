@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { eq, ilike, or } from 'drizzle-orm';
-import { users, NewUser, User } from '../../drizzle/schema';
+import { eq, ilike, or, inArray } from 'drizzle-orm';
+import { friendships, users, NewUser, User } from '../../drizzle/schema';
 import { DRIZZLE } from '../drizzle/drizzle.module';
 import type { DrizzleDB } from '../drizzle/drizzle.module';
 
@@ -59,6 +59,28 @@ export class UsersRepository {
         or(ilike(users.email, pattern), ilike(users.username, pattern)),
       )
       .limit(limit);
+  }
+
+  async findFriends(userId: string): Promise<User[]> {
+    const rows = await this.db
+      .select()
+      .from(friendships)
+      .where(
+        or(
+          eq(friendships.userIdLow, userId),
+          eq(friendships.userIdHigh, userId),
+        ),
+      );
+
+    if (rows.length === 0) {
+      return [];
+    }
+
+    const friendIds = rows.map((row) =>
+      row.userIdLow === userId ? row.userIdHigh : row.userIdLow,
+    );
+
+    return this.db.select().from(users).where(inArray(users.id, friendIds));
   }
 
   async update(

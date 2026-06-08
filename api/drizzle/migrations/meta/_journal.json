@@ -8,6 +8,34 @@
       "when": 1780876203317,
       "tag": "0000_loving_mephistopheles",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1780876203318,
+      "tag": "0001_tracking_lead_minutes",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1780876203319,
+      "tag": "0002_friend_requests",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1780876203320,
+      "tag": "0003_user_notifications",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1780876203321,
+      "tag": "0004_backfill_invitation_notifications",
+      "breakpoints": true
     }
   ]
 }
