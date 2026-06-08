@@ -1,7 +1,12 @@
 package com.example.friendzone.presentation.create
 
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -9,9 +14,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -20,22 +29,32 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
 import androidx.compose.material3.TimePickerDialog
 import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.material3.Icon
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.friendzone.presentation.components.CreateEventHeader
 import com.example.friendzone.presentation.components.FriendZonePrimaryButton
 import com.example.friendzone.presentation.components.FriendZoneTextField
+import com.example.friendzone.presentation.components.LocationPickerDialog
 import com.example.friendzone.presentation.components.StepProgressBar
 import com.example.friendzone.presentation.components.UploadZone
 import com.example.friendzone.ui.theme.FzBackground
+import com.example.friendzone.ui.theme.FzGreen
+import com.example.friendzone.ui.theme.FzInk
 import java.time.Instant
 import java.time.LocalTime
 import java.time.ZoneId
@@ -50,8 +69,18 @@ fun CreateEventStep1Screen(
     BackHandler(onBack = onBack)
 
     val draft by viewModel.draft.collectAsStateWithLifecycle()
+    val locationMessage by viewModel.locationMessage.collectAsStateWithLifecycle()
     var showDatePicker by remember { mutableStateOf(false) }
     var showTimePicker by remember { mutableStateOf(false) }
+    var showLocationPicker by remember { mutableStateOf(false) }
+
+    val context = LocalContext.current
+    LaunchedEffect(locationMessage) {
+        locationMessage?.let { message ->
+            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+            viewModel.consumeLocationMessage()
+        }
+    }
 
     val initialDateMillis = remember(draft.selectedDate) {
         draft.selectedDate
@@ -90,13 +119,38 @@ fun CreateEventStep1Screen(
                 required = true,
             )
             Spacer(modifier = Modifier.height(12.dp))
-            FriendZoneTextField(
-                label = "Location",
-                value = draft.location,
-                onValueChange = viewModel::updateLocation,
-                placeholder = "Enter venue or address",
-                required = true,
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.Bottom,
+            ) {
+                FriendZoneTextField(
+                    label = "Location",
+                    value = draft.location,
+                    onValueChange = viewModel::updateLocation,
+                    placeholder = "Enter venue or address",
+                    required = true,
+                    modifier = Modifier.weight(1f),
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                    keyboardActions = KeyboardActions(
+                        onSearch = { viewModel.geocodeTypedLocation() },
+                    ),
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(if (draft.latitude != null) FzGreen else FzInk)
+                        .clickable { showLocationPicker = true },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Place,
+                        contentDescription = "Elegir ubicacion en el mapa",
+                        tint = Color.White,
+                    )
+                }
+            }
             Spacer(modifier = Modifier.height(12.dp))
             Row(modifier = Modifier.fillMaxWidth()) {
                 FriendZoneTextField(
@@ -152,6 +206,18 @@ fun CreateEventStep1Screen(
             )
             Spacer(modifier = Modifier.height(24.dp))
         }
+    }
+
+    if (showLocationPicker) {
+        LocationPickerDialog(
+            initialLatitude = draft.latitude,
+            initialLongitude = draft.longitude,
+            onConfirm = { latitude, longitude ->
+                viewModel.updatePickedLocation(latitude, longitude)
+                showLocationPicker = false
+            },
+            onDismiss = { showLocationPicker = false },
+        )
     }
 
     if (showDatePicker) {

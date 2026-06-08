@@ -1,5 +1,6 @@
 package com.example.friendzone.presentation.events
 
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -20,17 +21,24 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.friendzone.presentation.components.CreateEventHeader
+import com.example.friendzone.presentation.components.EventMapDialog
+import com.example.friendzone.presentation.components.EventMapPerson
+import com.example.friendzone.presentation.components.EventMapThumbnail
 import com.example.friendzone.presentation.components.FriendRow
 import com.example.friendzone.presentation.components.FriendZoneOutlineButton
-import com.example.friendzone.presentation.components.LiveMapPlaceholder
 import com.example.friendzone.presentation.components.PillBadge
 import com.example.friendzone.presentation.components.PillVariant
 import com.example.friendzone.ui.theme.FzBackground
@@ -48,6 +56,17 @@ fun EventDetailScreen(
     BackHandler(onBack = onBack)
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val inviteSheetOpen by viewModel.inviteSheetOpen.collectAsStateWithLifecycle()
+    val isSharingLocation by viewModel.isSharingLocation.collectAsStateWithLifecycle()
+    val sharingMessage by viewModel.sharingMessage.collectAsStateWithLifecycle()
+    var mapOpen by remember { mutableStateOf(false) }
+
+    val context = LocalContext.current
+    LaunchedEffect(sharingMessage) {
+        sharingMessage?.let { message ->
+            Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+            viewModel.consumeSharingMessage()
+        }
+    }
 
     if (inviteSheetOpen) {
         InviteGuestsBottomSheet(
@@ -134,7 +153,29 @@ fun EventDetailScreen(
                         }
                     }
                     Spacer(modifier = Modifier.height(16.dp))
-                    LiveMapPlaceholder()
+                    EventMapThumbnail(
+                        eventLatitude = state.eventLatitude,
+                        eventLongitude = state.eventLongitude,
+                        onClick = { mapOpen = true },
+                    )
+                    if (mapOpen) {
+                        EventMapDialog(
+                            eventLatitude = state.eventLatitude,
+                            eventLongitude = state.eventLongitude,
+                            eventLabel = state.eventLocationLabel ?: state.title,
+                            people = state.participantLocations.map { person ->
+                                EventMapPerson(
+                                    label = person.displayName,
+                                    latitude = person.latitude,
+                                    longitude = person.longitude,
+                                    arrived = person.arrived,
+                                )
+                            },
+                            isSharingLocation = isSharingLocation,
+                            onSharingChange = viewModel::setLocationSharing,
+                            onDismiss = { mapOpen = false },
+                        )
+                    }
                     Spacer(modifier = Modifier.height(20.dp))
                     ParticipantSection(state.arrived)
                     Spacer(modifier = Modifier.height(12.dp))

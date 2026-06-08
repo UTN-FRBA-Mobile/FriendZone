@@ -2,6 +2,7 @@ package com.example.friendzone.presentation.create
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.friendzone.data.location.GeocoderHelper
 import com.example.friendzone.domain.model.User
 import com.example.friendzone.domain.repository.EventRepository
 import com.example.friendzone.domain.repository.FriendRepository
@@ -22,6 +23,8 @@ import javax.inject.Inject
 data class CreateEventDraft(
     val eventName: String = "",
     val location: String = "",
+    val latitude: Double? = null,
+    val longitude: Double? = null,
     val selectedDate: LocalDate? = null,
     val selectedTime: LocalTime? = null,
     val description: String = "",
@@ -42,9 +45,13 @@ class CreateEventViewModel @Inject constructor(
     private val eventRepository: EventRepository,
     private val friendRepository: FriendRepository,
     private val invitationRepository: InvitationRepository,
+    private val geocoder: GeocoderHelper,
 ) : ViewModel() {
     private val _draft = MutableStateFlow(CreateEventDraft())
     val draft: StateFlow<CreateEventDraft> = _draft.asStateFlow()
+
+    private val _locationMessage = MutableStateFlow<String?>(null)
+    val locationMessage: StateFlow<String?> = _locationMessage.asStateFlow()
 
     private val _friends = MutableStateFlow<List<User>>(emptyList())
     val friends: StateFlow<List<User>> = _friends.asStateFlow()
@@ -76,6 +83,53 @@ class CreateEventViewModel @Inject constructor(
 
     fun updateLocation(value: String) {
         _draft.value = _draft.value.copy(location = value)
+    }
+
+    /**
+     * Guarda la ubicacion elegida marcandola en el mapa. Setea las coordenadas
+     * al instante (mostrando los numeros) y luego intenta resolver una
+     * direccion legible para reemplazar el texto.
+     */
+    fun updatePickedLocation(latitude: Double, longitude: Double) {
+        _draft.value = _draft.value.copy(
+            latitude = latitude,
+            longitude = longitude,
+            location = "%.5f, %.5f".format(latitude, longitude),
+        )
+        viewModelScope.launch {
+            val address = geocoder.reverseGeocode(latitude, longitude) ?: return@launch
+            val current = _draft.value
+            // Solo si el punto sigue siendo el mismo (no lo volvio a mover).
+            if (current.latitude == latitude && current.longitude == longitude) {
+                _draft.value = current.copy(location = address)
+            }
+        }
+    }
+
+    /**
+     * Toma la direccion escrita en el campo y obtiene sus coordenadas. Si la
+     * encuentra, las guarda y normaliza el texto; si no, avisa.
+     */
+    fun geocodeTypedLocation() {
+        val query = _draft.value.location.trim()
+        if (query.isBlank()) return
+        viewModelScope.launch {
+            when (val place = geocoder.forwardGeocode(query)) {
+                null -> _locationMessage.value = "No se encontro la direccion"
+                else -> {
+                    _draft.value = _draft.value.copy(
+                        latitude = place.latitude,
+                        longitude = place.longitude,
+                        location = place.address,
+                    )
+                    _locationMessage.value = "Ubicacion encontrada"
+                }
+            }
+        }
+    }
+
+    fun consumeLocationMessage() {
+        _locationMessage.value = null
     }
 
     fun updateDescription(value: String) {
@@ -130,8 +184,8 @@ class CreateEventViewModel @Inject constructor(
                 val result = eventRepository.create(
                     title = d.eventName.trim(),
                     description = d.description.trim().ifBlank { null },
-                    latitude = PLACEHOLDER_LATITUDE,
-                    longitude = PLACEHOLDER_LONGITUDE,
+                    latitude = d.latitude ?: PLACEHOLDER_LATITUDE,
+                    longitude = d.longitude ?: PLACEHOLDER_LONGITUDE,
                     address = d.location.trim(),
                     startsAt = startsAt.toString(),
                     arrivalThresholdM = null,
