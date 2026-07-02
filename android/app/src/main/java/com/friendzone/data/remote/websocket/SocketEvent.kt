@@ -7,6 +7,7 @@ enum class SocketEventType {
     PARTICIPANT_JOINED,
     PARTICIPANT_ARRIVED,
     EVENT_COMPLETED,
+    RECONNECTED,
 }
 
 @Serializable

@@ -18,6 +18,8 @@ class EventSocketManager @Inject constructor(
     private val tokenManager: TokenManager,
 ) {
     private var socket: Socket? = null
+    private val joinedEventIds = mutableSetOf<String>()
+    private var hasConnectedBefore = false
     private val _events = MutableSharedFlow<SocketEvent>(extraBufferCapacity = 32)
     val events = _events.asSharedFlow()
 
@@ -41,13 +43,21 @@ class EventSocketManager @Inject constructor(
         socket?.disconnect()
         socket?.off()
         socket = null
+        joinedEventIds.clear()
+        hasConnectedBefore = false
     }
 
     fun joinEvent(eventId: String) {
-        socket?.emit("join", JSONObject(mapOf("eventId" to eventId)))
+        synchronized(joinedEventIds) {
+            joinedEventIds.add(eventId)
+        }
+        emitJoin(eventId)
     }
 
     fun leaveEvent(eventId: String) {
+        synchronized(joinedEventIds) {
+            joinedEventIds.remove(eventId)
+        }
         socket?.emit("leave", JSONObject(mapOf("eventId" to eventId)))
     }
 
@@ -74,10 +84,32 @@ class EventSocketManager @Inject constructor(
     }
 
     private fun registerListeners(socket: Socket) {
+        socket.on(Socket.EVENT_CONNECT) {
+            onSocketConnected()
+        }
         listen(socket, "location.updated", SocketEventType.LOCATION_UPDATED)
         listen(socket, "participant.joined", SocketEventType.PARTICIPANT_JOINED)
         listen(socket, "participant.arrived", SocketEventType.PARTICIPANT_ARRIVED)
         listen(socket, "event.completed", SocketEventType.EVENT_COMPLETED)
+    }
+
+    private fun onSocketConnected() {
+        rejoinTrackedEvents()
+        if (hasConnectedBefore) {
+            _events.tryEmit(SocketEvent(SocketEventType.RECONNECTED, "", ""))
+        }
+        hasConnectedBefore = true
+    }
+
+    private fun rejoinTrackedEvents() {
+        val eventIds = synchronized(joinedEventIds) {
+            joinedEventIds.toList()
+        }
+        eventIds.forEach { emitJoin(it) }
+    }
+
+    private fun emitJoin(eventId: String) {
+        socket?.emit("join", JSONObject(mapOf("eventId" to eventId)))
     }
 
     private fun listen(socket: Socket, eventName: String, type: SocketEventType) {
