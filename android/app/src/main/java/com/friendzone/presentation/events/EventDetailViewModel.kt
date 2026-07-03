@@ -132,7 +132,8 @@ class EventDetailViewModel @Inject constructor(
                     event.type == SocketEventType.LOCATION_UPDATED ||
                     event.type == SocketEventType.PARTICIPANT_ARRIVED ||
                     event.type == SocketEventType.PARTICIPANT_JOINED ||
-                    event.type == SocketEventType.EVENT_COMPLETED
+                    event.type == SocketEventType.EVENT_COMPLETED ||
+                    event.type == SocketEventType.RECONNECTED
                 ) {
                     loadDetail()
                 }
