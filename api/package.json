@@ -12,6 +12,7 @@
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/src/main",
+    "start:render": "node dist/src/drizzle/migrate.js && node dist/src/main",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "ts-node src/drizzle/migrate.ts",
     "db:studio": "drizzle-kit studio",

@@ -182,10 +182,14 @@ Events emitted on room `event:{eventId}`:
 
 ## Deployment (Render / Railway)
 
+**Demo deployment (free tier):** see **[docs/DEPLOY_RENDER_NEON.md](docs/DEPLOY_RENDER_NEON.md)** for Neon Postgres + Render + Android APK steps and [`scripts/deploy-render-neon.sh`](scripts/deploy-render-neon.sh).
+
+Legacy notes (any host):
+
 1. Create a PostgreSQL instance.
 2. Set all environment variables.
 3. Build command: `npm run build`
-4. Start command: `npm run start:prod` (run migrations first or use entrypoint script)
+4. Start command: `npm run start:render` (runs migrations first) or `npm run start:prod` if migrations run separately
 5. For Firebase on Render/Railway, paste the private key with `\n` escaped newlines.
 
 ## Scripts
