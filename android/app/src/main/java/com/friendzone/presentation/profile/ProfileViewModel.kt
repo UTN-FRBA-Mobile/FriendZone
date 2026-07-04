@@ -115,6 +115,12 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
+    fun showLocationPermissionRequired() {
+        _uiState.update {
+            it.copy(errorMessage = "Location permission is required to share your location")
+        }
+    }
+
     fun logout() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoggingOut = true, errorMessage = null) }
