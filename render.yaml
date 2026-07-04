@@ -1,0 +1,36 @@
+# Render Blueprint for FriendZone API (Neon Postgres is provisioned separately).
+# Docs: api/docs/DEPLOY_RENDER_NEON.md
+#
+# Deploy: connect this GitHub repo in the Render dashboard and apply the Blueprint,
+# or create a Web Service manually with root directory "api" and the commands below.
+
+services:
+  - type: web
+    name: friendzone-api
+    runtime: node
+    plan: free
+    rootDir: api
+    buildCommand: npm ci && npm run build
+    startCommand: npm run start:render
+    healthCheckPath: /api/docs
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: JWT_ACCESS_EXPIRES_IN
+        value: 15m
+      - key: JWT_REFRESH_EXPIRES_IN
+        value: 7d
+      - key: ARRIVAL_THRESHOLD
+        value: '500'
+      - key: FIREBASE_PROJECT_ID
+        value: ''
+      - key: FIREBASE_CLIENT_EMAIL
+        value: ''
+      - key: FIREBASE_PRIVATE_KEY
+        value: ''
