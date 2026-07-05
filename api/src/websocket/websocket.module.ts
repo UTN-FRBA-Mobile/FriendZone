@@ -7,7 +7,7 @@ import { EventsGateway } from './events.gateway';
 @Module({
   imports: [
     JwtModule.register({}),
-    EventsModule,
+    forwardRef(() => EventsModule),
     UsersModule,
   ],
   providers: [EventsGateway],

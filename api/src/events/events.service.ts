@@ -1,13 +1,16 @@
 import {
   ForbiddenException,
+  Inject,
   Injectable,
   NotFoundException,
+  forwardRef,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { UsersRepository } from '../users/users.repository';
 import { CreateEventDto, UpdateEventDto } from './dto/event.dto';
 import { EventsRepository } from './events.repository';
 import { Event } from '../../drizzle/schema';
+import { EventsGateway } from '../websocket/events.gateway';
 
 @Injectable()
 export class EventsService {
@@ -15,6 +18,8 @@ export class EventsService {
     private readonly eventsRepository: EventsRepository,
     private readonly usersRepository: UsersRepository,
     private readonly configService: ConfigService,
+    @Inject(forwardRef(() => EventsGateway))
+    private readonly eventsGateway: EventsGateway,
   ) {}
 
   async create(userId: string, dto: CreateEventDto): Promise<Event> {
@@ -94,6 +99,18 @@ export class EventsService {
   async delete(eventId: string, userId: string): Promise<void> {
     await this.assertOrganizer(eventId, userId);
     await this.eventsRepository.delete(eventId);
+    this.eventsGateway.broadcastEventDeleted(eventId);
+  }
+
+  async leave(eventId: string, userId: string): Promise<void> {
+    const event = await this.assertParticipant(eventId, userId);
+    if (event.organizerId === userId) {
+      throw new ForbiddenException(
+        'Organizer cannot leave the event. Delete it instead.',
+      );
+    }
+    await this.eventsRepository.removeParticipant(eventId, userId);
+    this.eventsGateway.broadcastParticipantLeft(eventId, userId);
   }
 
   async assertOrganizer(eventId: string, userId: string): Promise<Event> {

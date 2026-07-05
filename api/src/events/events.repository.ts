@@ -68,6 +68,17 @@ export class EventsRepository {
     await this.db.delete(events).where(eq(events.id, id));
   }
 
+  async removeParticipant(eventId: string, userId: string): Promise<void> {
+    await this.db
+      .delete(eventParticipants)
+      .where(
+        and(
+          eq(eventParticipants.eventId, eventId),
+          eq(eventParticipants.userId, userId),
+        ),
+      );
+  }
+
   async addParticipant(data: {
     eventId: string;
     userId: string;

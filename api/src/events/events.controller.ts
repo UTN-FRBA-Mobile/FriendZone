@@ -56,4 +56,11 @@ export class EventsController {
     await this.eventsService.delete(id, user.id);
     return { success: true };
   }
+
+  @Post(':id/leave')
+  @ApiOperation({ summary: 'Leave an event' })
+  async leave(@CurrentUser() user: SafeUser, @Param('id') id: string) {
+    await this.eventsService.leave(id, user.id);
+    return { success: true };
+  }
 }
