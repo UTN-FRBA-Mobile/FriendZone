@@ -44,6 +44,7 @@ import com.example.friendzone.ui.theme.FzSurface2
 @Composable
 fun EventLiveCard(
     item: EventListItemUi,
+    onClick: () -> Unit,
     onViewMapClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -53,7 +54,8 @@ fun EventLiveCard(
             .padding(horizontal = 16.dp)
             .clip(RoundedCornerShape(16.dp))
             .background(FzSurface)
-            .border(2.dp, FzInk, RoundedCornerShape(16.dp)),
+            .border(2.dp, FzInk, RoundedCornerShape(16.dp))
+            .clickable(onClick = onClick),
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(
@@ -113,14 +115,15 @@ fun EventLiveCard(
 @Composable
 fun EventUpcomingCard(
     item: EventListItemUi,
-    onArrowClick: () -> Unit,
+    onClick: () -> Unit,
 ) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 6.dp)
             .clip(RoundedCornerShape(16.dp))
-            .background(FzSurface),
+            .background(FzSurface)
+            .clickable(onClick = onClick),
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(
@@ -130,9 +133,8 @@ fun EventUpcomingCard(
                 Text(item.title, style = MaterialTheme.typography.titleMedium, color = FzInk)
                 Icon(
                     Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                    contentDescription = "View event",
+                    contentDescription = null,
                     tint = FzInk3,
-                    modifier = Modifier.clickable(onClick = onArrowClick),
                 )
             }
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {

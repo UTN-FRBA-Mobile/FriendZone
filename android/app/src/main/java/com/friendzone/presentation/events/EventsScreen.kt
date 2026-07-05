@@ -163,12 +163,13 @@ fun EventsScreen(
                                 if (item.isLive) {
                                     EventLiveCard(
                                         item = item,
+                                        onClick = { onEventDetailClick(item.eventId) },
                                         onViewMapClick = { onEventDetailClick(item.eventId) },
                                     )
                                 } else {
                                     EventUpcomingCard(
                                         item = item,
-                                        onArrowClick = { onEventDetailClick(item.eventId) },
+                                        onClick = { onEventDetailClick(item.eventId) },
                                     )
                                 }
                             }
@@ -181,7 +182,7 @@ fun EventsScreen(
                             items(state.pastEvents, key = { it.eventId }) { item ->
                                 EventUpcomingCard(
                                     item = item,
-                                    onArrowClick = { onEventDetailClick(item.eventId) },
+                                    onClick = { onEventDetailClick(item.eventId) },
                                 )
                             }
                         }
