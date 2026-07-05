@@ -34,7 +34,7 @@ fun parseHttpError(exception: HttpException): com.example.friendzone.domain.resu
     val body = exception.response()?.errorBody()?.string()
     if (!body.isNullOrBlank()) {
         parseApiErrorBody(body, exception.code())?.let { (statusCode, message) ->
-            if (statusCode == 401) {
+            if (statusCode == 401 && !isAuthCredentialFailure(message)) {
                 return com.example.friendzone.domain.result.AppError.Unauthorized
             }
             return com.example.friendzone.domain.result.AppError.Http(statusCode, message)
@@ -47,4 +47,9 @@ fun parseHttpError(exception: HttpException): com.example.friendzone.domain.resu
         exception.code(),
         exception.message().orEmpty(),
     )
+}
+
+private fun isAuthCredentialFailure(message: String): Boolean {
+    val lower = message.lowercase()
+    return lower.contains("invalid credentials")
 }

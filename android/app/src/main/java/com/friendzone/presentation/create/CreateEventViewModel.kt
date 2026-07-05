@@ -150,8 +150,8 @@ class CreateEventViewModel @Inject constructor(
                 return@launch
             }
             val bytes = resolver.openInputStream(uri)?.use { it.readBytes() } ?: return@launch
-            if (bytes.size > 2 * 1024 * 1024) {
-                _locationMessage.value = "Cover image must be 2 MB or smaller"
+            if (bytes.size > 20 * 1024 * 1024) {
+                _locationMessage.value = "Cover image must be 20 MB or smaller"
                 return@launch
             }
             _draft.value = _draft.value.copy(
