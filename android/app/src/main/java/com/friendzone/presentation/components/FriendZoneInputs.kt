@@ -17,10 +17,19 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -109,6 +118,8 @@ fun FriendZoneTextField(
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
 ) {
+    var passwordVisible by rememberSaveable { mutableStateOf(false) }
+
     Column(modifier = modifier.fillMaxWidth()) {
         Row {
             Text(
@@ -149,33 +160,63 @@ fun FriendZoneTextField(
                 )
             }
         } else {
-            BasicTextField(
-                value = value,
-                onValueChange = onValueChange,
-                readOnly = readOnly,
-                keyboardOptions = keyboardOptions,
-                keyboardActions = keyboardActions,
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(fieldHeight)
                     .background(FzSurface, fieldShape)
                     .border(1.5.dp, FzBorder, fieldShape)
                     .padding(horizontal = 14.dp, vertical = 13.dp),
-                textStyle = MaterialTheme.typography.bodyMedium.copy(color = FzInk),
-                singleLine = singleLine && minLines == 1,
-                minLines = minLines,
-                visualTransformation = if (isPassword) {
-                    PasswordVisualTransformation()
-                } else {
-                    VisualTransformation.None
-                },
-                decorationBox = { inner ->
-                    if (value.isEmpty() && placeholder.isNotEmpty()) {
-                        Text(placeholder, color = FzInk3)
-                    }
-                    inner()
-                },
-            )
+            ) {
+                BasicTextField(
+                    value = value,
+                    onValueChange = onValueChange,
+                    readOnly = readOnly,
+                    keyboardOptions = keyboardOptions,
+                    keyboardActions = keyboardActions,
+                    modifier = Modifier.fillMaxWidth(),
+                    textStyle = MaterialTheme.typography.bodyMedium.copy(color = FzInk),
+                    singleLine = singleLine && minLines == 1,
+                    minLines = minLines,
+                    visualTransformation = if (isPassword && !passwordVisible) {
+                        PasswordVisualTransformation()
+                    } else {
+                        VisualTransformation.None
+                    },
+                    decorationBox = { inner ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Box(modifier = Modifier.weight(1f)) {
+                                if (value.isEmpty() && placeholder.isNotEmpty()) {
+                                    Text(placeholder, color = FzInk3)
+                                }
+                                inner()
+                            }
+                            if (isPassword) {
+                                IconButton(
+                                    onClick = { passwordVisible = !passwordVisible },
+                                    modifier = Modifier
+                                        .size(24.dp)
+                                        .padding(0.dp),
+                                ) {
+                                    Icon(
+                                        imageVector = if (passwordVisible) {
+                                            Icons.Filled.Visibility
+                                        } else {
+                                            Icons.Filled.VisibilityOff
+                                        },
+                                        contentDescription = if (passwordVisible) "Hide password" else "Show password",
+                                        tint = FzInk3,
+                                        modifier = Modifier.size(20.dp),
+                                    )
+                                }
+                            }
+                        }
+                    },
+                )
+            }
         }
     }
 }
