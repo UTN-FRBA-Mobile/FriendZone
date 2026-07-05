@@ -8,7 +8,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -42,80 +46,89 @@ fun EventsScreen(
         viewModel.loadEvents()
     }
 
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(FzBackground),
-        contentPadding = PaddingValues(bottom = 16.dp),
-    ) {
-        item {
-            FriendZoneTopBar(
-                title = "My Events",
-                showNotifications = true,
-                notificationBadgeCount = notificationBadgeCount,
-                onNotificationsClick = onNotificationsClick,
-                showAdd = true,
-                onAddClick = onCreateClick,
-            )
-        }
+    Box(modifier = Modifier.fillMaxSize()) {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(FzBackground),
+            contentPadding = PaddingValues(bottom = 16.dp),
+        ) {
+            item {
+                FriendZoneTopBar(
+                    title = "My Events",
+                    showNotifications = true,
+                    notificationBadgeCount = notificationBadgeCount,
+                    onNotificationsClick = onNotificationsClick,
+                )
+            }
 
-        when (val state = uiState) {
-            is EventsUiState.Loading -> {
-                item {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(48.dp),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        CircularProgressIndicator(color = FzInk)
-                    }
-                }
-            }
-            is EventsUiState.Error -> {
-                item {
-                    ColumnError(
-                        message = state.message,
-                        onRetry = { viewModel.loadEvents() },
-                    )
-                }
-            }
-            is EventsUiState.Data -> {
-                if (state.liveEvents.isNotEmpty()) {
+            when (val state = uiState) {
+                is EventsUiState.Loading -> {
                     item {
-                        SectionLabel("Next Events")
-                    }
-                    items(state.liveEvents, key = { it.eventId }) { item ->
-                        EventLiveCard(
-                            item = item,
-                            onViewMapClick = { onEventDetailClick(item.eventId) },
-                        )
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(48.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            CircularProgressIndicator(color = FzInk)
+                        }
                     }
                 }
-                item {
-                    SectionLabel(
-                        "Upcoming",
-                        modifier = Modifier.padding(top = if (state.liveEvents.isEmpty()) 0.dp else 6.dp),
-                    )
-                }
-                if (state.upcomingEvents.isEmpty()) {
+                is EventsUiState.Error -> {
                     item {
-                        Text(
-                            "No upcoming events",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = FzInk3,
-                            modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
+                        ColumnError(
+                            message = state.message,
+                            onRetry = { viewModel.loadEvents() },
                         )
                     }
-                } else {
-                    items(state.upcomingEvents, key = { it.eventId }) { item ->
-                        EventUpcomingCard(
-                            item = item,
-                            onArrowClick = { onEventDetailClick(item.eventId) },
+                }
+                is EventsUiState.Data -> {
+                    if (state.liveEvents.isNotEmpty()) {
+                        item {
+                            SectionLabel("Next Events")
+                        }
+                        items(state.liveEvents, key = { it.eventId }) { item ->
+                            EventLiveCard(
+                                item = item,
+                                onViewMapClick = { onEventDetailClick(item.eventId) },
+                            )
+                        }
+                    }
+                    item {
+                        SectionLabel(
+                            "Upcoming",
+                            modifier = Modifier.padding(top = if (state.liveEvents.isEmpty()) 0.dp else 6.dp),
                         )
+                    }
+                    if (state.upcomingEvents.isEmpty()) {
+                        item {
+                            Text(
+                                "No upcoming events",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = FzInk3,
+                                modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
+                            )
+                        }
+                    } else {
+                        items(state.upcomingEvents, key = { it.eventId }) { item ->
+                            EventUpcomingCard(
+                                item = item,
+                                onArrowClick = { onEventDetailClick(item.eventId) },
+                            )
+                        }
                     }
                 }
             }
+        }
+        FloatingActionButton(
+            onClick = onCreateClick,
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(16.dp),
+            containerColor = FzInk,
+        ) {
+            Icon(Icons.Default.Add, contentDescription = "Create event", tint = androidx.compose.ui.graphics.Color.White)
         }
     }
 }

@@ -127,11 +127,6 @@ fun FriendZoneNavHost(
                             launchSingleTop = true
                         }
                     },
-                    onFabClick = {
-                        navController.navigate(Screen.Create) {
-                            launchSingleTop = true
-                        }
-                    },
                 )
             }
         },

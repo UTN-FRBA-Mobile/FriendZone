@@ -178,7 +178,6 @@ fun FriendZoneBottomBar(
     onEventsClick: () -> Unit,
     onFriendsClick: () -> Unit,
     onProfileClick: () -> Unit,
-    onFabClick: () -> Unit,
     pendingFriendsCount: Int = 0,
     modifier: Modifier = Modifier,
 ) {
@@ -208,17 +207,6 @@ fun FriendZoneBottomBar(
                 badgeCount = pendingFriendsCount,
                 icon = { Icon(Icons.Default.People, contentDescription = null) },
             )
-            Box(
-                modifier = Modifier
-                    .size(52.dp)
-                    .clip(FabShape)
-                    .background(FzInk)
-                    .clickable(onClick = onFabClick)
-                    .semantics { contentDescription = "Create event" },
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(Icons.Default.Add, contentDescription = null, tint = Color.White)
-            }
             BottomNavItem(
                 label = "Profile",
                 selected = selectedTab == BottomNavTab.Profile,
