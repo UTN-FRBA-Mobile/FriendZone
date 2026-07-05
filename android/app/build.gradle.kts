@@ -18,9 +18,17 @@ fun buildConfigString(value: String): String =
 val configuredApiBaseUrl = providers.environmentVariable("FRIENDZONE_API_BASE_URL")
     .orElse(providers.gradleProperty("friendzoneApiBaseUrl"))
 
+val configuredPastThresholdHours = providers.environmentVariable("FRIENDZONE_EVENT_PAST_THRESHOLD_HOURS")
+    .orElse(providers.gradleProperty("friendzoneEventPastThresholdHours"))
+
 val defaultApiBaseUrl = normalizeApiBaseUrl(
     configuredApiBaseUrl.orNull ?: "https://friendzone-api-zrvr.onrender.com/",
 )
+
+val defaultPastThresholdHours = configuredPastThresholdHours.orNull
+    ?.toIntOrNull()
+    ?.coerceAtLeast(0)
+    ?: 48
 
 val localProperties = Properties().apply {
     val localPropertiesFile = rootProject.file("local.properties")
@@ -71,10 +79,12 @@ android {
     buildTypes {
         debug {
             buildConfigField("String", "API_BASE_URL", buildConfigString(defaultApiBaseUrl))
+            buildConfigField("int", "EVENT_PAST_THRESHOLD_HOURS", defaultPastThresholdHours.toString())
         }
         release {
             isMinifyEnabled = false
             buildConfigField("String", "API_BASE_URL", buildConfigString(defaultApiBaseUrl))
+            buildConfigField("int", "EVENT_PAST_THRESHOLD_HOURS", defaultPastThresholdHours.toString())
             if (hasReleaseSigningConfig) {
                 signingConfig = signingConfigs.getByName("release")
             }

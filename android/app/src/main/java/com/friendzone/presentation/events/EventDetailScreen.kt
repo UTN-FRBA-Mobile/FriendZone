@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -31,6 +32,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -49,6 +51,7 @@ import com.example.friendzone.ui.theme.FzBorder
 import com.example.friendzone.ui.theme.FzGreen
 import com.example.friendzone.ui.theme.FzInk
 import com.example.friendzone.ui.theme.FzInk3
+import com.example.friendzone.ui.theme.FzRequired
 import com.example.friendzone.ui.theme.FzSurface
 
 @Composable
@@ -62,6 +65,7 @@ fun EventDetailScreen(
     val isSharingLocation by viewModel.isSharingLocation.collectAsStateWithLifecycle()
     val sharingMessage by viewModel.sharingMessage.collectAsStateWithLifecycle()
     val actionMessage by viewModel.actionMessage.collectAsStateWithLifecycle()
+    val showCompletePrompt by viewModel.showCompletePrompt.collectAsStateWithLifecycle()
     var mapOpen by remember { mutableStateOf(false) }
     var menuOpen by remember { mutableStateOf(false) }
 
@@ -83,6 +87,29 @@ fun EventDetailScreen(
         InviteGuestsBottomSheet(
             viewModel = viewModel,
             onDismiss = { viewModel.closeInviteSheet() },
+        )
+    }
+
+    if (showCompletePrompt) {
+        AlertDialog(
+            onDismissRequest = { viewModel.dismissCompletePrompt() },
+            title = { Text("Mark event as completed?") },
+            text = {
+                Text(
+                    "This event has started and you have accepted guests. " +
+                        "Do you want to mark it as completed?",
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = { viewModel.confirmCompleteFromPrompt() }) {
+                    Text("Mark completed", color = FzInk)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { viewModel.dismissCompletePrompt() }) {
+                    Text("Not now", color = FzInk3)
+                }
+            },
         )
     }
 
@@ -147,24 +174,19 @@ fun EventDetailScreen(
                             style = MaterialTheme.typography.bodySmall,
                             color = FzInk3,
                         )
-                        if (state.isLive) {
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(6.dp),
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(9.dp)
-                                        .clip(RoundedCornerShape(50))
-                                        .background(FzGreen),
-                                )
-                                Text(
-                                    "Live",
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = FzInk,
-                                )
-                            }
+                        when {
+                            state.isLive -> EventStatusIndicatorRow(
+                                dotColor = FzGreen,
+                                label = "Live",
+                            )
+                            state.statusBadge == EventDetailStatusBadge.Completed -> EventStatusIndicatorRow(
+                                dotColor = FzInk3,
+                                label = "Completed",
+                            )
+                            state.statusBadge == EventDetailStatusBadge.Cancelled -> EventStatusIndicatorRow(
+                                dotColor = FzRequired,
+                                label = "Cancelled",
+                            )
                         }
                         if (state.organizerSelfArrived) {
                             Spacer(modifier = Modifier.height(8.dp))
@@ -225,22 +247,50 @@ fun EventDetailScreen(
                         },
                     )
                 }
-                DropdownMenuItem(
-                    text = { Text("Mark event as completed") },
-                    onClick = {
-                        menuOpen = false
-                        viewModel.markEventCompleted()
-                    },
-                )
-                DropdownMenuItem(
-                    text = { Text("Cancel event") },
-                    onClick = {
-                        menuOpen = false
-                        viewModel.cancelEvent()
-                    },
-                )
+                if (organizerState.canMarkComplete) {
+                    DropdownMenuItem(
+                        text = { Text("Mark event as completed") },
+                        onClick = {
+                            menuOpen = false
+                            viewModel.markEventCompleted()
+                        },
+                    )
+                }
+                if (organizerState.canCancelEvent) {
+                    DropdownMenuItem(
+                        text = { Text("Cancel event") },
+                        onClick = {
+                            menuOpen = false
+                            viewModel.cancelEvent()
+                        },
+                    )
+                }
             }
         }
+    }
+}
+
+@Composable
+private fun EventStatusIndicatorRow(
+    dotColor: Color,
+    label: String,
+) {
+    Spacer(modifier = Modifier.height(8.dp))
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(6.dp),
+    ) {
+        Box(
+            modifier = Modifier
+                .size(9.dp)
+                .clip(RoundedCornerShape(50))
+                .background(dotColor),
+        )
+        Text(
+            label,
+            style = MaterialTheme.typography.labelMedium,
+            color = FzInk,
+        )
     }
 }
 

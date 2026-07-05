@@ -68,3 +68,5 @@ screenshots/
 
 # API uploads
 api/uploads/
+.vscode
+prompts/

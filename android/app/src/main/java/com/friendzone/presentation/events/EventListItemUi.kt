@@ -9,6 +9,7 @@ data class EventListItemUi(
     val timeIcon: String,
     val timeLabel: String,
     val dateText: String,
+    val statusBadge: EventDetailStatusBadge? = null,
     val confirmedText: String,
     val pendingText: String,
     val onTheWayText: String? = null,
