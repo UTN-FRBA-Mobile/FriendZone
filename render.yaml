@@ -27,7 +27,7 @@ services:
       - key: JWT_REFRESH_EXPIRES_IN
         value: 7d
       - key: ARRIVAL_THRESHOLD
-        value: '500'
+        value: '150'
       - key: FIREBASE_PROJECT_ID
         value: ''
       - key: FIREBASE_CLIENT_EMAIL

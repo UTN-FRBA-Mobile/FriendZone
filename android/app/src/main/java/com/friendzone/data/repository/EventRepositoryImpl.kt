@@ -6,8 +6,12 @@ import com.example.friendzone.data.remote.dto.CreateEventRequest
 import com.example.friendzone.data.remote.dto.UpdateEventRequest
 import com.example.friendzone.data.remote.safeApiCall
 import com.example.friendzone.domain.model.Event
+import com.example.friendzone.domain.model.EventStatus
 import com.example.friendzone.domain.repository.EventRepository
 import com.example.friendzone.domain.result.ApiResult
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -73,6 +77,26 @@ class EventRepositoryImpl @Inject constructor(
                 ),
             ),
         )
+    }
+
+    override suspend fun updateStatus(id: String, status: EventStatus): ApiResult<Event> =
+        safeApiCall {
+            val apiStatus = when (status) {
+                EventStatus.COMPLETED -> "completed"
+                EventStatus.CANCELLED -> "cancelled"
+                else -> error("Unsupported status update: $status")
+            }
+            DtoMapper.toEvent(eventsApi.update(id, UpdateEventRequest(status = apiStatus)))
+        }
+
+    override suspend fun uploadCover(
+        id: String,
+        bytes: ByteArray,
+        mimeType: String,
+    ): ApiResult<Event> = safeApiCall {
+        val requestBody = bytes.toRequestBody(mimeType.toMediaType())
+        val part = MultipartBody.Part.createFormData("cover", "cover", requestBody)
+        DtoMapper.toEvent(eventsApi.uploadCover(id, part))
     }
 
     override suspend fun delete(id: String): ApiResult<Unit> = safeApiCall {

@@ -7,6 +7,7 @@ import com.example.friendzone.data.remote.dto.UpdateInvitationRequest
 import com.example.friendzone.data.remote.safeApiCall
 import com.example.friendzone.domain.model.Invitation
 import com.example.friendzone.domain.model.InvitationStatus
+import com.example.friendzone.domain.model.PendingInvitation
 import com.example.friendzone.domain.repository.InvitationRepository
 import com.example.friendzone.domain.result.ApiResult
 import javax.inject.Inject
@@ -25,6 +26,10 @@ class InvitationRepositoryImpl @Inject constructor(
 
     override suspend fun getByEvent(eventId: String): ApiResult<List<Invitation>> = safeApiCall {
         invitationsApi.getByEvent(eventId).map(DtoMapper::toInvitation)
+    }
+
+    override suspend fun getMinePending(): ApiResult<List<PendingInvitation>> = safeApiCall {
+        invitationsApi.getMinePending().map(DtoMapper::toPendingInvitation)
     }
 
     override suspend fun respond(invitationId: String, status: InvitationStatus): ApiResult<Invitation> =

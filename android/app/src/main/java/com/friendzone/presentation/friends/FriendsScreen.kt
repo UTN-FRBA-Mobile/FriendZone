@@ -58,6 +58,7 @@ fun FriendsScreen(
     onFriendsChanged: () -> Unit,
     onNotificationsClick: () -> Unit = {},
     notificationBadgeCount: Int = 0,
+    initialTab: FriendsTab? = null,
     viewModel: FriendsViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -66,6 +67,10 @@ fun FriendsScreen(
     LaunchedEffect(Unit) {
         viewModel.loadAll()
         onFriendsChanged()
+    }
+
+    LaunchedEffect(initialTab) {
+        initialTab?.let(viewModel::selectTab)
     }
 
     LaunchedEffect(uiState.snackbarMessage) {

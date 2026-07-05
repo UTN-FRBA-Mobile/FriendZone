@@ -96,14 +96,23 @@ class FriendsViewModel @Inject constructor(
                 is ApiResult.Success -> {
                     val user = result.data
                     val alreadyFriend = _uiState.value.friends.any { it.id == user.id }
-                    if (alreadyFriend) {
-                        _uiState.value = _uiState.value.copy(
-                            lookupResult = LookupResult.Error("Already friends"),
-                        )
-                    } else {
-                        _uiState.value = _uiState.value.copy(
-                            lookupResult = LookupResult.Found(user),
-                        )
+                    val pendingFromUser = _uiState.value.requests.any { it.requester.id == user.id }
+                    when {
+                        alreadyFriend -> {
+                            _uiState.value = _uiState.value.copy(
+                                lookupResult = LookupResult.Error("Already friends"),
+                            )
+                        }
+                        pendingFromUser -> {
+                            _uiState.value = _uiState.value.copy(
+                                lookupResult = LookupResult.Error("This user already sent you a request"),
+                            )
+                        }
+                        else -> {
+                            _uiState.value = _uiState.value.copy(
+                                lookupResult = LookupResult.Found(user),
+                            )
+                        }
                     }
                 }
                 is ApiResult.Error -> {

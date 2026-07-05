@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.HorizontalDivider
@@ -166,6 +167,8 @@ fun CreateEventHeader(
     title: String,
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
+    showMenu: Boolean = false,
+    onMenuClick: () -> Unit = {},
 ) {
     Row(
         modifier = modifier
@@ -189,7 +192,18 @@ fun CreateEventHeader(
             modifier = Modifier.weight(1f),
             textAlign = androidx.compose.ui.text.style.TextAlign.Center,
         )
-        Spacer(modifier = Modifier.size(38.dp))
+        if (showMenu) {
+            IconButton(
+                onClick = onMenuClick,
+                modifier = Modifier
+                    .size(38.dp)
+                    .background(FzSurface2, RoundedCornerShape(12.dp)),
+            ) {
+                Icon(Icons.Filled.Menu, contentDescription = "Event options", tint = FzInk2)
+            }
+        } else {
+            Spacer(modifier = Modifier.size(38.dp))
+        }
     }
 }
 
@@ -229,20 +243,41 @@ fun StepProgressBar(
 }
 
 @Composable
-fun UploadZone(modifier: Modifier = Modifier) {
-    Column(
+fun UploadZone(
+    modifier: Modifier = Modifier,
+    previewModel: Any? = null,
+    onClick: () -> Unit = {},
+) {
+    Box(
         modifier = modifier
             .fillMaxWidth()
             .height(120.dp)
             .clip(RoundedCornerShape(10.dp))
             .background(FzSurface2)
-            .border(1.5.dp, FzBorder, RoundedCornerShape(10.dp)),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
+            .border(1.5.dp, FzBorder, RoundedCornerShape(10.dp))
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center,
     ) {
-        Text("🖼", style = MaterialTheme.typography.headlineMedium)
-        Text("Upload cover image", style = MaterialTheme.typography.labelMedium, color = FzInk2)
-        Text("JPG, PNG up to 5MB", style = MaterialTheme.typography.bodySmall, color = FzInk3)
+        if (previewModel != null) {
+            coil.compose.AsyncImage(
+                model = previewModel,
+                contentDescription = "Cover preview",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(120.dp)
+                    .clip(RoundedCornerShape(10.dp)),
+                contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+            )
+        } else {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+            ) {
+                Text("🖼", style = MaterialTheme.typography.headlineMedium)
+                Text("Upload cover image", style = MaterialTheme.typography.labelMedium, color = FzInk2)
+                Text("JPG, PNG up to 2MB", style = MaterialTheme.typography.bodySmall, color = FzInk3)
+            }
+        }
     }
 }
 

@@ -50,6 +50,9 @@ class FriendZoneFirebaseMessagingService : FirebaseMessagingService() {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
             putExtra(EXTRA_NOTIFICATION_ID, data["notificationId"])
             putExtra(EXTRA_NOTIFICATION_TYPE, data["type"])
+            putExtra(EXTRA_INVITATION_ID, data["invitationId"])
+            putExtra(EXTRA_REQUEST_ID, data["requestId"])
+            putExtra(EXTRA_EVENT_ID, data["eventId"])
         }
         val pendingIntent = PendingIntent.getActivity(
             this,
@@ -75,5 +78,8 @@ class FriendZoneFirebaseMessagingService : FirebaseMessagingService() {
     companion object {
         const val EXTRA_NOTIFICATION_ID = "notificationId"
         const val EXTRA_NOTIFICATION_TYPE = "notificationType"
+        const val EXTRA_INVITATION_ID = "invitationId"
+        const val EXTRA_REQUEST_ID = "requestId"
+        const val EXTRA_EVENT_ID = "eventId"
     }
 }

@@ -2,6 +2,8 @@ package com.example.friendzone.presentation.create
 
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.text.KeyboardActions
@@ -95,6 +97,12 @@ fun CreateEventStep1Screen(
         is24Hour = false,
     )
 
+    val pickCoverImage = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent(),
+    ) { uri ->
+        uri?.let { viewModel.setCoverImage(context, it) }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -109,7 +117,10 @@ fun CreateEventStep1Screen(
         )
 
         Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-            UploadZone()
+            UploadZone(
+                previewModel = draft.coverPreviewUri,
+                onClick = { pickCoverImage.launch("image/*") },
+            )
             Spacer(modifier = Modifier.height(12.dp))
             FriendZoneTextField(
                 label = "Event Name",

@@ -16,6 +16,9 @@ data class EventListItemUi(
     val avatars: List<String> = emptyList(),
     val extraCount: Int = 0,
     val friendPreviews: List<FriendRowUi> = emptyList(),
+    val coverImageUrl: String? = null,
+    val isPastItem: Boolean = false,
+    val startsAtEpoch: Long = 0L,
 )
 
 fun participantToFriendRow(

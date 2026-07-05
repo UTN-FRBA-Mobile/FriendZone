@@ -8,6 +8,7 @@ import com.example.friendzone.domain.util.classifyParticipantWithUser
 import com.example.friendzone.domain.util.formatEventDate
 import com.example.friendzone.domain.util.formatRelativeTimeLabel
 import com.example.friendzone.domain.util.isLive
+import com.example.friendzone.domain.util.resolveApiAssetUrl
 import com.example.friendzone.presentation.components.PillVariant
 
 fun Event.toListItemUi(
@@ -17,6 +18,8 @@ fun Event.toListItemUi(
     friendPreviews: List<com.example.friendzone.presentation.components.FriendRowUi> = emptyList(),
     participantAvatars: List<String> = emptyList(),
     extraAvatarCount: Int = 0,
+    isPastItem: Boolean = false,
+    startsAtEpoch: Long = 0L,
 ): EventListItemUi {
     val (icon, label) = formatRelativeTimeLabel(startsAt)
     return EventListItemUi(
@@ -32,6 +35,9 @@ fun Event.toListItemUi(
         avatars = participantAvatars,
         extraCount = extraAvatarCount,
         friendPreviews = friendPreviews,
+        coverImageUrl = resolveApiAssetUrl(coverImageUrl),
+        isPastItem = isPastItem,
+        startsAtEpoch = startsAtEpoch,
     )
 }
 

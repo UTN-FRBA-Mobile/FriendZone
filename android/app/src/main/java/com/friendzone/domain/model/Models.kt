@@ -37,6 +37,7 @@ data class Event(
     val startsAt: String,
     val completedAt: String?,
     val createdAt: String,
+    val coverImageUrl: String? = null,
 )
 
 enum class InvitationStatus {
@@ -52,6 +53,18 @@ data class Invitation(
     val invitedById: String,
     val status: InvitationStatus,
     val createdAt: String,
+)
+
+data class PendingInvitation(
+    val id: String,
+    val eventId: String,
+    val inviteeId: String,
+    val invitedById: String,
+    val status: InvitationStatus,
+    val createdAt: String,
+    val eventTitle: String,
+    val eventStartsAt: String,
+    val organizerDisplayName: String,
 )
 
 enum class ParticipantRole {
@@ -106,9 +119,12 @@ data class LocationUpdateResult(
 
 enum class AppNotificationType {
     FRIEND_REQUEST,
+    FRIEND_REQUEST_ACCEPTED,
     INVITATION_CREATED,
     PARTICIPANT_ARRIVED,
+    ORGANIZER_SELF_ARRIVED,
     EVENT_COMPLETED,
+    EVENT_CANCELLED,
 }
 
 data class InboxNotification(
