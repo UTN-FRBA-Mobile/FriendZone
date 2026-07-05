@@ -14,7 +14,7 @@ import { CreateEventDto, UpdateEventDto } from './dto/event.dto';
 import { EventsRepository } from './events.repository';
 import { Event } from '../../drizzle/schema';
 
-const MAX_COVER_BYTES = 2 * 1024 * 1024;
+const MAX_COVER_BYTES = 20 * 1024 * 1024;
 const ALLOWED_MIME_TYPES = new Set(['image/jpeg', 'image/png']);
 
 @Injectable()
@@ -163,7 +163,7 @@ export class EventsService {
     }
 
     if (file.size > MAX_COVER_BYTES) {
-      throw new BadRequestException('Cover image must be 2 MB or smaller');
+      throw new BadRequestException('Cover image must be 20 MB or smaller');
     }
 
     const uploadsDir = this.configService.get<string>('UPLOADS_DIR', 'uploads');

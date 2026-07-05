@@ -315,7 +315,7 @@ fun UploadZone(
             ) {
                 Text("🖼", style = MaterialTheme.typography.headlineMedium)
                 Text("Upload cover image", style = MaterialTheme.typography.labelMedium, color = FzInk2)
-                Text("JPG, PNG up to 2MB", style = MaterialTheme.typography.bodySmall, color = FzInk3)
+                Text("JPG, PNG up to 20MB", style = MaterialTheme.typography.bodySmall, color = FzInk3)
             }
         }
     }
