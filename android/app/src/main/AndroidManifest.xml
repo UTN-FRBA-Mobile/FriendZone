@@ -41,6 +41,16 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
+            <!-- Invite deep link: https://<api-host>/invite/<username> -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" />
+                <data android:host="friendzone-api-zrvr.onrender.com" />
+                <data android:pathPrefix="/invite" />
+            </intent-filter>
         </activity>
     </application>
 

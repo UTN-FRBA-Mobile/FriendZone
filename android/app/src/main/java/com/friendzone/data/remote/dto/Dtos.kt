@@ -209,6 +209,11 @@ data class RespondFriendRequestBody(
 )
 
 @Serializable
+data class AddFriendByInviteBody(
+    val username: String,
+)
+
+@Serializable
 data class FriendRequestDto(
     val id: String,
     val requesterId: String,

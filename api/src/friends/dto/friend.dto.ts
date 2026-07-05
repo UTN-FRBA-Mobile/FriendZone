@@ -13,3 +13,10 @@ export class RespondFriendRequestDto {
   @IsIn(['accepted', 'rejected'])
   status!: 'accepted' | 'rejected';
 }
+
+export class AddFriendByInviteDto {
+  @ApiProperty({ example: 'lucas2' })
+  @IsString()
+  @MinLength(1)
+  username!: string;
+}

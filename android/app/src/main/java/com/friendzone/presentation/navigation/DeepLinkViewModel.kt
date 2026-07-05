@@ -14,6 +14,7 @@ data class DeepLink(
     val invitationId: String? = null,
     val requestId: String? = null,
     val eventId: String? = null,
+    val inviteUsername: String? = null,
 )
 
 @HiltViewModel
@@ -23,6 +24,20 @@ class DeepLinkViewModel @Inject constructor() : ViewModel() {
 
     fun consumeFromIntent(intent: Intent?) {
         if (intent == null) return
+
+        // App Link: https://<host>/invite/<username>
+        if (intent.action == Intent.ACTION_VIEW) {
+            val segments = intent.data?.pathSegments.orEmpty()
+            if (segments.size >= 2 && segments[0] == "invite") {
+                val username = segments[1].takeIf { it.isNotBlank() }
+                if (username != null) {
+                    _pending.value = DeepLink(type = "invite.link", inviteUsername = username)
+                }
+                intent.data = null
+                return
+            }
+        }
+
         val type = intent.getStringExtra(EXTRA_TYPE)
             ?: intent.getStringExtra(FriendZoneFirebaseMessagingService.EXTRA_NOTIFICATION_TYPE)
         val invitationId = intent.getStringExtra(FriendZoneFirebaseMessagingService.EXTRA_INVITATION_ID)

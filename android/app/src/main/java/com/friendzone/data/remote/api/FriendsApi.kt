@@ -1,5 +1,6 @@
 package com.example.friendzone.data.remote.api
 
+import com.example.friendzone.data.remote.dto.AddFriendByInviteBody
 import com.example.friendzone.data.remote.dto.CreateFriendRequestBody
 import com.example.friendzone.data.remote.dto.FriendRequestCountDto
 import com.example.friendzone.data.remote.dto.FriendRequestDto
@@ -24,6 +25,9 @@ interface FriendsApi {
 
     @POST("friends/requests")
     suspend fun sendRequest(@Body body: CreateFriendRequestBody): FriendRequestDto
+
+    @POST("friends/add-by-invite")
+    suspend fun addByInvite(@Body body: AddFriendByInviteBody): UserDto
 
     @PATCH("friends/requests/{id}")
     suspend fun respondToRequest(

@@ -8,7 +8,10 @@ import {
 import { NotificationsService } from '../notifications/notifications.service';
 import { UsersRepository } from '../users/users.repository';
 import { toSafeUser, SafeUser } from '../common/utils/user.mapper';
-import { CreateFriendRequestDto, RespondFriendRequestDto } from './dto/friend.dto';
+import {
+  CreateFriendRequestDto,
+  RespondFriendRequestDto,
+} from './dto/friend.dto';
 import { FriendsRepository } from './friends.repository';
 
 export interface FriendRequestWithUser {
@@ -109,6 +112,40 @@ export class FriendsService {
       respondedAt: request.respondedAt?.toISOString() ?? null,
       requester: toSafeUser(requester),
     };
+  }
+
+  /**
+   * Adds a friend instantly (confirmed friendship, no pending request) from an
+   * invite link. The inviter deliberately shared their link, so consent is
+   * implicit and no acceptance step is needed.
+   */
+  async addByInvite(userId: string, username: string): Promise<SafeUser> {
+    const target = await this.usersRepository.findByEmailOrUsername(username);
+    if (!target) {
+      throw new NotFoundException('User not found');
+    }
+    if (target.id === userId) {
+      throw new BadRequestException('Cannot add yourself');
+    }
+
+    const alreadyFriends = await this.friendsRepository.areFriends(
+      userId,
+      target.id,
+    );
+    if (!alreadyFriends) {
+      await this.friendsRepository.createFriendship(userId, target.id);
+    }
+
+    // Keep state consistent if a request was already pending between them.
+    const pending = await this.friendsRepository.findPendingBetween(
+      userId,
+      target.id,
+    );
+    if (pending && pending.status === 'pending') {
+      await this.friendsRepository.updateRequestStatus(pending.id, 'accepted');
+    }
+
+    return toSafeUser(target);
   }
 
   async respondToRequest(

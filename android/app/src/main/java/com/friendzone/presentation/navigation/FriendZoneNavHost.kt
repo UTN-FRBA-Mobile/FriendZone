@@ -41,6 +41,7 @@ import com.example.friendzone.presentation.friends.FriendsBadgeViewModel
 import com.example.friendzone.presentation.friends.FriendsScreen
 import com.example.friendzone.presentation.friends.FriendsTab
 import com.example.friendzone.presentation.events.EventsTab
+import com.example.friendzone.presentation.invite.IncomingInviteBottomSheet
 import com.example.friendzone.presentation.notifications.NotificationsBadgeViewModel
 import com.example.friendzone.presentation.notifications.NotificationsScreen
 import com.example.friendzone.presentation.profile.ProfileScreen
@@ -86,6 +87,7 @@ fun FriendZoneNavHost(
     var eventsInitialTab by remember { mutableStateOf<EventsTab?>(null) }
     var eventsOpenInvitationId by remember { mutableStateOf<String?>(null) }
     var friendsInitialTab by remember { mutableStateOf<FriendsTab?>(null) }
+    var pendingInviteUsername by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(authSession, pendingDeepLink, currentRoute) {
         when (authSession) {
@@ -115,6 +117,17 @@ fun FriendZoneNavHost(
                             navController.navigate(Screen.Friends) {
                                 popUpTo(Screen.Bootstrap) { inclusive = true }
                                 launchSingleTop = true
+                            }
+                        }
+                        deepLink.inviteUsername != null -> {
+                            // Show the invite modal over the current screen; land on
+                            // Events as the base screen on a cold start via the link.
+                            pendingInviteUsername = deepLink.inviteUsername
+                            if (currentRoute in authGateRoutes) {
+                                navController.navigate(Screen.Events) {
+                                    popUpTo(Screen.Bootstrap) { inclusive = true }
+                                    launchSingleTop = true
+                                }
                             }
                         }
                     }
@@ -337,6 +350,16 @@ fun FriendZoneNavHost(
                         },
                     )
                 }
+            }
+        }
+
+        if (isLoggedIn) {
+            pendingInviteUsername?.let { username ->
+                IncomingInviteBottomSheet(
+                    username = username,
+                    onDismiss = { pendingInviteUsername = null },
+                    onAdded = { friendsBadgeViewModel.refresh() },
+                )
             }
         }
     }

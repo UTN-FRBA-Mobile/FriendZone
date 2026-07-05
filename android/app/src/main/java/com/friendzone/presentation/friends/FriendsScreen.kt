@@ -33,7 +33,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -43,9 +46,11 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.friendzone.domain.model.FriendRequest
 import com.example.friendzone.domain.model.User
+import com.example.friendzone.presentation.components.FriendZoneOutlineButton
 import com.example.friendzone.presentation.components.FriendZoneTextField
 import com.example.friendzone.presentation.components.FriendZoneTopBar
 import com.example.friendzone.presentation.components.UserInitialAvatar
+import com.example.friendzone.presentation.invite.InviteFriendsBottomSheet
 import com.example.friendzone.ui.theme.FzBackground
 import com.example.friendzone.ui.theme.FzBorder
 import com.example.friendzone.ui.theme.FzInk
@@ -63,6 +68,7 @@ fun FriendsScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
+    var showInviteSheet by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         viewModel.loadAll()
@@ -112,6 +118,7 @@ fun FriendsScreen(
                         viewModel.sendFriendRequest(user.username)
                         onFriendsChanged()
                     },
+                    onInviteClick = { showInviteSheet = true },
                 )
                 FriendsTab.Requests -> RequestsListContent(
                     isLoading = uiState.isLoading,
@@ -131,6 +138,10 @@ fun FriendsScreen(
             hostState = snackbarHostState,
             modifier = Modifier.align(Alignment.BottomCenter),
         )
+    }
+
+    if (showInviteSheet) {
+        InviteFriendsBottomSheet(onDismiss = { showInviteSheet = false })
     }
 }
 
@@ -193,6 +204,7 @@ private fun FriendsListContent(
     onSearchChange: (String) -> Unit,
     onSearchSubmit: () -> Unit,
     onSendRequest: (User) -> Unit,
+    onInviteClick: () -> Unit,
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -208,6 +220,11 @@ private fun FriendsListContent(
                     modifier = Modifier.fillMaxWidth(),
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                     keyboardActions = KeyboardActions(onSearch = { onSearchSubmit() }),
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+                FriendZoneOutlineButton(
+                    text = "Invitar amigos",
+                    onClick = onInviteClick,
                 )
                 when (lookupResult) {
                     is LookupResult.Found -> {
