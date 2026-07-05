@@ -2,6 +2,7 @@ package com.example.friendzone.presentation.notifications
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -44,9 +45,10 @@ import com.example.friendzone.presentation.components.FriendZonePullToRefreshBox
 import com.example.friendzone.presentation.components.PillBadge
 import com.example.friendzone.presentation.components.PillVariant
 import com.example.friendzone.ui.theme.FzBackground
-import com.example.friendzone.ui.theme.FzBorder
-import com.example.friendzone.ui.theme.FzInk
-import com.example.friendzone.ui.theme.FzInk3
+import com.example.friendzone.ui.theme.FzBorderGray
+import com.example.friendzone.ui.theme.FzPrimary
+import com.example.friendzone.ui.theme.FzTextMain
+import com.example.friendzone.ui.theme.FzTextSecondary
 import com.example.friendzone.ui.theme.FzSurface
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -120,7 +122,7 @@ fun NotificationsScreen(
                                     .padding(48.dp),
                                 contentAlignment = Alignment.Center,
                             ) {
-                                CircularProgressIndicator(color = FzInk)
+                                CircularProgressIndicator(color = FzPrimary)
                             }
                         }
                     }
@@ -132,9 +134,9 @@ fun NotificationsScreen(
                                     .padding(32.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally,
                             ) {
-                                Text(uiState.errorMessage!!, color = FzInk3)
+                                Text(uiState.errorMessage!!, color = FzTextSecondary)
                                 TextButton(onClick = { viewModel.loadInbox() }) {
-                                    Text("Retry", color = FzInk)
+                                    Text("Retry", color = FzPrimary)
                                 }
                             }
                         }
@@ -147,7 +149,7 @@ fun NotificationsScreen(
                                     .padding(48.dp),
                                 contentAlignment = Alignment.Center,
                             ) {
-                                Text("No notifications", color = FzInk3)
+                                Text("No notifications", color = FzTextSecondary)
                             }
                         }
                     }
@@ -158,7 +160,7 @@ fun NotificationsScreen(
                                 onClick = { viewModel.selectNotification(item) },
                             )
                             HorizontalDivider(
-                                color = FzBorder,
+                                color = FzBorderGray,
                                 modifier = Modifier.padding(horizontal = 16.dp),
                             )
                         }
@@ -188,9 +190,9 @@ private fun NotificationRow(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(modifier = Modifier.weight(1f)) {
-            Text(item.title, style = MaterialTheme.typography.labelLarge, color = FzInk)
+            Text(item.title, style = MaterialTheme.typography.labelLarge, color = FzTextMain)
             Spacer(modifier = Modifier.height(4.dp))
-            Text(item.body, style = MaterialTheme.typography.bodySmall, color = FzInk3)
+            Text(item.body, style = MaterialTheme.typography.bodySmall, color = FzTextSecondary)
         }
         if (item.actionable) {
             Spacer(modifier = Modifier.padding(start = 8.dp))
@@ -216,17 +218,17 @@ private fun NotificationActionSheet(
         Text(
             notification.title,
             style = MaterialTheme.typography.titleMedium,
-            color = FzInk,
+            color = FzTextMain,
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             notification.body,
             style = MaterialTheme.typography.bodyMedium,
-            color = FzInk3,
+            color = FzTextSecondary,
         )
         if (!subtitle.isNullOrBlank()) {
             Spacer(modifier = Modifier.height(8.dp))
-            Text(subtitle, style = MaterialTheme.typography.bodySmall, color = FzInk3)
+            Text(subtitle, style = MaterialTheme.typography.bodySmall, color = FzTextSecondary)
         }
         if (notification.type == AppNotificationType.INVITATION_CREATED) {
             notification.data["eventTitle"]?.let { eventTitle ->
@@ -234,11 +236,12 @@ private fun NotificationActionSheet(
                 Text(
                     eventTitle,
                     style = MaterialTheme.typography.labelLarge,
-                    color = FzInk,
+                    color = FzTextMain,
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(12.dp))
                         .background(FzSurface)
+                        .border(1.dp, FzBorderGray, RoundedCornerShape(12.dp))
                         .padding(12.dp),
                 )
             }

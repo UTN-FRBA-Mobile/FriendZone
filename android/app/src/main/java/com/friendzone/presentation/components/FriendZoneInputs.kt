@@ -3,6 +3,7 @@ package com.example.friendzone.presentation.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -41,11 +42,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
-import com.example.friendzone.ui.theme.FzBorder
-import com.example.friendzone.ui.theme.FzInk
-import com.example.friendzone.ui.theme.FzInk2
-import com.example.friendzone.ui.theme.FzInk3
-import com.example.friendzone.ui.theme.FzRequired
+import com.example.friendzone.ui.theme.FzBorderGray
+import com.example.friendzone.ui.theme.FzPrimary
+import com.example.friendzone.ui.theme.FzPrimaryDark
+import com.example.friendzone.ui.theme.FzPrimaryLight
+import com.example.friendzone.ui.theme.FzTextMain
+import com.example.friendzone.ui.theme.FzTextSecondary
+import com.example.friendzone.ui.theme.FzError
 import com.example.friendzone.ui.theme.FzSurface
 
 @Composable
@@ -61,14 +64,14 @@ fun FriendZoneSwitch(
         enabled = enabled,
         modifier = modifier,
         colors = SwitchDefaults.colors(
-            checkedTrackColor = FzInk,
+            checkedTrackColor = FzPrimary,
             checkedThumbColor = Color.White,
-            checkedBorderColor = FzInk,
-            uncheckedTrackColor = FzInk3,
+            checkedBorderColor = FzPrimary,
+            uncheckedTrackColor = FzBorderGray,
             uncheckedThumbColor = Color.White,
-            uncheckedBorderColor = FzInk3,
-            disabledCheckedTrackColor = FzInk.copy(alpha = 0.5f),
-            disabledUncheckedTrackColor = FzSurface.copy(alpha = 0.5f),
+            uncheckedBorderColor = FzBorderGray,
+            disabledCheckedTrackColor = FzPrimary.copy(alpha = 0.5f),
+            disabledUncheckedTrackColor = FzPrimaryLight,
         ),
     )
 }
@@ -89,9 +92,9 @@ fun FriendZonePrimaryButton(
             .height(52.dp),
         shape = RoundedCornerShape(10.dp),
         colors = ButtonDefaults.buttonColors(
-            containerColor = FzInk,
+            containerColor = FzPrimary,
             contentColor = Color.White,
-            disabledContainerColor = FzInk.copy(alpha = 0.4f),
+            disabledContainerColor = FzPrimary.copy(alpha = 0.4f),
         ),
         contentPadding = PaddingValues(horizontal = 16.dp),
     ) {
@@ -102,7 +105,7 @@ fun FriendZonePrimaryButton(
                 strokeWidth = 2.dp,
             )
         } else {
-            Text(text)
+            Text(text, style = MaterialTheme.typography.labelLarge)
         }
     }
 }
@@ -112,6 +115,7 @@ fun FriendZoneOutlineButton(
     text: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    icon: @Composable (() -> Unit)? = null,
 ) {
     OutlinedButton(
         onClick = onClick,
@@ -121,11 +125,19 @@ fun FriendZoneOutlineButton(
         shape = RoundedCornerShape(10.dp),
         colors = ButtonDefaults.outlinedButtonColors(
             containerColor = FzSurface,
-            contentColor = FzInk,
+            contentColor = FzPrimary,
         ),
-        border = androidx.compose.foundation.BorderStroke(1.5.dp, FzBorder),
+        border = androidx.compose.foundation.BorderStroke(1.5.dp, FzBorderGray),
     ) {
-        Text(text)
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            if (icon != null) {
+                icon()
+            }
+            Text(text, style = MaterialTheme.typography.labelLarge)
+        }
     }
 }
 
@@ -153,16 +165,16 @@ fun FriendZoneTextField(
             Text(
                 text = label,
                 style = MaterialTheme.typography.labelLarge,
-                color = FzInk,
+                color = FzTextMain,
             )
             if (required) {
-                Text(" *", color = FzRequired)
+                Text(" *", color = FzError)
             }
             optionalLabel?.let {
                 Text(
                     text = " $it",
                     style = MaterialTheme.typography.bodySmall,
-                    color = FzInk3,
+                    color = FzTextSecondary,
                 )
             }
         }
@@ -176,7 +188,7 @@ fun FriendZoneTextField(
                     .height(fieldHeight)
                     .clip(fieldShape)
                     .background(FzSurface)
-                    .border(1.5.dp, FzBorder, fieldShape)
+                    .border(1.5.dp, FzBorderGray, fieldShape)
                     .clickable(onClick = onClick)
                     .padding(horizontal = 14.dp),
                 contentAlignment = Alignment.CenterStart,
@@ -184,7 +196,7 @@ fun FriendZoneTextField(
                 Text(
                     text = value.ifEmpty { placeholder },
                     style = MaterialTheme.typography.bodyMedium,
-                    color = if (value.isEmpty()) FzInk3 else FzInk,
+                    color = if (value.isEmpty()) FzTextSecondary else FzTextMain,
                 )
             }
         } else {
@@ -193,7 +205,7 @@ fun FriendZoneTextField(
                     .fillMaxWidth()
                     .height(fieldHeight)
                     .background(FzSurface, fieldShape)
-                    .border(1.5.dp, FzBorder, fieldShape)
+                    .border(1.5.dp, FzBorderGray, fieldShape)
                     .padding(horizontal = 14.dp, vertical = 13.dp),
             ) {
                 BasicTextField(
@@ -203,7 +215,7 @@ fun FriendZoneTextField(
                     keyboardOptions = keyboardOptions,
                     keyboardActions = keyboardActions,
                     modifier = Modifier.fillMaxWidth(),
-                    textStyle = MaterialTheme.typography.bodyMedium.copy(color = FzInk),
+                    textStyle = MaterialTheme.typography.bodyMedium.copy(color = FzTextMain),
                     singleLine = singleLine && minLines == 1,
                     minLines = minLines,
                     visualTransformation = if (isPassword && !passwordVisible) {
@@ -218,7 +230,7 @@ fun FriendZoneTextField(
                         ) {
                             Box(modifier = Modifier.weight(1f)) {
                                 if (value.isEmpty() && placeholder.isNotEmpty()) {
-                                    Text(placeholder, color = FzInk3)
+                                    Text(placeholder, color = FzTextSecondary)
                                 }
                                 inner()
                             }
@@ -236,7 +248,7 @@ fun FriendZoneTextField(
                                             Icons.Filled.VisibilityOff
                                         },
                                         contentDescription = if (passwordVisible) "Hide password" else "Show password",
-                                        tint = FzInk3,
+                                        tint = FzTextSecondary,
                                         modifier = Modifier.size(20.dp),
                                     )
                                 }

@@ -6,8 +6,6 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -20,18 +18,21 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
 import androidx.compose.material3.TimePickerDialog
 import androidx.compose.material3.rememberDatePickerState
-import androidx.compose.material3.Icon
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -55,8 +56,10 @@ import com.example.friendzone.presentation.components.LocationPickerDialog
 import com.example.friendzone.presentation.components.StepProgressBar
 import com.example.friendzone.presentation.components.UploadZone
 import com.example.friendzone.ui.theme.FzBackground
-import com.example.friendzone.ui.theme.FzGreen
-import com.example.friendzone.ui.theme.FzInk
+import com.example.friendzone.ui.theme.FzPrimary
+import com.example.friendzone.ui.theme.FzSuccess
+import com.example.friendzone.ui.theme.FzTextMain
+import com.example.friendzone.ui.theme.FzTextSecondary
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
@@ -119,7 +122,7 @@ fun CreateEventStep1Screen(
                 previewModel = draft.coverPreviewUri,
                 onClick = { pickCoverImage.launch("image/*") },
             )
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(16.dp))
             FriendZoneTextField(
                 label = "Event Name",
                 value = draft.eventName,
@@ -127,7 +130,7 @@ fun CreateEventStep1Screen(
                 placeholder = "Enter event name",
                 required = true,
             )
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(16.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.Bottom,
@@ -149,18 +152,18 @@ fun CreateEventStep1Screen(
                     modifier = Modifier
                         .size(48.dp)
                         .clip(RoundedCornerShape(10.dp))
-                        .background(if (draft.latitude != null) FzGreen else FzInk)
+                        .background(if (draft.latitude != null) FzSuccess else FzPrimary)
                         .clickable { showLocationPicker = true },
                     contentAlignment = Alignment.Center,
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Place,
-                        contentDescription = "Elegir ubicacion en el mapa",
+                        contentDescription = "Select on map",
                         tint = Color.White,
                     )
                 }
             }
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(16.dp))
             Row(modifier = Modifier.fillMaxWidth()) {
                 FriendZoneTextField(
                     label = "Date",
@@ -182,14 +185,14 @@ fun CreateEventStep1Screen(
                     onClick = { showTimePicker = true },
                 )
             }
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(20.dp))
             TrackingLeadSelector(
                 selectedMinutes = draft.trackingLeadMinutes,
                 isCustom = draft.isCustomTracking,
                 onPresetSelected = viewModel::selectTrackingPreset,
                 onCustomSelected = viewModel::selectCustomTracking,
             )
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(16.dp))
             FriendZoneTextField(
                 label = "Description",
                 value = draft.description,
@@ -199,7 +202,7 @@ fun CreateEventStep1Screen(
                 minLines = 3,
                 singleLine = false,
             )
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(16.dp))
             FriendZoneTextField(
                 label = "Guest Limit",
                 value = draft.guestLimit,
@@ -207,13 +210,13 @@ fun CreateEventStep1Screen(
                 placeholder = "Unlimited",
                 optionalLabel = "(Optional)",
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(16.dp))
             FriendZonePrimaryButton(
                 text = "Continue →",
                 onClick = onContinue,
                 enabled = viewModel.step1Valid(),
             )
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(32.dp))
         }
     }
 
@@ -241,11 +244,13 @@ fun CreateEventStep1Screen(
                         showDatePicker = false
                     },
                 ) {
-                    Text("OK")
+                    Text("OK", color = FzPrimary)
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showDatePicker = false }) { Text("Cancel") }
+                TextButton(onClick = { showDatePicker = false }) {
+                    Text("Cancel", color = FzTextSecondary)
+                }
             },
         ) {
             DatePicker(state = datePickerState)
@@ -265,11 +270,13 @@ fun CreateEventStep1Screen(
                         showTimePicker = false
                     },
                 ) {
-                    Text("OK")
+                    Text("OK", color = FzPrimary)
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showTimePicker = false }) { Text("Cancel") }
+                TextButton(onClick = { showTimePicker = false }) {
+                    Text("Cancel", color = FzTextSecondary)
+                }
             },
         ) {
             TimePicker(state = timePickerState)

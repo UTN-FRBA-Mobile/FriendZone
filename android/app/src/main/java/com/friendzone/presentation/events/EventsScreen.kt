@@ -2,6 +2,7 @@ package com.example.friendzone.presentation.events
 
 import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -54,16 +55,17 @@ import com.example.friendzone.presentation.components.FriendZoneTopBar
 import com.example.friendzone.presentation.components.PillBadge
 import com.example.friendzone.presentation.components.PillVariant
 import com.example.friendzone.ui.theme.FzBackground
-import com.example.friendzone.ui.theme.FzBorder
-import com.example.friendzone.ui.theme.FzInk
-import com.example.friendzone.ui.theme.FzInk3
+import com.example.friendzone.ui.theme.FzBorderGray
+import com.example.friendzone.ui.theme.FzPrimary
+import com.example.friendzone.ui.theme.FzTextMain
+import com.example.friendzone.ui.theme.FzTextSecondary
 import com.example.friendzone.ui.theme.FzSurface
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EventsScreen(
     onCreateClick: () -> Unit,
-    onEventDetailClick: (String, Boolean) -> Unit = { eventId, _ -> },
+    onEventDetailClick: (String, Boolean) -> Unit = { _, _ -> },
     onNotificationsClick: () -> Unit = {},
     notificationBadgeCount: Int = 0,
     initialTab: EventsTab? = null,
@@ -172,8 +174,6 @@ fun EventsScreen(
                         showNotifications = true,
                         notificationBadgeCount = notificationBadgeCount,
                         onNotificationsClick = onNotificationsClick,
-                        showAdd = true,
-                        onAddClick = onCreateClick,
                     )
                 }
                 item {
@@ -193,7 +193,7 @@ fun EventsScreen(
                                     .padding(48.dp),
                                 contentAlignment = Alignment.Center,
                             ) {
-                                CircularProgressIndicator(color = FzInk)
+                                CircularProgressIndicator(color = FzPrimary)
                             }
                         }
                     }
@@ -266,7 +266,7 @@ fun EventsScreen(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(16.dp),
-            containerColor = FzInk,
+            containerColor = FzPrimary,
         ) {
             Icon(Icons.Default.Add, contentDescription = "Create event", tint = androidx.compose.ui.graphics.Color.White)
         }
@@ -311,7 +311,8 @@ private fun EventsTabChip(
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(12.dp))
-            .background(if (selected) FzInk else FzSurface)
+            .background(if (selected) FzPrimary else FzSurface)
+            .border(1.dp, if (selected) FzPrimary else FzBorderGray, RoundedCornerShape(12.dp))
             .clickable(onClick = onClick)
             .padding(vertical = 10.dp),
         contentAlignment = Alignment.Center,
@@ -319,7 +320,7 @@ private fun EventsTabChip(
         Text(
             label,
             style = MaterialTheme.typography.labelMedium,
-            color = if (selected) FzBackground else FzInk,
+            color = if (selected) androidx.compose.ui.graphics.Color.White else FzTextSecondary,
         )
     }
 }
@@ -335,15 +336,16 @@ private fun InvitationRow(
             .padding(horizontal = 16.dp, vertical = 6.dp)
             .clip(RoundedCornerShape(16.dp))
             .background(FzSurface)
+            .border(1.dp, FzBorderGray, RoundedCornerShape(16.dp))
             .clickable(onClick = onClick)
             .padding(16.dp),
     ) {
-        Text(invitation.eventTitle, style = MaterialTheme.typography.titleMedium, color = FzInk)
+        Text(invitation.eventTitle, style = MaterialTheme.typography.titleMedium, color = FzTextMain)
         Spacer(modifier = Modifier.height(4.dp))
         Text(
             "From ${invitation.organizerDisplayName} · ${formatEventDate(invitation.eventStartsAt)}",
             style = MaterialTheme.typography.bodySmall,
-            color = FzInk3,
+            color = FzTextSecondary,
         )
         Spacer(modifier = Modifier.height(8.dp))
         PillBadge("Pending", PillVariant.Light)
@@ -363,18 +365,18 @@ fun InvitationActionSheet(
             .padding(horizontal = 16.dp)
             .padding(bottom = 24.dp),
     ) {
-        Text("Event Invitation", style = MaterialTheme.typography.titleMedium, color = FzInk)
+        Text("Event Invitation", style = MaterialTheme.typography.titleMedium, color = FzTextMain)
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             "You have been invited to \"${invitation.eventTitle}\"",
             style = MaterialTheme.typography.bodyMedium,
-            color = FzInk3,
+            color = FzTextSecondary,
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             "From ${invitation.organizerDisplayName} · ${formatEventDate(invitation.eventStartsAt)}",
             style = MaterialTheme.typography.bodySmall,
-            color = FzInk3,
+            color = FzTextSecondary,
         )
         Spacer(modifier = Modifier.height(24.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -398,7 +400,7 @@ private fun EmptyTabMessage(message: String) {
     Text(
         message,
         style = MaterialTheme.typography.bodyMedium,
-        color = FzInk3,
+        color = FzTextSecondary,
         modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
     )
 }
@@ -415,9 +417,9 @@ private fun ColumnError(
         contentAlignment = Alignment.Center,
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(message, style = MaterialTheme.typography.bodyMedium, color = FzInk3)
+            Text(message, style = MaterialTheme.typography.bodyMedium, color = FzTextSecondary)
             TextButton(onClick = onRetry) {
-                Text("Retry", color = FzInk)
+                Text("Retry", color = FzPrimary)
             }
         }
     }

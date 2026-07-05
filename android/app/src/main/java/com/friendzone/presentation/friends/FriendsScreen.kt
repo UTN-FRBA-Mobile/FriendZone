@@ -24,7 +24,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -41,6 +40,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -54,9 +54,11 @@ import com.example.friendzone.presentation.components.FriendZoneTopBar
 import com.example.friendzone.presentation.components.UserInitialAvatar
 import com.example.friendzone.presentation.invite.InviteFriendsBottomSheet
 import com.example.friendzone.ui.theme.FzBackground
-import com.example.friendzone.ui.theme.FzBorder
-import com.example.friendzone.ui.theme.FzInk
-import com.example.friendzone.ui.theme.FzInk3
+import com.example.friendzone.ui.theme.FzBorderGray
+import com.example.friendzone.ui.theme.FzPrimary
+import com.example.friendzone.ui.theme.FzPrimaryLight
+import com.example.friendzone.ui.theme.FzTextMain
+import com.example.friendzone.ui.theme.FzTextSecondary
 import com.example.friendzone.ui.theme.FzSurface
 import com.example.friendzone.ui.theme.FzSurface2
 
@@ -120,31 +122,31 @@ fun FriendsScreen(
             ) {
                 when (uiState.selectedTab) {
                     FriendsTab.Friends -> FriendsListContent(
-                    isLoading = uiState.isLoading,
-                    searchQuery = uiState.searchQuery,
-                    lookupResult = uiState.lookupResult,
-                    isSendingRequest = uiState.isSendingRequest,
-                    friends = uiState.friends,
-                    onSearchChange = viewModel::updateSearchQuery,
-                    onSearchSubmit = viewModel::lookupUser,
-                    onSendRequest = { user ->
-                        viewModel.sendFriendRequest(user.username)
-                        onFriendsChanged()
-                    },
-                    onInviteClick = { showInviteSheet = true },
-                )
-                FriendsTab.Requests -> RequestsListContent(
-                    isLoading = uiState.isLoading,
-                    requests = uiState.requests,
-                    onAccept = { id ->
-                        viewModel.respondToRequest(id, accept = true)
-                        onFriendsChanged()
-                    },
-                    onReject = { id ->
-                        viewModel.respondToRequest(id, accept = false)
-                        onFriendsChanged()
-                    },
-                )
+                        isLoading = uiState.isLoading,
+                        searchQuery = uiState.searchQuery,
+                        lookupResult = uiState.lookupResult,
+                        isSendingRequest = uiState.isSendingRequest,
+                        friends = uiState.friends,
+                        onSearchChange = viewModel::updateSearchQuery,
+                        onSearchSubmit = viewModel::lookupUser,
+                        onSendRequest = { user ->
+                            viewModel.sendFriendRequest(user.username)
+                            onFriendsChanged()
+                        },
+                        onInviteClick = { showInviteSheet = true },
+                    )
+                    FriendsTab.Requests -> RequestsListContent(
+                        isLoading = uiState.isLoading,
+                        requests = uiState.requests,
+                        onAccept = { id ->
+                            viewModel.respondToRequest(id, accept = true)
+                            onFriendsChanged()
+                        },
+                        onReject = { id ->
+                            viewModel.respondToRequest(id, accept = false)
+                            onFriendsChanged()
+                        },
+                    )
                 }
             }
         }
@@ -157,9 +159,9 @@ fun FriendsScreen(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(16.dp),
-            containerColor = FzInk,
+            containerColor = FzPrimary,
         ) {
-            Icon(Icons.Default.Add, contentDescription = "Add friend", tint = androidx.compose.ui.graphics.Color.White)
+            Icon(Icons.Default.Add, contentDescription = "Add friend", tint = Color.White)
         }
     }
 
@@ -202,13 +204,15 @@ private fun SegmentChip(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val bg = if (selected) FzInk else FzSurface2
-    val fg = if (selected) FzSurface else FzInk
+    val bg = if (selected) FzPrimary else FzSurface
+    val fg = if (selected) Color.White else FzTextSecondary
+    val border = if (selected) FzPrimary else FzBorderGray
     Text(
         text = label,
         modifier = modifier
-            .clip(RoundedCornerShape(10.dp))
+            .clip(RoundedCornerShape(12.dp))
             .background(bg)
+            .border(1.dp, border, RoundedCornerShape(12.dp))
             .clickable(onClick = onClick)
             .padding(vertical = 10.dp),
         style = MaterialTheme.typography.labelLarge,
@@ -244,7 +248,7 @@ private fun FriendsListContent(
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                     keyboardActions = KeyboardActions(onSearch = { onSearchSubmit() }),
                 )
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(12.dp))
                 FriendZoneOutlineButton(
                     text = "Invite friends",
                     onClick = onInviteClick,
@@ -260,17 +264,17 @@ private fun FriendsListContent(
                     }
                     is LookupResult.NotFound -> {
                         Spacer(modifier = Modifier.height(8.dp))
-                        Text("No user found", color = FzInk3, style = MaterialTheme.typography.bodySmall)
+                        Text("No user found", color = FzTextSecondary, style = MaterialTheme.typography.bodySmall)
                     }
                     is LookupResult.Error -> {
                         Spacer(modifier = Modifier.height(8.dp))
-                        Text(lookupResult.message, color = FzInk3, style = MaterialTheme.typography.bodySmall)
+                        Text(lookupResult.message, color = FzTextSecondary, style = MaterialTheme.typography.bodySmall)
                     }
                     null -> Unit
                 }
-                Spacer(modifier = Modifier.height(16.dp))
-                Text("Your friends", style = MaterialTheme.typography.labelLarge, color = FzInk)
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(24.dp))
+                Text("Your friends", style = MaterialTheme.typography.labelLarge, color = FzTextMain)
+                Spacer(modifier = Modifier.height(12.dp))
             }
         }
         if (isLoading) {
@@ -281,7 +285,7 @@ private fun FriendsListContent(
                         .padding(32.dp),
                     contentAlignment = Alignment.Center,
                 ) {
-                    CircularProgressIndicator(color = FzInk)
+                    CircularProgressIndicator(color = FzPrimary)
                 }
             }
         } else if (friends.isEmpty()) {
@@ -289,7 +293,7 @@ private fun FriendsListContent(
                 Text(
                     "No friends yet",
                     modifier = Modifier.padding(horizontal = 16.dp),
-                    color = FzInk3,
+                    color = FzTextSecondary,
                     style = MaterialTheme.typography.bodyMedium,
                 )
             }
@@ -310,29 +314,29 @@ private fun LookupUserRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
+            .clip(RoundedCornerShape(16.dp))
             .background(FzSurface)
-            .border(1.5.dp, FzBorder, RoundedCornerShape(12.dp))
+            .border(1.dp, FzBorderGray, RoundedCornerShape(16.dp))
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         UserInitialAvatar(displayName = user.displayName)
         Spacer(modifier = Modifier.width(10.dp))
         Column(modifier = Modifier.weight(1f)) {
-            Text(user.displayName, style = MaterialTheme.typography.bodyMedium, color = FzInk)
-            Text("@${user.username}", style = MaterialTheme.typography.bodySmall, color = FzInk3)
+            Text(user.displayName, style = MaterialTheme.typography.bodyMedium, color = FzTextMain)
+            Text("@${user.username}", style = MaterialTheme.typography.bodySmall, color = FzTextSecondary)
         }
         if (isSending) {
-            CircularProgressIndicator(modifier = Modifier.size(24.dp), color = FzInk, strokeWidth = 2.dp)
+            CircularProgressIndicator(modifier = Modifier.size(24.dp), color = FzPrimary, strokeWidth = 2.dp)
         } else {
             IconButton(
                 onClick = onAddClick,
                 modifier = Modifier
                     .size(36.dp)
                     .clip(CircleShape)
-                    .background(FzInk),
+                    .background(FzPrimary),
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Send request", tint = FzSurface)
+                Icon(Icons.Default.Add, contentDescription = "Send request", tint = Color.White)
             }
         }
     }
@@ -344,16 +348,17 @@ private fun FriendListRow(user: User) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp)
-            .clip(RoundedCornerShape(12.dp))
+            .clip(RoundedCornerShape(16.dp))
             .background(FzSurface)
+            .border(1.dp, FzBorderGray, RoundedCornerShape(16.dp))
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         UserInitialAvatar(displayName = user.displayName)
         Spacer(modifier = Modifier.width(10.dp))
         Column {
-            Text(user.displayName, style = MaterialTheme.typography.bodyMedium, color = FzInk)
-            Text("@${user.username}", style = MaterialTheme.typography.bodySmall, color = FzInk3)
+            Text(user.displayName, style = MaterialTheme.typography.bodyMedium, color = FzTextMain)
+            Text("@${user.username}", style = MaterialTheme.typography.bodySmall, color = FzTextSecondary)
         }
     }
 }
@@ -378,7 +383,7 @@ private fun RequestsListContent(
                             .padding(32.dp),
                         contentAlignment = Alignment.Center,
                     ) {
-                        CircularProgressIndicator(color = FzInk)
+                        CircularProgressIndicator(color = FzPrimary)
                     }
                 }
             }
@@ -390,7 +395,7 @@ private fun RequestsListContent(
                             .padding(32.dp),
                         contentAlignment = Alignment.Center,
                     ) {
-                        Text("No pending requests", color = FzInk3)
+                        Text("No pending requests", color = FzTextSecondary)
                     }
                 }
             }
@@ -401,7 +406,6 @@ private fun RequestsListContent(
                         onAccept = { onAccept(request.id) },
                         onReject = { onReject(request.id) },
                     )
-                    HorizontalDivider(color = FzBorder, modifier = Modifier.padding(horizontal = 16.dp))
                 }
             }
         }
@@ -417,23 +421,27 @@ private fun RequestRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .padding(horizontal = 16.dp, vertical = 12.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .background(FzSurface)
+            .border(1.dp, FzBorderGray, RoundedCornerShape(16.dp))
+            .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         UserInitialAvatar(displayName = request.requester.displayName)
         Spacer(modifier = Modifier.width(10.dp))
         Column(modifier = Modifier.weight(1f)) {
-            Text(request.requester.displayName, style = MaterialTheme.typography.bodyMedium, color = FzInk)
-            Text("@${request.requester.username}", style = MaterialTheme.typography.bodySmall, color = FzInk3)
+            Text(request.requester.displayName, style = MaterialTheme.typography.bodyMedium, color = FzTextMain)
+            Text("@${request.requester.username}", style = MaterialTheme.typography.bodySmall, color = FzTextSecondary)
         }
         Text(
             "Accept",
             modifier = Modifier
                 .clip(RoundedCornerShape(8.dp))
-                .background(FzInk)
+                .background(FzPrimary)
                 .clickable(onClick = onAccept)
                 .padding(horizontal = 12.dp, vertical = 8.dp),
-            color = FzSurface,
+            color = Color.White,
             style = MaterialTheme.typography.labelMedium,
         )
         Spacer(modifier = Modifier.width(8.dp))
@@ -441,10 +449,10 @@ private fun RequestRow(
             "Reject",
             modifier = Modifier
                 .clip(RoundedCornerShape(8.dp))
-                .border(1.5.dp, FzBorder, RoundedCornerShape(8.dp))
+                .border(1.dp, FzBorderGray, RoundedCornerShape(8.dp))
                 .clickable(onClick = onReject)
                 .padding(horizontal = 12.dp, vertical = 8.dp),
-            color = FzInk,
+            color = FzTextSecondary,
             style = MaterialTheme.typography.labelMedium,
         )
     }

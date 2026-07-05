@@ -39,12 +39,17 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.example.friendzone.ui.theme.FabShape
 import com.example.friendzone.ui.theme.FzBackground
-import com.example.friendzone.ui.theme.FzBorder
-import com.example.friendzone.ui.theme.FzInk
-import com.example.friendzone.ui.theme.FzInk2
-import com.example.friendzone.ui.theme.FzInk3
+import com.example.friendzone.ui.theme.FzBorderGray
+import com.example.friendzone.ui.theme.FzPrimary
+import com.example.friendzone.ui.theme.FzPrimaryDark
+import com.example.friendzone.ui.theme.FzPrimaryLight
+import com.example.friendzone.ui.theme.FzTextMain
+import com.example.friendzone.ui.theme.FzTextSecondary
+import com.example.friendzone.ui.theme.FzSuccess
+import com.example.friendzone.ui.theme.FzPending
+import com.example.friendzone.ui.theme.FzError
+import com.example.friendzone.ui.theme.FzSurface
 import com.example.friendzone.ui.theme.FzSurface2
 
 enum class BottomNavTab {
@@ -64,13 +69,12 @@ fun FriendZoneTopBar(
     showSettings: Boolean = false,
     onMenuClick: () -> Unit = {},
     onNotificationsClick: () -> Unit = {},
-    onAddClick: () -> Unit = {},
     onSettingsClick: () -> Unit = {},
 ) {
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .background(FzBackground.copy(alpha = 0.88f))
+            .background(FzSurface.copy(alpha = 0.95f))
             .padding(horizontal = 20.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -82,7 +86,7 @@ fun FriendZoneTopBar(
                     .size(38.dp)
                     .background(FzSurface2, RoundedCornerShape(12.dp)),
             ) {
-                Icon(Icons.Default.Menu, contentDescription = "Menu", tint = FzInk3)
+                Icon(Icons.Default.Menu, contentDescription = "Menu", tint = FzTextSecondary)
             }
         } else {
             Spacer(modifier = Modifier.size(38.dp))
@@ -90,8 +94,8 @@ fun FriendZoneTopBar(
 
         Text(
             text = title,
-            style = MaterialTheme.typography.headlineMedium,
-            color = FzInk,
+            style = MaterialTheme.typography.titleLarge,
+            color = FzTextMain,
             modifier = Modifier.weight(1f),
             textAlign = if (showSettings) TextAlign.Center else TextAlign.Start,
         )
@@ -106,16 +110,12 @@ fun FriendZoneTopBar(
                     badgeCount = notificationBadgeCount,
                     contentDescription = "Notifications",
                 ) {
-                    Icon(Icons.Default.Notifications, contentDescription = null, tint = FzInk3)
+                    Icon(Icons.Default.Notifications, contentDescription = null, tint = FzTextSecondary)
                 }
             }
-            if (showAdd) {
-                TopBarIconButton(onClick = onAddClick, contentDescription = "Create event") {
-                    Icon(Icons.Default.Add, contentDescription = null, tint = FzInk3)
-                }
-            } else if (showSettings) {
+            else if (showSettings) {
                 TopBarIconButton(onClick = onSettingsClick, contentDescription = "Settings") {
-                    Icon(Icons.Default.Settings, contentDescription = null, tint = FzInk3)
+                    Icon(Icons.Default.Settings, contentDescription = null, tint = FzTextSecondary)
                 }
             }
             if (!showNotifications && !showAdd && !showSettings) {
@@ -159,7 +159,7 @@ private fun TopBarIconWithBadge(
                     .offset(x = 4.dp, y = (-4).dp)
                     .size(16.dp)
                     .clip(CircleShape)
-                    .background(com.example.friendzone.ui.theme.FzRequired),
+                    .background(FzError),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
@@ -183,14 +183,14 @@ fun FriendZoneBottomBar(
 ) {
     Surface(
         modifier = modifier.fillMaxWidth(),
-        color = Color.White.copy(alpha = 0.92f),
-        shadowElevation = 8.dp,
+        color = Color.White.copy(alpha = 0.96f),
+        shadowElevation = 12.dp,
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .navigationBarsPadding()
-                .padding(start = 10.dp, end = 10.dp, top = 8.dp, bottom = 16.dp),
+                .padding(start = 10.dp, end = 10.dp, top = 8.dp, bottom = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceAround,
         ) {
@@ -225,7 +225,7 @@ private fun BottomNavItem(
     badgeCount: Int = 0,
     icon: @Composable () -> Unit,
 ) {
-    val color = if (selected) FzInk else FzInk3
+    val color = if (selected) FzPrimary else FzTextSecondary
     Column(
         modifier = Modifier
             .clip(RoundedCornerShape(12.dp))
@@ -233,7 +233,7 @@ private fun BottomNavItem(
             .padding(horizontal = 10.dp, vertical = 6.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Box(modifier = Modifier.size(22.dp), contentAlignment = Alignment.Center) {
+        Box(modifier = Modifier.size(24.dp), contentAlignment = Alignment.Center) {
             androidx.compose.runtime.CompositionLocalProvider(
                 androidx.compose.material3.LocalContentColor provides color,
             ) {
@@ -246,7 +246,7 @@ private fun BottomNavItem(
                         .offset(x = 8.dp, y = (-6).dp)
                         .size(14.dp)
                         .clip(CircleShape)
-                        .background(com.example.friendzone.ui.theme.FzRequired),
+                        .background(FzError),
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
@@ -270,7 +270,7 @@ fun SectionLabel(text: String, modifier: Modifier = Modifier) {
     Text(
         text = text.uppercase(),
         style = MaterialTheme.typography.labelSmall,
-        color = FzInk3,
+        color = FzTextSecondary,
         modifier = modifier.padding(horizontal = 20.dp, vertical = 8.dp),
     )
 }
@@ -282,18 +282,10 @@ fun PillBadge(
     modifier: Modifier = Modifier,
 ) {
     val (bg, fg, borderColor) = when (variant) {
-        PillVariant.Dark, PillVariant.Live -> Triple(FzInk, Color.White, Color.Transparent)
-        PillVariant.Light -> Triple(FzSurface2, FzInk3, FzBorder)
-        PillVariant.Green -> Triple(
-            com.example.friendzone.ui.theme.FzGreenBg,
-            com.example.friendzone.ui.theme.FzGreen,
-            Color.Transparent,
-        )
-        PillVariant.Amber -> Triple(
-            com.example.friendzone.ui.theme.FzAmberBg,
-            com.example.friendzone.ui.theme.FzAmber,
-            Color.Transparent,
-        )
+        PillVariant.Dark, PillVariant.Live -> Triple(FzTextMain, Color.White, Color.Transparent)
+        PillVariant.Light -> Triple(FzPrimaryLight, FzPrimaryDark, FzBorderGray)
+        PillVariant.Green -> Triple(FzPrimaryLight, FzSuccess, Color.Transparent)
+        PillVariant.Amber -> Triple(Color(0xFFFEF3C7), FzPending, Color.Transparent)
     }
     Text(
         text = text,
@@ -301,7 +293,7 @@ fun PillBadge(
             .background(bg, CircleShape)
             .then(
                 if (borderColor != Color.Transparent) {
-                    Modifier.border(1.5.dp, borderColor, CircleShape)
+                    Modifier.border(1.dp, borderColor, CircleShape)
                 } else {
                     Modifier
                 },
@@ -342,7 +334,7 @@ fun AvatarStack(
                     .border(2.dp, Color.White, CircleShape),
                 contentAlignment = Alignment.Center,
             ) {
-                Text("+$extraCount", style = MaterialTheme.typography.labelMedium, color = FzInk3)
+                Text("+$extraCount", style = MaterialTheme.typography.labelMedium, color = FzTextSecondary)
             }
         }
     }
@@ -363,12 +355,12 @@ fun FriendRow(friend: FriendRowUi) {
                 .background(FzSurface2),
             contentAlignment = Alignment.Center,
         ) {
-            Text(friend.initial, style = MaterialTheme.typography.titleMedium, color = FzInk2)
+            Text(friend.initial, style = MaterialTheme.typography.titleMedium, color = FzTextSecondary)
         }
         Spacer(modifier = Modifier.width(10.dp))
         Column(modifier = Modifier.weight(1f)) {
-            Text(friend.name, style = MaterialTheme.typography.bodyMedium, color = FzInk)
-            Text(friend.subtitle, style = MaterialTheme.typography.bodySmall, color = FzInk3)
+            Text(friend.name, style = MaterialTheme.typography.bodyMedium, color = FzTextMain)
+            Text(friend.subtitle, style = MaterialTheme.typography.bodySmall, color = FzTextSecondary)
         }
         PillBadge(text = friend.pillText, variant = friend.pillVariant)
     }

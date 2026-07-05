@@ -6,18 +6,19 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
 private val FriendZoneColorScheme = lightColorScheme(
-    primary = FzInk,
+    primary = FzPrimary,
     onPrimary = Color.White,
-    secondary = FzInk2,
+    secondary = FzPrimaryDark,
     onSecondary = Color.White,
+    tertiary = FzSuccess,
     background = FzBackground,
-    onBackground = FzInk,
+    onBackground = FzTextMain,
     surface = FzSurface,
-    onSurface = FzInk,
-    surfaceVariant = FzSurface2,
-    onSurfaceVariant = FzInk2,
-    outline = FzBorder,
-    error = FzRequired,
+    onSurface = FzTextMain,
+    surfaceVariant = FzPrimaryLight,
+    onSurfaceVariant = FzPrimaryDark,
+    outline = FzBorderGray,
+    error = FzError,
 )
 
 @Composable
