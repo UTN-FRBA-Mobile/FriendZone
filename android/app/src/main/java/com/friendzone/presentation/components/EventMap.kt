@@ -52,6 +52,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
@@ -60,6 +61,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.example.friendzone.R
 import com.example.friendzone.ui.theme.FzBorder
 import com.example.friendzone.ui.theme.FzGreen
 import com.example.friendzone.ui.theme.FzInk
@@ -282,7 +284,7 @@ private fun ShareLocationToggle(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Text("Share my location", color = FzInk)
+        Text(stringResource(R.string.msg_share_location), color = FzInk)
         FriendZoneSwitch(checked = checked, onCheckedChange = onCheckedChange)
     }
 }
@@ -352,7 +354,7 @@ fun LocationPickerDialog(
             )
 
             Text(
-                text = "Move the map to place the pin",
+                text = stringResource(R.string.label_location),
                 color = FzInk,
                 modifier = Modifier
                     .align(Alignment.TopStart)
@@ -383,7 +385,7 @@ fun LocationPickerDialog(
             }
 
             FriendZonePrimaryButton(
-                text = "Confirm location",
+                text = stringResource(R.string.btn_continue),
                 onClick = {
                     val center = mapView.mapCenter
                     onConfirm(center.latitude, center.longitude)

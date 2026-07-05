@@ -41,10 +41,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.friendzone.R
 import com.example.friendzone.domain.model.FriendRequest
 import com.example.friendzone.domain.model.User
 import com.example.friendzone.presentation.components.FriendZoneOutlineButton
@@ -99,7 +101,7 @@ fun FriendsScreen(
                 .background(FzBackground),
         ) {
             FriendZoneTopBar(
-                title = "Friends",
+                title = stringResource(R.string.header_friends),
                 showNotifications = true,
                 notificationBadgeCount = notificationBadgeCount,
                 onNotificationsClick = onNotificationsClick,
@@ -183,13 +185,14 @@ private fun FriendsSegmentedControl(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         SegmentChip(
-            label = "Friends",
+            label = stringResource(R.string.tab_friends),
             selected = selectedTab == FriendsTab.Friends,
             onClick = { onTabSelected(FriendsTab.Friends) },
             modifier = Modifier.weight(1f),
         )
+        val requestLabel = if (requestCount > 0) "${stringResource(R.string.tab_requests)} ($requestCount)" else stringResource(R.string.tab_requests)
         SegmentChip(
-            label = if (requestCount > 0) "Requests ($requestCount)" else "Requests",
+            label = requestLabel,
             selected = selectedTab == FriendsTab.Requests,
             onClick = { onTabSelected(FriendsTab.Requests) },
             modifier = Modifier.weight(1f),
@@ -240,17 +243,17 @@ private fun FriendsListContent(
         item {
             Column(modifier = Modifier.padding(horizontal = 16.dp)) {
                 FriendZoneTextField(
-                    label = "Add friend",
+                    label = stringResource(R.string.label_add_friend),
                     value = searchQuery,
                     onValueChange = onSearchChange,
-                    placeholder = "Email or username",
+                    placeholder = stringResource(R.string.label_email_username),
                     modifier = Modifier.fillMaxWidth(),
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                     keyboardActions = KeyboardActions(onSearch = { onSearchSubmit() }),
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 FriendZoneOutlineButton(
-                    text = "Invite friends",
+                    text = stringResource(R.string.header_invite_friends),
                     onClick = onInviteClick,
                 )
                 when (lookupResult) {
@@ -264,7 +267,7 @@ private fun FriendsListContent(
                     }
                     is LookupResult.NotFound -> {
                         Spacer(modifier = Modifier.height(8.dp))
-                        Text("No user found", color = FzTextSecondary, style = MaterialTheme.typography.bodySmall)
+                        Text(stringResource(R.string.msg_no_user_found), color = FzTextSecondary, style = MaterialTheme.typography.bodySmall)
                     }
                     is LookupResult.Error -> {
                         Spacer(modifier = Modifier.height(8.dp))
@@ -273,7 +276,7 @@ private fun FriendsListContent(
                     null -> Unit
                 }
                 Spacer(modifier = Modifier.height(24.dp))
-                Text("Your friends", style = MaterialTheme.typography.labelLarge, color = FzTextMain)
+                Text(stringResource(R.string.label_your_friends), style = MaterialTheme.typography.labelLarge, color = FzTextMain)
                 Spacer(modifier = Modifier.height(12.dp))
             }
         }
@@ -291,7 +294,7 @@ private fun FriendsListContent(
         } else if (friends.isEmpty()) {
             item {
                 Text(
-                    "No friends yet",
+                    stringResource(R.string.msg_no_friends),
                     modifier = Modifier.padding(horizontal = 16.dp),
                     color = FzTextSecondary,
                     style = MaterialTheme.typography.bodyMedium,
@@ -395,7 +398,7 @@ private fun RequestsListContent(
                             .padding(32.dp),
                         contentAlignment = Alignment.Center,
                     ) {
-                        Text("No pending requests", color = FzTextSecondary)
+                        Text(stringResource(R.string.msg_no_pending_requests), color = FzTextSecondary)
                     }
                 }
             }
@@ -435,7 +438,7 @@ private fun RequestRow(
             Text("@${request.requester.username}", style = MaterialTheme.typography.bodySmall, color = FzTextSecondary)
         }
         Text(
-            "Accept",
+            stringResource(R.string.btn_accept),
             modifier = Modifier
                 .clip(RoundedCornerShape(8.dp))
                 .background(FzPrimary)
@@ -446,7 +449,7 @@ private fun RequestRow(
         )
         Spacer(modifier = Modifier.width(8.dp))
         Text(
-            "Reject",
+            stringResource(R.string.btn_reject),
             modifier = Modifier
                 .clip(RoundedCornerShape(8.dp))
                 .border(1.dp, FzBorderGray, RoundedCornerShape(8.dp))

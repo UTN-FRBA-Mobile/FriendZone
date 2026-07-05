@@ -30,11 +30,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.friendzone.R
 import com.example.friendzone.presentation.components.FriendZonePrimaryButton
 import com.example.friendzone.presentation.components.FriendZoneTextField
 import com.example.friendzone.ui.theme.FzBackground
@@ -84,7 +86,7 @@ fun LoginScreen(
             }
             Spacer(modifier = Modifier.height(18.dp))
             Text(
-                "FriendZone",
+                stringResource(R.string.app_name),
                 style = MaterialTheme.typography.displayLarge,
                 color = Color.White,
             )
@@ -107,14 +109,14 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             FriendZoneTextField(
-                label = "Email or username",
+                label = stringResource(R.string.label_email_username),
                 value = uiState.emailOrUsername,
                 onValueChange = viewModel::onEmailOrUsernameChange,
                 placeholder = "you@example.com",
             )
             Spacer(modifier = Modifier.height(16.dp))
             FriendZoneTextField(
-                label = "Password",
+                label = stringResource(R.string.label_password),
                 value = uiState.password,
                 onValueChange = viewModel::onPasswordChange,
                 placeholder = "········",
@@ -146,7 +148,7 @@ fun LoginScreen(
             }
 
             FriendZonePrimaryButton(
-                text = "Log In",
+                text = stringResource(R.string.btn_login),
                 onClick = viewModel::login,
                 isLoading = uiState.isLoading,
             )
@@ -160,7 +162,7 @@ fun LoginScreen(
                 modifier = Modifier.fillMaxWidth(),
             )
             Text(
-                text = "Sign up",
+                text = stringResource(R.string.btn_signup),
                 style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
                 color = FzPrimary,
                 textAlign = TextAlign.Center,

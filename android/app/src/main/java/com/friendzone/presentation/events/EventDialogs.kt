@@ -8,8 +8,11 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.example.friendzone.R
 import com.example.friendzone.ui.theme.FzInk
+import com.example.friendzone.ui.theme.FzTextSecondary
 
 @Composable
 fun ConfirmDeleteEventDialog(
@@ -19,8 +22,8 @@ fun ConfirmDeleteEventDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Delete Event") },
-        text = { Text("Are you sure you want to delete this event? All participants will be notified.") },
+        title = { Text(stringResource(R.string.title_delete_event)) },
+        text = { Text(stringResource(R.string.msg_delete_event_confirm), color = FzTextSecondary) },
         confirmButton = {
             TextButton(
                 onClick = onConfirm,
@@ -32,13 +35,13 @@ fun ConfirmDeleteEventDialog(
                         color = FzInk,
                     )
                 } else {
-                    Text("Delete", color = MaterialTheme.colorScheme.error)
+                    Text(stringResource(R.string.btn_delete), color = MaterialTheme.colorScheme.error)
                 }
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss, enabled = !isLoading) {
-                Text("Cancel", color = FzInk)
+                Text(stringResource(R.string.btn_cancel), color = FzInk)
             }
         },
     )
@@ -52,8 +55,8 @@ fun ConfirmLeaveEventDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Leave Event") },
-        text = { Text("Are you sure you want to leave this event?") },
+        title = { Text(stringResource(R.string.title_leave_event)) },
+        text = { Text(stringResource(R.string.msg_leave_event_confirm)) },
         confirmButton = {
             TextButton(
                 onClick = onConfirm,
@@ -65,13 +68,13 @@ fun ConfirmLeaveEventDialog(
                         color = FzInk,
                     )
                 } else {
-                    Text("Leave", color = MaterialTheme.colorScheme.error)
+                    Text(stringResource(R.string.btn_leave), color = MaterialTheme.colorScheme.error)
                 }
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss, enabled = !isLoading) {
-                Text("Cancel", color = FzInk)
+                Text(stringResource(R.string.btn_cancel), color = FzInk)
             }
         },
     )

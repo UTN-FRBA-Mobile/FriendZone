@@ -24,7 +24,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.example.friendzone.R
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.friendzone.presentation.components.CreateEventHeader
 import com.example.friendzone.presentation.components.FriendZonePrimaryButton
@@ -82,29 +84,29 @@ fun CreateEventStep2Screen(
                     .background(FzBackground)
                     .verticalScroll(rememberScrollState()),
             ) {
-                CreateEventHeader(title = "Create Event", onBackClick = onBack)
+                    CreateEventHeader(title = stringResource(R.string.header_create_event), onBackClick = onBack)
                 StepProgressBar(
-                    stepLabel = "Step 2 of 2",
-                    stepDescription = "Invite Friends",
+                    stepLabel = stringResource(R.string.create_step_label, 2, 2),
+                    stepDescription = stringResource(R.string.create_step2_desc),
                     progress = 1f,
                 )
 
                 Column(modifier = Modifier.padding(horizontal = 16.dp)) {
                     Text(
-                        "Invite friends",
+                        stringResource(R.string.header_invite_friends),
                         style = MaterialTheme.typography.labelLarge,
                         color = FzTextMain,
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        "Tap friends to invite them to this event",
+                        stringResource(R.string.create_invite_hint),
                         style = MaterialTheme.typography.bodySmall,
                         color = FzTextSecondary,
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     if (friends.isEmpty()) {
                         Text(
-                            "No friends yet. Add friends from the Friends tab.",
+                            stringResource(R.string.create_no_friends_hint),
                             style = MaterialTheme.typography.bodyMedium,
                             color = FzTextSecondary,
                         )

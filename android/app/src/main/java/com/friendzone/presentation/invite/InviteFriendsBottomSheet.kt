@@ -26,14 +26,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.friendzone.R
 import com.example.friendzone.presentation.components.FriendZoneOutlineButton
 import com.example.friendzone.presentation.components.FriendZonePrimaryButton
-import com.example.friendzone.ui.theme.FzBorder
-import com.example.friendzone.ui.theme.FzInk
-import com.example.friendzone.ui.theme.FzInk3
+import com.example.friendzone.ui.theme.FzBorderGray
+import com.example.friendzone.ui.theme.FzPrimary
+import com.example.friendzone.ui.theme.FzTextMain
+import com.example.friendzone.ui.theme.FzTextSecondary
 import com.example.friendzone.ui.theme.FzSurface2
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -58,15 +61,15 @@ fun InviteFriendsBottomSheet(
                 .padding(bottom = 24.dp),
         ) {
             Text(
-                "Invite your friends",
+                stringResource(R.string.header_invite_your_friends),
                 style = MaterialTheme.typography.titleMedium,
-                color = FzInk,
+                color = FzTextMain,
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                "Share your personal link. When someone opens it, the app opens so they can add you as a friend.",
+                stringResource(R.string.msg_invite_personal_link_desc),
                 style = MaterialTheme.typography.bodySmall,
-                color = FzInk3,
+                color = FzTextSecondary,
             )
             Spacer(modifier = Modifier.height(20.dp))
 
@@ -78,43 +81,47 @@ fun InviteFriendsBottomSheet(
                             .padding(24.dp),
                         contentAlignment = Alignment.Center,
                     ) {
-                        CircularProgressIndicator(color = FzInk)
+                        CircularProgressIndicator(color = FzPrimary)
                     }
                 }
 
                 link == null -> {
                     Text(
-                        "We couldn't generate your link. Please try again later.",
+                        stringResource(R.string.msg_invite_error),
                         style = MaterialTheme.typography.bodyMedium,
-                        color = FzInk3,
+                        color = FzTextSecondary,
                     )
                 }
 
                 else -> {
-                    Text("YOUR LINK", style = MaterialTheme.typography.labelSmall, color = FzInk3)
+                    Text(stringResource(R.string.label_your_link), style = MaterialTheme.typography.labelSmall, color = FzTextSecondary)
                     Spacer(modifier = Modifier.height(6.dp))
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(12.dp))
                             .background(FzSurface2)
-                            .border(1.5.dp, FzBorder, RoundedCornerShape(12.dp))
+                            .border(1.dp, FzBorderGray, RoundedCornerShape(12.dp))
                             .padding(horizontal = 14.dp, vertical = 14.dp),
                     ) {
-                        Text(link, style = MaterialTheme.typography.bodyMedium, color = FzInk)
+                        Text(link, style = MaterialTheme.typography.bodyMedium, color = FzTextMain)
                     }
                     Spacer(modifier = Modifier.height(20.dp))
 
                     FriendZonePrimaryButton(
-                        text = "Share",
-                        onClick = { shareInvite(context, viewModel.shareMessage(link)) },
+                        text = stringResource(R.string.btn_share),
+                        onClick = { 
+                            val message = viewModel.shareMessage(context, link)
+                            val chooserTitle = context.getString(R.string.header_invite_friends)
+                            shareInvite(context, message, chooserTitle)
+                        },
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                     FriendZoneOutlineButton(
-                        text = "Copy link",
+                        text = stringResource(R.string.btn_copy_link),
                         onClick = {
                             copyToClipboard(context, link)
-                            Toast.makeText(context, "Link copied", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, context.getString(R.string.msg_link_copied), Toast.LENGTH_SHORT).show()
                         },
                     )
                 }
@@ -128,10 +135,10 @@ private fun copyToClipboard(context: Context, text: String) {
     clipboard.setPrimaryClip(ClipData.newPlainText("FriendZone invite", text))
 }
 
-private fun shareInvite(context: Context, message: String) {
+private fun shareInvite(context: Context, message: String, chooserTitle: String) {
     val sendIntent = Intent(Intent.ACTION_SEND).apply {
         type = "text/plain"
         putExtra(Intent.EXTRA_TEXT, message)
     }
-    context.startActivity(Intent.createChooser(sendIntent, "Invite friends"))
+    context.startActivity(Intent.createChooser(sendIntent, chooserTitle))
 }

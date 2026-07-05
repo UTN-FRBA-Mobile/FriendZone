@@ -12,6 +12,7 @@ object Screen {
     const val CreateStep2 = "create/step2"
     const val EventDetail = "events/detail/{eventId}?openMap={openMap}"
     const val Notifications = "notifications"
+    const val Settings = "settings"
 
     fun eventDetail(eventId: String, openMap: Boolean = false) = "events/detail/$eventId?openMap=$openMap"
 

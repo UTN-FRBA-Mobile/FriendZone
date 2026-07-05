@@ -41,9 +41,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.friendzone.R
 import com.example.friendzone.domain.model.PendingInvitation
 import com.example.friendzone.domain.util.formatEventDate
 import com.example.friendzone.presentation.components.EventLiveCard
@@ -170,7 +172,7 @@ fun EventsScreen(
             ) {
                 item {
                     FriendZoneTopBar(
-                        title = "My Events",
+                        title = stringResource(R.string.header_events),
                         showNotifications = true,
                         notificationBadgeCount = notificationBadgeCount,
                         onNotificationsClick = onNotificationsClick,
@@ -208,7 +210,7 @@ fun EventsScreen(
                     is EventsUiState.Data -> when (selectedTab) {
                         EventsTab.Upcoming -> {
                             if (state.upcomingEvents.isEmpty()) {
-                                item { EmptyTabMessage("No upcoming events") }
+                                item { EmptyTabMessage(stringResource(R.string.msg_no_upcoming_events)) }
                             } else {
                                 items(state.upcomingEvents, key = { it.eventId }) { item ->
                                     if (item.isLive) {
@@ -232,7 +234,7 @@ fun EventsScreen(
                         }
                         EventsTab.Past -> {
                             if (state.pastEvents.isEmpty()) {
-                                item { EmptyTabMessage("No past events") }
+                                item { EmptyTabMessage(stringResource(R.string.msg_no_past_events)) }
                             } else {
                                 items(state.pastEvents, key = { it.eventId }) { item ->
                                     EventUpcomingCard(
@@ -246,7 +248,7 @@ fun EventsScreen(
                         }
                         EventsTab.Invitations -> {
                             if (state.pendingInvitations.isEmpty()) {
-                                item { EmptyTabMessage("No pending invitations") }
+                                item { EmptyTabMessage(stringResource(R.string.msg_no_invites)) }
                             } else {
                                 items(state.pendingInvitations, key = { it.id }) { invitation ->
                                     InvitationRow(
@@ -268,7 +270,7 @@ fun EventsScreen(
                 .padding(16.dp),
             containerColor = FzPrimary,
         ) {
-            Icon(Icons.Default.Add, contentDescription = "Create event", tint = androidx.compose.ui.graphics.Color.White)
+            Icon(Icons.Default.Add, contentDescription = stringResource(R.string.header_create_event), tint = androidx.compose.ui.graphics.Color.White)
         }
 
         SnackbarHost(
@@ -290,13 +292,14 @@ private fun EventsSegmentedControl(
             .padding(horizontal = 16.dp, vertical = 12.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        EventsTabChip("Upcoming", selectedTab == EventsTab.Upcoming, { onTabSelected(EventsTab.Upcoming) }, Modifier.weight(1f))
-        EventsTabChip("Past", selectedTab == EventsTab.Past, { onTabSelected(EventsTab.Past) }, Modifier.weight(1f))
+        EventsTabChip(stringResource(R.string.tab_upcoming), selectedTab == EventsTab.Upcoming, { onTabSelected(EventsTab.Upcoming) }, Modifier.weight(1f))
+        EventsTabChip(stringResource(R.string.tab_past), selectedTab == EventsTab.Past, { onTabSelected(EventsTab.Past) }, Modifier.weight(1f))
+        val inviteLabel = if (invitationCount > 0) "${stringResource(R.string.tab_invites)} ($invitationCount)" else stringResource(R.string.tab_invites)
         EventsTabChip(
-            if (invitationCount > 0) "Invites ($invitationCount)" else "Invites",
-            selectedTab == EventsTab.Invitations,
-            { onTabSelected(EventsTab.Invitations) },
-            Modifier.weight(1f),
+            inviteLabel,
+            selected = selectedTab == EventsTab.Invitations,
+            onClick = { onTabSelected(EventsTab.Invitations) },
+            modifier = Modifier.weight(1f),
         )
     }
 }
@@ -348,7 +351,7 @@ private fun InvitationRow(
             color = FzTextSecondary,
         )
         Spacer(modifier = Modifier.height(8.dp))
-        PillBadge("Pending", PillVariant.Light)
+        PillBadge(stringResource(R.string.tab_invites), PillVariant.Light)
     }
 }
 
@@ -365,7 +368,7 @@ fun InvitationActionSheet(
             .padding(horizontal = 16.dp)
             .padding(bottom = 24.dp),
     ) {
-        Text("Event Invitation", style = MaterialTheme.typography.titleMedium, color = FzTextMain)
+        Text(stringResource(R.string.tab_invites), style = MaterialTheme.typography.titleMedium, color = FzTextMain)
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             "You have been invited to \"${invitation.eventTitle}\"",
@@ -381,12 +384,12 @@ fun InvitationActionSheet(
         Spacer(modifier = Modifier.height(24.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             FriendZoneOutlineButton(
-                text = if (isLoading) "..." else "Decline",
+                text = if (isLoading) "..." else stringResource(R.string.btn_reject),
                 onClick = onReject,
                 modifier = Modifier.weight(1f),
             )
             FriendZonePrimaryButton(
-                text = if (isLoading) "..." else "Accept invite",
+                text = if (isLoading) "..." else stringResource(R.string.btn_accept),
                 onClick = onAccept,
                 enabled = !isLoading,
                 modifier = Modifier.weight(1f),
@@ -419,7 +422,7 @@ private fun ColumnError(
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(message, style = MaterialTheme.typography.bodyMedium, color = FzTextSecondary)
             TextButton(onClick = onRetry) {
-                Text("Retry", color = FzPrimary)
+                Text(stringResource(R.string.btn_retry), color = FzPrimary)
             }
         }
     }

@@ -37,8 +37,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.example.friendzone.R
 import com.example.friendzone.ui.theme.FzBackground
 import com.example.friendzone.ui.theme.FzBorderGray
 import com.example.friendzone.ui.theme.FzPrimary
@@ -65,7 +67,6 @@ fun FriendZoneTopBar(
     showMenu: Boolean = false,
     showNotifications: Boolean = false,
     notificationBadgeCount: Int = 0,
-    showAdd: Boolean = false,
     showSettings: Boolean = false,
     onMenuClick: () -> Unit = {},
     onNotificationsClick: () -> Unit = {},
@@ -101,7 +102,7 @@ fun FriendZoneTopBar(
         )
 
         Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(20.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             if (showNotifications) {
@@ -113,12 +114,12 @@ fun FriendZoneTopBar(
                     Icon(Icons.Default.Notifications, contentDescription = null, tint = FzTextSecondary)
                 }
             }
-            else if (showSettings) {
+            if (showSettings) {
                 TopBarIconButton(onClick = onSettingsClick, contentDescription = "Settings") {
                     Icon(Icons.Default.Settings, contentDescription = null, tint = FzTextSecondary)
                 }
             }
-            if (!showNotifications && !showAdd && !showSettings) {
+            if (!showNotifications && !showSettings) {
                 Spacer(modifier = Modifier.size(38.dp))
             }
         }
@@ -195,20 +196,20 @@ fun FriendZoneBottomBar(
             horizontalArrangement = Arrangement.SpaceAround,
         ) {
             BottomNavItem(
-                label = "Events",
+                label = stringResource(R.string.nav_events),
                 selected = selectedTab == BottomNavTab.Events,
                 onClick = onEventsClick,
                 icon = { Icon(Icons.Default.Event, contentDescription = null) },
             )
             BottomNavItem(
-                label = "Friends",
+                label = stringResource(R.string.nav_friends),
                 selected = selectedTab == BottomNavTab.Friends,
                 onClick = onFriendsClick,
                 badgeCount = pendingFriendsCount,
                 icon = { Icon(Icons.Default.People, contentDescription = null) },
             )
             BottomNavItem(
-                label = "Profile",
+                label = stringResource(R.string.nav_profile),
                 selected = selectedTab == BottomNavTab.Profile,
                 onClick = onProfileClick,
                 icon = { Icon(Icons.Default.Person, contentDescription = null) },

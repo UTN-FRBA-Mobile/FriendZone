@@ -46,6 +46,7 @@ import com.example.friendzone.presentation.notifications.NotificationsBadgeViewM
 import com.example.friendzone.presentation.notifications.NotificationsScreen
 import com.example.friendzone.presentation.notifications.RequestNotificationPermissionWhenLoggedIn
 import com.example.friendzone.presentation.profile.ProfileScreen
+import com.example.friendzone.presentation.settings.SettingsScreen
 import com.example.friendzone.ui.theme.FzBackground
 import com.example.friendzone.ui.theme.FzInk
 
@@ -298,7 +299,19 @@ fun FriendZoneNavHost(
                     onNotificationsClick = {
                         navController.navigate(Screen.Notifications)
                     },
+                    onSettingsClick = {
+                        navController.navigate(Screen.Settings)
+                    }
                 )
+            }
+            composable(
+                route = Screen.Settings,
+                enterTransition = { slideInFromRight() },
+                exitTransition = { slideOutToLeft() },
+                popEnterTransition = { slideInFromLeft() },
+                popExitTransition = { slideOutToRight() },
+            ) {
+                SettingsScreen(onBack = { navController.popBackStack() })
             }
             composable(
                 route = Screen.Notifications,

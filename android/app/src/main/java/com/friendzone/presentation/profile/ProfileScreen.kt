@@ -31,15 +31,20 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.friendzone.R
 import com.example.friendzone.presentation.components.FriendZoneOutlineButton
 import com.example.friendzone.presentation.components.FriendZonePullToRefreshBox
 import com.example.friendzone.presentation.components.FriendZoneSwitch
@@ -51,11 +56,11 @@ import com.example.friendzone.ui.theme.FzTextMain
 import com.example.friendzone.ui.theme.FzTextSecondary
 import com.example.friendzone.ui.theme.FzError
 import com.example.friendzone.ui.theme.FzSurface
-import com.example.friendzone.ui.theme.FzSurface2
 
 @Composable
 fun ProfileScreen(
     onNotificationsClick: () -> Unit = {},
+    onSettingsClick: () -> Unit = {},
     notificationBadgeCount: Int = 0,
     viewModel: ProfileViewModel = hiltViewModel(),
 ) {
@@ -103,11 +108,12 @@ fun ProfileScreen(
                 .verticalScroll(rememberScrollState()),
         ) {
             FriendZoneTopBar(
-                title = "Profile",
+                title = stringResource(R.string.header_profile),
                 showNotifications = true,
                 notificationBadgeCount = notificationBadgeCount,
                 onNotificationsClick = onNotificationsClick,
                 showSettings = true,
+                onSettingsClick = onSettingsClick
             )
 
             Column(
@@ -153,14 +159,14 @@ fun ProfileScreen(
 
                 Spacer(modifier = Modifier.height(24.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(20.dp)) {
-                    StatColumn("Friends", uiState.friendsCount, uiState.isLoading)
+                    StatColumn(stringResource(R.string.header_friends), uiState.friendsCount, uiState.isLoading)
                     Box(
                         modifier = Modifier
                             .width(1.dp)
                             .height(36.dp)
                             .background(FzBorderGray),
                     )
-                    StatColumn("Events", uiState.eventsCount, uiState.isLoading)
+                    StatColumn(stringResource(R.string.header_events), uiState.eventsCount, uiState.isLoading)
                 }
             }
 
@@ -168,22 +174,22 @@ fun ProfileScreen(
 
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
-                    "Location Sharing",
+                    stringResource(R.string.label_location),
                     style = MaterialTheme.typography.labelLarge,
                     color = FzTextMain,
                     modifier = Modifier.padding(bottom = 12.dp),
                 )
                 SettingToggleRow(
-                    title = "Share my location",
-                    subtitle = "Friends can see where you are",
+                    title = stringResource(R.string.msg_share_location),
+                    subtitle = stringResource(R.string.msg_location_sharing_desc),
                     checked = user?.locationSharingEnabled ?: false,
                     enabled = !uiState.isUpdatingLocationSharing && user != null,
                     onCheckedChange = ::handleLocationSharingChange,
                 )
-                
+
                 Spacer(modifier = Modifier.height(24.dp))
                 FriendZoneOutlineButton(
-                    text = if (uiState.isLoggingOut) "Logging out..." else "Log out",
+                    text = if (uiState.isLoggingOut) "..." else stringResource(R.string.msg_logout),
                     onClick = viewModel::logout,
                     icon = { Icon(Icons.AutoMirrored.Filled.ExitToApp, contentDescription = null) }
                 )

@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -25,11 +24,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.friendzone.R
 import com.example.friendzone.presentation.components.FriendZonePrimaryButton
 import com.example.friendzone.presentation.components.FriendZoneTextField
 import com.example.friendzone.ui.theme.FzBackground
@@ -75,7 +76,7 @@ fun RegisterScreen(
                 Text("👥", style = MaterialTheme.typography.displayLarge)
             }
             Spacer(modifier = Modifier.height(12.dp))
-            Text("FriendZone", style = MaterialTheme.typography.displayLarge, color = Color.White)
+            Text(stringResource(R.string.app_name), style = MaterialTheme.typography.displayLarge, color = Color.White)
         }
 
         Column(
@@ -113,7 +114,7 @@ fun RegisterScreen(
             )
             Spacer(modifier = Modifier.height(16.dp))
             FriendZoneTextField(
-                label = "Password",
+                label = stringResource(R.string.label_password),
                 value = uiState.password,
                 onValueChange = viewModel::onPasswordChange,
                 placeholder = "········",
@@ -131,13 +132,13 @@ fun RegisterScreen(
             )
 
             uiState.errorMessage?.let { message ->
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(8.dp))
                 Text(message, color = MaterialTheme.colorScheme.error)
             }
 
             Spacer(modifier = Modifier.height(24.dp))
             FriendZonePrimaryButton(
-                text = "Sign up",
+                text = stringResource(R.string.btn_signup),
                 onClick = viewModel::register,
                 isLoading = uiState.isLoading,
             )
@@ -151,7 +152,7 @@ fun RegisterScreen(
                 modifier = Modifier.fillMaxWidth(),
             )
             Text(
-                text = "Log in",
+                text = stringResource(R.string.btn_login),
                 style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
                 color = FzPrimary,
                 textAlign = TextAlign.Center,

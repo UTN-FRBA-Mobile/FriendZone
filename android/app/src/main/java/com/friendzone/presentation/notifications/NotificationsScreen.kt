@@ -33,7 +33,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.example.friendzone.R
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.friendzone.domain.model.AppNotificationType
@@ -110,7 +112,7 @@ fun NotificationsScreen(
                     .background(FzBackground),
             ) {
                 item {
-                    CreateEventHeader(title = "Notifications", onBackClick = onBack)
+                    CreateEventHeader(title = stringResource(R.string.header_notifications), onBackClick = onBack)
                 }
 
                 when {
@@ -149,7 +151,7 @@ fun NotificationsScreen(
                                     .padding(48.dp),
                                 contentAlignment = Alignment.Center,
                             ) {
-                                Text("No notifications", color = FzTextSecondary)
+                                Text(stringResource(R.string.msg_no_notifications), color = FzTextSecondary)
                             }
                         }
                     }
@@ -216,13 +218,13 @@ private fun NotificationActionSheet(
             .padding(bottom = 24.dp),
     ) {
         Text(
-            notification.title,
+            stringResource(R.string.title_invitation),
             style = MaterialTheme.typography.titleMedium,
             color = FzTextMain,
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            notification.body,
+            stringResource(R.string.msg_invitation_body, notification.data["eventTitle"] ?: ""),
             style = MaterialTheme.typography.bodyMedium,
             color = FzTextSecondary,
         )
@@ -249,15 +251,15 @@ private fun NotificationActionSheet(
         Spacer(modifier = Modifier.height(24.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             FriendZoneOutlineButton(
-                text = if (isLoading) "..." else "Decline",
+                text = if (isLoading) "..." else stringResource(R.string.btn_decline),
                 onClick = onReject,
                 modifier = Modifier.weight(1f),
             )
             FriendZonePrimaryButton(
                 text = when {
                     isLoading -> "..."
-                    notification.type == AppNotificationType.INVITATION_CREATED -> "Accept invite"
-                    else -> "Accept"
+                    notification.type == AppNotificationType.INVITATION_CREATED -> stringResource(R.string.btn_accept_invite)
+                    else -> stringResource(R.string.btn_accept)
                 },
                 onClick = onAccept,
                 enabled = !isLoading,
