@@ -17,6 +17,8 @@ fun Event.toListItemUi(
     friendPreviews: List<com.example.friendzone.presentation.components.FriendRowUi> = emptyList(),
     participantAvatars: List<String> = emptyList(),
     extraAvatarCount: Int = 0,
+    organizerId: String? = null,
+    currentUserId: String? = null,
 ): EventListItemUi {
     val (icon, label) = formatRelativeTimeLabel(startsAt)
     return EventListItemUi(
@@ -32,6 +34,9 @@ fun Event.toListItemUi(
         avatars = participantAvatars,
         extraCount = extraAvatarCount,
         friendPreviews = friendPreviews,
+        isOrganizer = currentUserId != null && organizerId == currentUserId,
+        organizerId = organizerId,
+        currentUserId = currentUserId,
     )
 }
 

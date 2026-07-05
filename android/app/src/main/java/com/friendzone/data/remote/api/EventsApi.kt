@@ -26,4 +26,7 @@ interface EventsApi {
 
     @DELETE("events/{id}")
     suspend fun delete(@Path("id") id: String): SuccessResponseDto
+
+    @POST("events/{id}/leave")
+    suspend fun leave(@Path("id") id: String): SuccessResponseDto
 }

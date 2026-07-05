@@ -63,6 +63,7 @@ interface EventRepository {
         arrivalThresholdM: Int?,
     ): ApiResult<com.example.friendzone.domain.model.Event>
     suspend fun delete(id: String): ApiResult<Unit>
+    suspend fun leave(id: String): ApiResult<Unit>
 }
 
 interface InvitationRepository {

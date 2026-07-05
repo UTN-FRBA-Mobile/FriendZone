@@ -109,6 +109,7 @@ enum class AppNotificationType {
     INVITATION_CREATED,
     PARTICIPANT_ARRIVED,
     EVENT_COMPLETED,
+    EVENT_DELETED,
 }
 
 data class InboxNotification(

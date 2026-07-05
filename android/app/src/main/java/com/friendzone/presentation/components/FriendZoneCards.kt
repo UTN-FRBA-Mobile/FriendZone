@@ -40,6 +40,9 @@ import com.example.friendzone.ui.theme.FzSurface2
 fun EventLiveCard(
     item: EventListItemUi,
     onViewMapClick: () -> Unit,
+    onCardClick: () -> Unit = {},
+    onDeleteClick: (() -> Unit)? = null,
+    onLeaveClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -48,7 +51,8 @@ fun EventLiveCard(
             .padding(horizontal = 16.dp)
             .clip(RoundedCornerShape(16.dp))
             .background(FzSurface)
-            .border(2.dp, FzInk, RoundedCornerShape(16.dp)),
+            .border(2.dp, FzInk, RoundedCornerShape(16.dp))
+            .clickable(onClick = onCardClick),
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(
@@ -100,7 +104,14 @@ fun EventLiveCard(
             }
         }
         Box(modifier = Modifier.padding(14.dp)) {
-            FriendZonePrimaryButton(text = "🗺  View Live Map", onClick = onViewMapClick)
+            Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                FriendZonePrimaryButton(text = "🗺  View Live Map", onClick = onViewMapClick)
+                if (item.isOrganizer && onDeleteClick != null) {
+                    FriendZoneOutlineButton(text = "Delete Event", onClick = onDeleteClick)
+                } else if (!item.isOrganizer && onLeaveClick != null) {
+                    FriendZoneOutlineButton(text = "Leave Event", onClick = onLeaveClick)
+                }
+            }
         }
     }
 }
@@ -109,13 +120,17 @@ fun EventLiveCard(
 fun EventUpcomingCard(
     item: EventListItemUi,
     onArrowClick: () -> Unit,
+    onCardClick: () -> Unit = {},
+    onDeleteClick: (() -> Unit)? = null,
+    onLeaveClick: (() -> Unit)? = null,
 ) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 6.dp)
             .clip(RoundedCornerShape(16.dp))
-            .background(FzSurface),
+            .background(FzSurface)
+            .clickable(onClick = onCardClick),
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(
@@ -156,6 +171,17 @@ fun EventUpcomingCard(
                         )
                     }
                 }
+            }
+            if (item.isOrganizer && onDeleteClick != null) {
+                Spacer(modifier = Modifier.height(12.dp))
+                HorizontalDivider(color = FzBorder)
+                Spacer(modifier = Modifier.height(12.dp))
+                FriendZoneOutlineButton(text = "Delete Event", onClick = onDeleteClick)
+            } else if (!item.isOrganizer && onLeaveClick != null) {
+                Spacer(modifier = Modifier.height(12.dp))
+                HorizontalDivider(color = FzBorder)
+                Spacer(modifier = Modifier.height(12.dp))
+                FriendZoneOutlineButton(text = "Leave Event", onClick = onLeaveClick)
             }
         }
     }

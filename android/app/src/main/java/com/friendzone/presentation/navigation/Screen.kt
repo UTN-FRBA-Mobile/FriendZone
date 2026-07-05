@@ -9,10 +9,10 @@ object Screen {
     const val Create = "create"
     const val CreateStep1 = "create/step1"
     const val CreateStep2 = "create/step2"
-    const val EventDetail = "events/detail/{eventId}"
+    const val EventDetail = "events/detail/{eventId}?openMap={openMap}"
     const val Notifications = "notifications"
 
-    fun eventDetail(eventId: String) = "events/detail/$eventId"
+    fun eventDetail(eventId: String, openMap: Boolean = false) = "events/detail/$eventId?openMap=$openMap"
 
     val bottomBarRoutes = setOf(Events, Friends, Profile)
 }

@@ -79,4 +79,9 @@ class EventRepositoryImpl @Inject constructor(
         eventsApi.delete(id)
         Unit
     }
+
+    override suspend fun leave(id: String): ApiResult<Unit> = safeApiCall {
+        eventsApi.leave(id)
+        Unit
+    }
 }

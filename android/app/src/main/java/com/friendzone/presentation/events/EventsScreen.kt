@@ -1,5 +1,6 @@
 package com.example.friendzone.presentation.events
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -19,8 +20,12 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -35,15 +40,56 @@ import com.example.friendzone.ui.theme.FzInk3
 @Composable
 fun EventsScreen(
     onCreateClick: () -> Unit,
-    onEventDetailClick: (String) -> Unit,
+    onEventDetailClick: (String, Boolean) -> Unit = { eventId, _ -> },
     onNotificationsClick: () -> Unit = {},
     notificationBadgeCount: Int = 0,
     viewModel: EventsViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val actionState by viewModel.actionState.collectAsStateWithLifecycle()
+
+    var eventIdToConfirmAction by remember { mutableStateOf<Pair<String, Boolean>?>(null) } // ID to (isDelete)
+    val context = LocalContext.current
 
     LaunchedEffect(Unit) {
         viewModel.loadEvents()
+    }
+
+    LaunchedEffect(actionState) {
+        when (actionState) {
+            is EventActionState.Success -> {
+                Toast.makeText(context, (actionState as EventActionState.Success).message, Toast.LENGTH_SHORT).show()
+                viewModel.resetActionState()
+            }
+            is EventActionState.Error -> {
+                Toast.makeText(context, (actionState as EventActionState.Error).message, Toast.LENGTH_LONG).show()
+                viewModel.resetActionState()
+            }
+            else -> Unit
+        }
+    }
+
+    if (eventIdToConfirmAction != null) {
+        val (eventId, isDelete) = eventIdToConfirmAction!!
+        if (isDelete) {
+            ConfirmDeleteEventDialog(
+                onConfirm = {
+                    viewModel.deleteEvent(eventId)
+                    eventIdToConfirmAction = null
+                },
+                onDismiss = { eventIdToConfirmAction = null },
+                isLoading = actionState is EventActionState.Loading,
+            )
+        } else {
+            ConfirmLeaveEventDialog(
+                onConfirm = {
+                    viewModel.leaveEvent(eventId)
+                    eventIdToConfirmAction = null
+                },
+                onDismiss = { eventIdToConfirmAction = null },
+                isLoading = actionState is EventActionState.Loading,
+            )
+        }
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -91,7 +137,10 @@ fun EventsScreen(
                         items(state.liveEvents, key = { it.eventId }) { item ->
                             EventLiveCard(
                                 item = item,
-                                onViewMapClick = { onEventDetailClick(item.eventId) },
+                                onCardClick = { onEventDetailClick(item.eventId, false) },
+                                onViewMapClick = { onEventDetailClick(item.eventId, true) },
+                                onDeleteClick = { eventIdToConfirmAction = item.eventId to true },
+                                onLeaveClick = { eventIdToConfirmAction = item.eventId to false },
                             )
                         }
                     }
@@ -114,7 +163,10 @@ fun EventsScreen(
                         items(state.upcomingEvents, key = { it.eventId }) { item ->
                             EventUpcomingCard(
                                 item = item,
-                                onArrowClick = { onEventDetailClick(item.eventId) },
+                                onCardClick = { onEventDetailClick(item.eventId, false) },
+                                onArrowClick = { onEventDetailClick(item.eventId, false) },
+                                onDeleteClick = { eventIdToConfirmAction = item.eventId to true },
+                                onLeaveClick = { eventIdToConfirmAction = item.eventId to false },
                             )
                         }
                     }

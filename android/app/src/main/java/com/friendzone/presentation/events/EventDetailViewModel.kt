@@ -60,6 +60,7 @@ sealed class EventDetailUiState {
         val dateText: String,
         val isLive: Boolean,
         val canInviteGuests: Boolean,
+        val isOrganizer: Boolean,
         val pendingInviteCount: Int,
         val eventLatitude: Double,
         val eventLongitude: Double,
@@ -90,6 +91,7 @@ class EventDetailViewModel @Inject constructor(
     private val locationTracker: LocationTracker,
 ) : ViewModel() {
     private val eventId: String = checkNotNull(savedStateHandle["eventId"])
+    private val openMapOnLoad: Boolean = savedStateHandle.get<Boolean>("openMap") ?: false
 
     private var currentUserId: String? = null
     private var locationJob: Job? = null
@@ -112,6 +114,12 @@ class EventDetailViewModel @Inject constructor(
     private val _inviteSubmitState = MutableStateFlow<InviteSubmitState>(InviteSubmitState.Idle)
     val inviteSubmitState: StateFlow<InviteSubmitState> = _inviteSubmitState.asStateFlow()
 
+    private val _deleteEventState = MutableStateFlow<EventActionState>(EventActionState.Idle)
+    val deleteEventState: StateFlow<EventActionState> = _deleteEventState.asStateFlow()
+
+    private val _leaveEventState = MutableStateFlow<EventActionState>(EventActionState.Idle)
+    val leaveEventState: StateFlow<EventActionState> = _leaveEventState.asStateFlow()
+
     private val _isSharingLocation = MutableStateFlow(false)
     val isSharingLocation: StateFlow<Boolean> = _isSharingLocation.asStateFlow()
 
@@ -122,6 +130,10 @@ class EventDetailViewModel @Inject constructor(
         viewModelScope.launch {
             authRepository.currentUser.collect { user ->
                 currentUserId = user?.id
+                // Cargar detalles del evento DESPUÉS de obtener el usuario
+                if (currentUserId != null) {
+                    loadDetail()
+                }
             }
         }
         viewModelScope.launch {
@@ -136,10 +148,15 @@ class EventDetailViewModel @Inject constructor(
                     event.type == SocketEventType.RECONNECTED
                 ) {
                     loadDetail()
+                } else if (event.type == SocketEventType.EVENT_DELETED) {
+                    // El evento fue eliminado por el organizador, salimos de la pantalla
+                    _deleteEventState.value = EventActionState.Success("Event deleted")
+                } else if (event.type == SocketEventType.PARTICIPANT_LEFT) {
+                    // Un participante se fue, refrescamos
+                    loadDetail()
                 }
             }
         }
-        loadDetail()
     }
 
     fun loadDetail() {
@@ -334,6 +351,45 @@ class EventDetailViewModel @Inject constructor(
         isOrganizer(event) &&
             (event.status == EventStatus.SCHEDULED || event.status == EventStatus.ACTIVE)
 
+    fun deleteEvent() {
+        viewModelScope.launch {
+            _deleteEventState.value = EventActionState.Loading
+            when (val result = eventRepository.delete(eventId)) {
+                is ApiResult.Success -> {
+                    // No es necesario navegar, el socket nos dirá que fue eliminado
+                    _deleteEventState.value = EventActionState.Success("Event deleted successfully")
+                }
+                is ApiResult.Error -> {
+                    _deleteEventState.value = EventActionState.Error(result.error.displayMessage())
+                }
+                ApiResult.Loading -> Unit
+            }
+        }
+    }
+
+    fun leaveEvent() {
+        viewModelScope.launch {
+            _leaveEventState.value = EventActionState.Loading
+            when (val result = eventRepository.leave(eventId)) {
+                is ApiResult.Success -> {
+                    _leaveEventState.value = EventActionState.Success("Left event successfully")
+                }
+                is ApiResult.Error -> {
+                    _leaveEventState.value = EventActionState.Error(result.error.displayMessage())
+                }
+                ApiResult.Loading -> Unit
+            }
+        }
+    }
+
+    fun resetDeleteEventState() {
+        _deleteEventState.value = EventActionState.Idle
+    }
+
+    fun resetLeaveEventState() {
+        _leaveEventState.value = EventActionState.Idle
+    }
+
     private fun applyInviteLists(friends: List<User>, invitations: List<Invitation>) {
         val invitedIds = invitations.map { it.inviteeId }.toSet()
         _inviteFriends.value = friends.filter { it.id !in invitedIds }
@@ -408,6 +464,7 @@ class EventDetailViewModel @Inject constructor(
             dateText = formatEventDate(event.startsAt),
             isLive = event.isLive(),
             canInviteGuests = canInviteGuests(event),
+            isOrganizer = isOrganizer(event),
             pendingInviteCount = pendingCount,
             eventLatitude = event.latitude,
             eventLongitude = event.longitude,
@@ -418,6 +475,8 @@ class EventDetailViewModel @Inject constructor(
             delayed = ParticipantSectionUi("Delayed", delayed.size, delayed),
         )
     }
+
+    fun shouldOpenMapOnLoad(): Boolean = openMapOnLoad
 
     override fun onCleared() {
         stopLocationUpdates()

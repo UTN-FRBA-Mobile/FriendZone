@@ -171,14 +171,17 @@ fun FriendZoneNavHost(
                     onCreateClick = {
                         navController.navigate(Screen.Create)
                     },
-                    onEventDetailClick = { eventId ->
-                        navController.navigate(Screen.eventDetail(eventId))
+                    onEventDetailClick = { eventId, openMap ->
+                        navController.navigate(Screen.eventDetail(eventId, openMap))
                     },
                 )
             }
             composable(
                 route = Screen.EventDetail,
-                arguments = listOf(navArgument("eventId") { type = NavType.StringType }),
+                arguments = listOf(
+                    navArgument("eventId") { type = NavType.StringType },
+                    navArgument("openMap") { type = NavType.BoolType; defaultValue = false }
+                ),
                 enterTransition = { slideInFromRight() },
                 exitTransition = { slideOutToLeft() },
                 popEnterTransition = { slideInFromLeft() },

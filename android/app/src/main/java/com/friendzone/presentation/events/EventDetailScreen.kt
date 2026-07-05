@@ -58,7 +58,11 @@ fun EventDetailScreen(
     val inviteSheetOpen by viewModel.inviteSheetOpen.collectAsStateWithLifecycle()
     val isSharingLocation by viewModel.isSharingLocation.collectAsStateWithLifecycle()
     val sharingMessage by viewModel.sharingMessage.collectAsStateWithLifecycle()
-    var mapOpen by remember { mutableStateOf(false) }
+    val deleteEventState by viewModel.deleteEventState.collectAsStateWithLifecycle()
+    val leaveEventState by viewModel.leaveEventState.collectAsStateWithLifecycle()
+    var mapOpen by remember { mutableStateOf(viewModel.shouldOpenMapOnLoad()) }
+    var showDeleteConfirmation by remember { mutableStateOf(false) }
+    var showLeaveConfirmation by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
     LaunchedEffect(sharingMessage) {
@@ -68,10 +72,60 @@ fun EventDetailScreen(
         }
     }
 
+    LaunchedEffect(deleteEventState) {
+        if (deleteEventState is EventActionState.Success) {
+            Toast.makeText(context, "Event deleted", Toast.LENGTH_SHORT).show()
+            onBack()
+        } else if (deleteEventState is EventActionState.Error) {
+            Toast.makeText(
+                context,
+                (deleteEventState as EventActionState.Error).message,
+                Toast.LENGTH_LONG
+            ).show()
+            viewModel.resetDeleteEventState()
+        }
+    }
+
+    LaunchedEffect(leaveEventState) {
+        if (leaveEventState is EventActionState.Success) {
+            Toast.makeText(context, "Left event", Toast.LENGTH_SHORT).show()
+            onBack()
+        } else if (leaveEventState is EventActionState.Error) {
+            Toast.makeText(
+                context,
+                (leaveEventState as EventActionState.Error).message,
+                Toast.LENGTH_LONG
+            ).show()
+            viewModel.resetLeaveEventState()
+        }
+    }
+
     if (inviteSheetOpen) {
         InviteGuestsBottomSheet(
             viewModel = viewModel,
             onDismiss = { viewModel.closeInviteSheet() },
+        )
+    }
+
+    if (showDeleteConfirmation) {
+        ConfirmDeleteEventDialog(
+            onConfirm = {
+                showDeleteConfirmation = false
+                viewModel.deleteEvent()
+            },
+            onDismiss = { showDeleteConfirmation = false },
+            isLoading = deleteEventState is EventActionState.Loading,
+        )
+    }
+
+    if (showLeaveConfirmation) {
+        ConfirmLeaveEventDialog(
+            onConfirm = {
+                showLeaveConfirmation = false
+                viewModel.leaveEvent()
+            },
+            onDismiss = { showLeaveConfirmation = false },
+            isLoading = leaveEventState is EventActionState.Loading,
         )
     }
 
@@ -137,21 +191,34 @@ fun EventDetailScreen(
                             )
                         }
                     }
-                    if (state.canInviteGuests) {
-                        Spacer(modifier = Modifier.height(16.dp))
-                        FriendZoneOutlineButton(
-                            text = "Add guests",
-                            onClick = { viewModel.openInviteSheet() },
-                        )
-                        if (state.pendingInviteCount > 0) {
-                            Spacer(modifier = Modifier.height(6.dp))
-                            Text(
-                                "${state.pendingInviteCount} pending",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = FzInk3,
-                            )
-                        }
-                    }
+                     if (state.canInviteGuests) {
+                         Spacer(modifier = Modifier.height(16.dp))
+                         FriendZoneOutlineButton(
+                             text = "Add guests",
+                             onClick = { viewModel.openInviteSheet() },
+                         )
+                         if (state.pendingInviteCount > 0) {
+                             Spacer(modifier = Modifier.height(6.dp))
+                             Text(
+                                 "${state.pendingInviteCount} pending",
+                                 style = MaterialTheme.typography.bodySmall,
+                                 color = FzInk3,
+                             )
+                         }
+                     }
+                     if (state.isOrganizer) {
+                         Spacer(modifier = Modifier.height(16.dp))
+                         FriendZoneOutlineButton(
+                             text = "Delete Event",
+                             onClick = { showDeleteConfirmation = true },
+                         )
+                     } else {
+                         Spacer(modifier = Modifier.height(16.dp))
+                         FriendZoneOutlineButton(
+                             text = "Leave Event",
+                             onClick = { showLeaveConfirmation = true },
+                         )
+                     }
                     Spacer(modifier = Modifier.height(16.dp))
                     EventMapThumbnail(
                         eventLatitude = state.eventLatitude,

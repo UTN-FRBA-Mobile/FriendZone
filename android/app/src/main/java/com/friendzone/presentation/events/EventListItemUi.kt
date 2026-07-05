@@ -16,6 +16,9 @@ data class EventListItemUi(
     val avatars: List<String> = emptyList(),
     val extraCount: Int = 0,
     val friendPreviews: List<FriendRowUi> = emptyList(),
+    val isOrganizer: Boolean = false,
+    val organizerId: String? = null,
+    val currentUserId: String? = null,
 )
 
 fun participantToFriendRow(
