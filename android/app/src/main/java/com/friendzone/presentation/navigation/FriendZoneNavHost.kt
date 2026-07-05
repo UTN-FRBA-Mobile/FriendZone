@@ -121,10 +121,10 @@ fun FriendZoneNavHost(
                         }
                         deepLink.inviteUsername != null -> {
                             // Show the invite modal over the current screen; land on
-                            // Events as the base screen on a cold start via the link.
+                            // Friends as the base screen on a cold start via the link.
                             pendingInviteUsername = deepLink.inviteUsername
                             if (currentRoute in authGateRoutes) {
-                                navController.navigate(Screen.Events) {
+                                navController.navigate(Screen.Friends) {
                                     popUpTo(Screen.Bootstrap) { inclusive = true }
                                     launchSingleTop = true
                                 }

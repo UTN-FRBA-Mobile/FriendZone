@@ -58,13 +58,13 @@ fun InviteFriendsBottomSheet(
                 .padding(bottom = 24.dp),
         ) {
             Text(
-                "Invitá a tus amigos",
+                "Invite your friends",
                 style = MaterialTheme.typography.titleMedium,
                 color = FzInk,
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                "Compartí tu link personal. Cuando lo abran, la app se abre para agregarte como amigo.",
+                "Share your personal link. When someone opens it, the app opens so they can add you as a friend.",
                 style = MaterialTheme.typography.bodySmall,
                 color = FzInk3,
             )
@@ -84,14 +84,14 @@ fun InviteFriendsBottomSheet(
 
                 link == null -> {
                     Text(
-                        "No pudimos generar tu link. Reintentá más tarde.",
+                        "We couldn't generate your link. Please try again later.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = FzInk3,
                     )
                 }
 
                 else -> {
-                    Text("TU LINK", style = MaterialTheme.typography.labelSmall, color = FzInk3)
+                    Text("YOUR LINK", style = MaterialTheme.typography.labelSmall, color = FzInk3)
                     Spacer(modifier = Modifier.height(6.dp))
                     Box(
                         modifier = Modifier
@@ -106,15 +106,15 @@ fun InviteFriendsBottomSheet(
                     Spacer(modifier = Modifier.height(20.dp))
 
                     FriendZonePrimaryButton(
-                        text = "Compartir",
+                        text = "Share",
                         onClick = { shareInvite(context, viewModel.shareMessage(link)) },
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                     FriendZoneOutlineButton(
-                        text = "Copiar link",
+                        text = "Copy link",
                         onClick = {
                             copyToClipboard(context, link)
-                            Toast.makeText(context, "Link copiado", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "Link copied", Toast.LENGTH_SHORT).show()
                         },
                     )
                 }
@@ -133,5 +133,5 @@ private fun shareInvite(context: Context, message: String) {
         type = "text/plain"
         putExtra(Intent.EXTRA_TEXT, message)
     }
-    context.startActivity(Intent.createChooser(sendIntent, "Invitar amigos"))
+    context.startActivity(Intent.createChooser(sendIntent, "Invite friends"))
 }

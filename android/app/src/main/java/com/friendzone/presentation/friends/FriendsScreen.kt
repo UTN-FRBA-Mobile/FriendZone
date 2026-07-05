@@ -223,7 +223,7 @@ private fun FriendsListContent(
                 )
                 Spacer(modifier = Modifier.height(10.dp))
                 FriendZoneOutlineButton(
-                    text = "Invitar amigos",
+                    text = "Invite friends",
                     onClick = onInviteClick,
                 )
                 when (lookupResult) {

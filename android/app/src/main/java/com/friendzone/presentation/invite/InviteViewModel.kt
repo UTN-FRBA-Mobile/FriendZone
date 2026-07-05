@@ -60,7 +60,7 @@ class InviteViewModel @Inject constructor(
 
     /** Message shared through the native share sheet (WhatsApp, Instagram, etc.). */
     fun shareMessage(link: String): String =
-        "¡Sumate a FriendZone! Agregame como amigo con este link: $link"
+        "Join me on FriendZone! Add me as a friend with this link: $link"
 
     private fun buildInviteLink(username: String): String =
         // API_BASE_URL always ends with "/" (normalized in build.gradle.kts).

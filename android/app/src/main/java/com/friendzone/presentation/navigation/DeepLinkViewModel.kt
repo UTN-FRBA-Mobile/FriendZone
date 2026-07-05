@@ -25,7 +25,7 @@ class DeepLinkViewModel @Inject constructor() : ViewModel() {
     fun consumeFromIntent(intent: Intent?) {
         if (intent == null) return
 
-        // App Link: https://<host>/invite/<username>
+        // Invite App Link: https://<host>/invite/<username>
         if (intent.action == Intent.ACTION_VIEW) {
             val segments = intent.data?.pathSegments.orEmpty()
             if (segments.size >= 2 && segments[0] == "invite") {
