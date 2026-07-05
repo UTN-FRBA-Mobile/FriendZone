@@ -7,7 +7,6 @@ import com.example.friendzone.data.remote.websocket.EventSocketManager
 import com.example.friendzone.data.remote.websocket.SocketEventType
 import com.example.friendzone.domain.model.Event
 import com.example.friendzone.domain.model.InvitationStatus
-import com.example.friendzone.domain.model.ParticipantRole
 import com.example.friendzone.domain.model.PendingInvitation
 import com.example.friendzone.domain.repository.EventRepository
 import com.example.friendzone.domain.repository.InvitationRepository
@@ -209,17 +208,10 @@ class EventsViewModel @Inject constructor(
                     is ApiResult.Success -> invitationsResult.data
                     else -> emptyList()
                 }
-                val acceptedInviteeIds = invitations
-                    .filter { it.status == InvitationStatus.ACCEPTED }
-                    .map { it.inviteeId }
-                    .toSet()
                 val (confirmed, pending) = countInvitations(invitations)
 
                 val participants = when (val p = locationRepository.getParticipants(event.id)) {
-                    is ApiResult.Success -> p.data.filter {
-                        it.participant.role == ParticipantRole.ORGANIZER ||
-                            acceptedInviteeIds.contains(it.participant.userId)
-                    }
+                    is ApiResult.Success -> p.data
                     else -> emptyList()
                 }
 

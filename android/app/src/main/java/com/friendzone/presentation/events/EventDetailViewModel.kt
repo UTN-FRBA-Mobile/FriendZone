@@ -455,14 +455,8 @@ class EventDetailViewModel @Inject constructor(
         participants: List<com.example.friendzone.domain.model.ParticipantWithUser>,
         invitations: List<Invitation>,
     ): EventDetailUiState.Data {
-        val acceptedInviteeIds = invitations
-            .filter { it.status == InvitationStatus.ACCEPTED }
-            .map { it.inviteeId }
-            .toSet()
-        val trackingParticipants = participants.filter {
-            it.participant.role == ParticipantRole.ORGANIZER ||
-                acceptedInviteeIds.contains(it.participant.userId)
-        }
+        // API participants are organizer + accepted guests only (pending invitees are excluded).
+        val trackingParticipants = participants
 
         val arrived = mutableListOf<FriendRowUi>()
         val inTransit = mutableListOf<FriendRowUi>()
