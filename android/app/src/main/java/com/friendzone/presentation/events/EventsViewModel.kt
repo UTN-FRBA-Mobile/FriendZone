@@ -2,10 +2,10 @@ package com.example.friendzone.presentation.events
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.friendzone.BuildConfig
 import com.example.friendzone.data.remote.websocket.EventSocketManager
 import com.example.friendzone.data.remote.websocket.SocketEventType
 import com.example.friendzone.domain.model.Event
-import com.example.friendzone.domain.model.EventStatus
 import com.example.friendzone.domain.model.InvitationStatus
 import com.example.friendzone.domain.model.ParticipantRole
 import com.example.friendzone.domain.model.PendingInvitation
@@ -17,6 +17,7 @@ import com.example.friendzone.domain.result.displayMessage
 import com.example.friendzone.domain.util.ParticipantStatus
 import com.example.friendzone.domain.util.classifyParticipantWithUser
 import com.example.friendzone.domain.util.isLive
+import com.example.friendzone.domain.util.isPastEvent
 import com.example.friendzone.domain.util.parseStartsAt
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
@@ -209,7 +210,7 @@ class EventsViewModel @Inject constructor(
                         pendingCount = pending,
                         onTheWayCount = onTheWay,
                         friendPreviews = buildFriendPreviews(event, participants),
-                        isPastItem = event.isPast(),
+                        isPastItem = event.isPastEvent(BuildConfig.EVENT_PAST_THRESHOLD_HOURS),
                         startsAtEpoch = event.parseStartsAt().epochSecond,
                     )
                 } else {
@@ -219,7 +220,7 @@ class EventsViewModel @Inject constructor(
                         pendingCount = pending,
                         participantAvatars = avatars,
                         extraAvatarCount = extra,
-                        isPastItem = event.isPast(),
+                        isPastItem = event.isPastEvent(BuildConfig.EVENT_PAST_THRESHOLD_HOURS),
                         startsAtEpoch = event.parseStartsAt().epochSecond,
                     )
                 }
@@ -228,8 +229,3 @@ class EventsViewModel @Inject constructor(
         }.awaitAll()
     }
 }
-
-private fun Event.isPast(now: Instant = Instant.now()): Boolean =
-    status == EventStatus.COMPLETED ||
-        status == EventStatus.CANCELLED ||
-        parseStartsAt().isBefore(now)

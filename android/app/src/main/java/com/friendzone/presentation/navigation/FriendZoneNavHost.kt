@@ -4,8 +4,11 @@ import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -13,6 +16,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -35,11 +39,14 @@ import com.example.friendzone.presentation.events.EventDetailScreen
 import com.example.friendzone.presentation.events.EventsScreen
 import com.example.friendzone.presentation.friends.FriendsBadgeViewModel
 import com.example.friendzone.presentation.friends.FriendsScreen
+import com.example.friendzone.presentation.friends.FriendsTab
+import com.example.friendzone.presentation.events.EventsTab
 import com.example.friendzone.presentation.invite.IncomingInviteBottomSheet
 import com.example.friendzone.presentation.notifications.NotificationsBadgeViewModel
 import com.example.friendzone.presentation.notifications.NotificationsScreen
 import com.example.friendzone.presentation.profile.ProfileScreen
 import com.example.friendzone.ui.theme.FzBackground
+import com.example.friendzone.ui.theme.FzInk
 
 private const val TransitionDuration = 380
 
@@ -55,12 +62,19 @@ private fun AnimatedContentTransitionScope<*>.slideInFromLeft() =
 private fun AnimatedContentTransitionScope<*>.slideOutToRight() =
     slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(TransitionDuration)) + fadeOut(tween(TransitionDuration / 2))
 
+private fun isFriendRequestDeepLink(deepLink: DeepLink): Boolean =
+    deepLink.type == "friend.request" ||
+        (deepLink.requestId != null && deepLink.type != "friend.request.accepted")
+
+private val authGateRoutes = setOf(Screen.Bootstrap, Screen.Login, Screen.Register)
+
 @Composable
 fun FriendZoneNavHost(
     appNavViewModel: AppNavViewModel = hiltViewModel(),
     deepLinkViewModel: DeepLinkViewModel = hiltViewModel(),
 ) {
-    val isLoggedIn by appNavViewModel.isLoggedIn.collectAsStateWithLifecycle()
+    val authSession by appNavViewModel.authSession.collectAsStateWithLifecycle()
+    val isLoggedIn = authSession == AuthSessionState.LoggedIn
     val friendsBadgeViewModel: FriendsBadgeViewModel = hiltViewModel()
     val notificationsBadgeViewModel: NotificationsBadgeViewModel = hiltViewModel()
     val pendingFriendsCount by friendsBadgeViewModel.pendingCount.collectAsStateWithLifecycle()
@@ -70,39 +84,65 @@ fun FriendZoneNavHost(
     val currentRoute = backStackEntry?.destination?.route
     val showBottomBar = currentRoute in Screen.bottomBarRoutes
     val pendingDeepLink by deepLinkViewModel.pending.collectAsStateWithLifecycle()
-    var eventsInitialTab by remember { mutableStateOf<com.example.friendzone.presentation.events.EventsTab?>(null) }
+    var eventsInitialTab by remember { mutableStateOf<EventsTab?>(null) }
     var eventsOpenInvitationId by remember { mutableStateOf<String?>(null) }
-    var friendsInitialTab by remember { mutableStateOf<com.example.friendzone.presentation.friends.FriendsTab?>(null) }
+    var friendsInitialTab by remember { mutableStateOf<FriendsTab?>(null) }
     var pendingInviteUsername by remember { mutableStateOf<String?>(null) }
 
-    LaunchedEffect(isLoggedIn, pendingDeepLink) {
-        val deepLink = pendingDeepLink ?: return@LaunchedEffect
-        if (!isLoggedIn) return@LaunchedEffect
+    LaunchedEffect(authSession, pendingDeepLink, currentRoute) {
+        when (authSession) {
+            AuthSessionState.Loading -> return@LaunchedEffect
+            AuthSessionState.LoggedOut -> {
+                if (currentRoute !in setOf(Screen.Login, Screen.Register)) {
+                    navController.navigate(Screen.Login) {
+                        popUpTo(Screen.Bootstrap) { inclusive = true }
+                        launchSingleTop = true
+                    }
+                }
+            }
+            AuthSessionState.LoggedIn -> {
+                val deepLink = pendingDeepLink
+                if (deepLink != null) {
+                    when {
+                        deepLink.type == "invitation.created" || deepLink.invitationId != null -> {
+                            eventsInitialTab = EventsTab.Invitations
+                            eventsOpenInvitationId = deepLink.invitationId
+                            navController.navigate(Screen.Events) {
+                                popUpTo(Screen.Bootstrap) { inclusive = true }
+                                launchSingleTop = true
+                            }
+                        }
+                        isFriendRequestDeepLink(deepLink) -> {
+                            friendsInitialTab = FriendsTab.Requests
+                            navController.navigate(Screen.Friends) {
+                                popUpTo(Screen.Bootstrap) { inclusive = true }
+                                launchSingleTop = true
+                            }
+                        }
+                        deepLink.inviteUsername != null -> {
+                            // Show the invite modal over the current screen; land on
+                            // Events as the base screen on a cold start via the link.
+                            pendingInviteUsername = deepLink.inviteUsername
+                            if (currentRoute in authGateRoutes) {
+                                navController.navigate(Screen.Events) {
+                                    popUpTo(Screen.Bootstrap) { inclusive = true }
+                                    launchSingleTop = true
+                                }
+                            }
+                        }
+                    }
+                    deepLinkViewModel.clear()
+                    return@LaunchedEffect
+                }
 
-        when {
-            deepLink.type == "invitation.created" || deepLink.invitationId != null -> {
-                eventsInitialTab = com.example.friendzone.presentation.events.EventsTab.Invitations
-                eventsOpenInvitationId = deepLink.invitationId
-                if (currentRoute != Screen.Events) {
+                if (currentRoute in authGateRoutes) {
                     navController.navigate(Screen.Events) {
+                        popUpTo(Screen.Bootstrap) { inclusive = true }
                         launchSingleTop = true
                     }
                 }
-            }
-            deepLink.type == "friend.request" -> {
-                friendsInitialTab = com.example.friendzone.presentation.friends.FriendsTab.Requests
-                if (currentRoute != Screen.Friends) {
-                    navController.navigate(Screen.Friends) {
-                        launchSingleTop = true
-                    }
-                }
-            }
-            deepLink.inviteUsername != null -> {
-                // Show the invite modal over whatever screen is active (no tab switch).
-                pendingInviteUsername = deepLink.inviteUsername
             }
         }
-        deepLinkViewModel.clear()
     }
 
     LaunchedEffect(isLoggedIn) {
@@ -115,22 +155,6 @@ fun FriendZoneNavHost(
     LaunchedEffect(currentRoute) {
         if (isLoggedIn && currentRoute in Screen.bottomBarRoutes) {
             notificationsBadgeViewModel.refresh()
-        }
-    }
-
-    LaunchedEffect(isLoggedIn, currentRoute) {
-        if (isLoggedIn) {
-            if (currentRoute == Screen.Login || currentRoute == Screen.Register || currentRoute == null) {
-                navController.navigate(Screen.Events) {
-                    popUpTo(Screen.Login) { inclusive = true }
-                    launchSingleTop = true
-                }
-            }
-        } else if (currentRoute !in setOf(Screen.Login, Screen.Register, null)) {
-            navController.navigate(Screen.Login) {
-                popUpTo(Screen.Login) { inclusive = true }
-                launchSingleTop = true
-            }
         }
     }
 
@@ -177,11 +201,21 @@ fun FriendZoneNavHost(
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = Screen.Login,
+            startDestination = Screen.Bootstrap,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding),
         ) {
+            composable(Screen.Bootstrap) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(FzBackground),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    CircularProgressIndicator(color = FzInk)
+                }
+            }
             composable(Screen.Login) {
                 LoginScreen(
                     onNavigateRegister = {

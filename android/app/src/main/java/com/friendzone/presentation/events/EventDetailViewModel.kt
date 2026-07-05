@@ -21,6 +21,7 @@ import com.example.friendzone.domain.repository.LocationRepository
 import com.example.friendzone.domain.result.ApiResult
 import com.example.friendzone.domain.result.displayMessage
 import com.example.friendzone.domain.util.ParticipantStatus
+import com.example.friendzone.domain.util.canPromptOrganizerToComplete
 import com.example.friendzone.domain.util.classifyParticipantWithUser
 import com.example.friendzone.domain.util.formatEventDate
 import com.example.friendzone.domain.util.isLive
@@ -54,6 +55,11 @@ data class InvitedGuestUi(
     val pillVariant: PillVariant,
 )
 
+enum class EventDetailStatusBadge {
+    Completed,
+    Cancelled,
+}
+
 sealed class EventDetailUiState {
     data object Loading : EventDetailUiState()
     data class Error(val message: String) : EventDetailUiState()
@@ -61,7 +67,10 @@ sealed class EventDetailUiState {
         val title: String,
         val dateText: String,
         val isLive: Boolean,
+        val statusBadge: EventDetailStatusBadge?,
         val canInviteGuests: Boolean,
+        val canMarkComplete: Boolean,
+        val canCancelEvent: Boolean,
         val showOrganizerMenu: Boolean,
         val organizerSelfArrived: Boolean,
         val pendingInviteCount: Int,
@@ -127,6 +136,11 @@ class EventDetailViewModel @Inject constructor(
     private val _actionMessage = MutableStateFlow<String?>(null)
     val actionMessage: StateFlow<String?> = _actionMessage.asStateFlow()
 
+    private val _showCompletePrompt = MutableStateFlow(false)
+    val showCompletePrompt: StateFlow<Boolean> = _showCompletePrompt.asStateFlow()
+
+    private val dismissedCompletePrompts = mutableSetOf<String>()
+
     fun consumeActionMessage() {
         _actionMessage.value = null
     }
@@ -135,6 +149,8 @@ class EventDetailViewModel @Inject constructor(
         viewModelScope.launch {
             when (val result = eventRepository.updateStatus(eventId, EventStatus.COMPLETED)) {
                 is ApiResult.Success -> {
+                    dismissedCompletePrompts.add(eventId)
+                    _showCompletePrompt.value = false
                     _actionMessage.value = "Event marked as completed"
                     loadDetail()
                 }
@@ -142,6 +158,15 @@ class EventDetailViewModel @Inject constructor(
                 ApiResult.Loading -> Unit
             }
         }
+    }
+
+    fun dismissCompletePrompt() {
+        dismissedCompletePrompts.add(eventId)
+        _showCompletePrompt.value = false
+    }
+
+    fun confirmCompleteFromPrompt() {
+        markEventCompleted()
     }
 
     fun cancelEvent() {
@@ -219,6 +244,7 @@ class EventDetailViewModel @Inject constructor(
                                 participants = participantsResult.data,
                                 invitations = invitations,
                             )
+                            maybeShowCompletePrompt(event, invitations)
                         }
                         ApiResult.Loading -> Unit
                     }
@@ -380,6 +406,19 @@ class EventDetailViewModel @Inject constructor(
         isOrganizer(event) &&
             (event.status == EventStatus.SCHEDULED || event.status == EventStatus.ACTIVE)
 
+    private fun canManageEvent(event: Event): Boolean =
+        isOrganizer(event) &&
+            event.status != EventStatus.COMPLETED &&
+            event.status != EventStatus.CANCELLED
+
+    private fun maybeShowCompletePrompt(event: Event, invitations: List<Invitation>) {
+        if (eventId in dismissedCompletePrompts) return
+        if (!isOrganizer(event)) return
+        val acceptedGuestCount = invitations.count { it.status == InvitationStatus.ACCEPTED }
+        if (!event.canPromptOrganizerToComplete(acceptedGuestCount)) return
+        _showCompletePrompt.value = true
+    }
+
     private fun applyInviteLists(friends: List<User>, invitations: List<Invitation>) {
         val invitedIds = invitations.map { it.inviteeId }.toSet()
         _inviteFriends.value = friends.filter { it.id !in invitedIds }
@@ -476,12 +515,22 @@ class EventDetailViewModel @Inject constructor(
             }
         }
 
+        val statusBadge = when (event.status) {
+            EventStatus.COMPLETED -> EventDetailStatusBadge.Completed
+            EventStatus.CANCELLED -> EventDetailStatusBadge.Cancelled
+            else -> null
+        }
+        val canManage = canManageEvent(event)
+
         return EventDetailUiState.Data(
             title = event.title,
             dateText = formatEventDate(event.startsAt),
             isLive = event.isLive(),
+            statusBadge = statusBadge,
             canInviteGuests = canInviteGuests(event),
-            showOrganizerMenu = isOrganizer(event),
+            canMarkComplete = canManage,
+            canCancelEvent = canManage,
+            showOrganizerMenu = isOrganizer(event) && statusBadge == null,
             organizerSelfArrived = organizerSelfArrived,
             pendingInviteCount = pendingCount,
             coverImageUrl = resolveApiAssetUrl(event.coverImageUrl),

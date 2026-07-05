@@ -28,12 +28,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.example.friendzone.presentation.events.EventDetailStatusBadge
 import com.example.friendzone.presentation.events.EventListItemUi
 import com.example.friendzone.ui.theme.FzBorder
 import com.example.friendzone.ui.theme.FzGreen
 import com.example.friendzone.ui.theme.FzInk
 import com.example.friendzone.ui.theme.FzInk2
 import com.example.friendzone.ui.theme.FzInk3
+import com.example.friendzone.ui.theme.FzRequired
 import com.example.friendzone.ui.theme.FzSurface
 import com.example.friendzone.ui.theme.FzSurface2
 
@@ -136,7 +138,7 @@ fun EventUpcomingCard(
                 Text(item.timeLabel, style = MaterialTheme.typography.labelMedium, color = FzInk2)
             }
             Spacer(modifier = Modifier.height(4.dp))
-            Text(item.dateText, style = MaterialTheme.typography.bodySmall, color = FzInk3)
+            EventListDateRow(dateText = item.dateText, statusBadge = item.statusBadge)
             Spacer(modifier = Modifier.height(12.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 PillBadge(item.confirmedText, PillVariant.Green)
@@ -159,6 +161,44 @@ fun EventUpcomingCard(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun EventListDateRow(
+    dateText: String,
+    statusBadge: EventDetailStatusBadge?,
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Text(dateText, style = MaterialTheme.typography.bodySmall, color = FzInk3)
+        statusBadge?.let { EventListStatusBadge(it) }
+    }
+}
+
+@Composable
+private fun EventListStatusBadge(badge: EventDetailStatusBadge) {
+    val (dotColor, label) = when (badge) {
+        EventDetailStatusBadge.Completed -> FzInk3 to "Completed"
+        EventDetailStatusBadge.Cancelled -> FzRequired to "Cancelled"
+    }
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        Box(
+            modifier = Modifier
+                .size(7.dp)
+                .clip(RoundedCornerShape(50))
+                .background(dotColor),
+        )
+        Text(
+            label,
+            style = MaterialTheme.typography.labelSmall,
+            color = FzInk2,
+        )
     }
 }
 

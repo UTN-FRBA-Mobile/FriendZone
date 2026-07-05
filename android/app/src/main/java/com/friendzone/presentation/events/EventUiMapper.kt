@@ -1,6 +1,7 @@
 package com.example.friendzone.presentation.events
 
 import com.example.friendzone.domain.model.Event
+import com.example.friendzone.domain.model.EventStatus
 import com.example.friendzone.domain.model.InvitationStatus
 import com.example.friendzone.domain.model.ParticipantWithUser
 import com.example.friendzone.domain.util.ParticipantStatus
@@ -22,12 +23,18 @@ fun Event.toListItemUi(
     startsAtEpoch: Long = 0L,
 ): EventListItemUi {
     val (icon, label) = formatRelativeTimeLabel(startsAt)
+    val statusBadge = when (status) {
+        EventStatus.COMPLETED -> EventDetailStatusBadge.Completed
+        EventStatus.CANCELLED -> EventDetailStatusBadge.Cancelled
+        else -> null
+    }
     return EventListItemUi(
         eventId = id,
         title = title,
         timeIcon = icon,
         timeLabel = label,
         dateText = formatEventDate(startsAt),
+        statusBadge = statusBadge,
         confirmedText = "✓ $confirmedCount Confirmed",
         pendingText = "? $pendingCount Pending",
         onTheWayText = if (onTheWayCount > 0) "🚗 $onTheWayCount On the way" else null,

@@ -1,6 +1,7 @@
 package com.example.friendzone.presentation.navigation
 
 object Screen {
+    const val Bootstrap = "bootstrap"
     const val Login = "login"
     const val Register = "register"
     const val Events = "events"
