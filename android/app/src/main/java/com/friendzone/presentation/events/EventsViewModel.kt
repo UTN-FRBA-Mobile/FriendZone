@@ -6,8 +6,10 @@ import com.example.friendzone.BuildConfig
 import com.example.friendzone.data.remote.websocket.EventSocketManager
 import com.example.friendzone.data.remote.websocket.SocketEventType
 import com.example.friendzone.domain.model.Event
+import com.example.friendzone.domain.model.EventStatus
 import com.example.friendzone.domain.model.InvitationStatus
 import com.example.friendzone.domain.model.PendingInvitation
+import com.example.friendzone.domain.repository.AuthRepository
 import com.example.friendzone.domain.repository.EventRepository
 import com.example.friendzone.domain.repository.InvitationRepository
 import com.example.friendzone.domain.repository.LocationRepository
@@ -52,9 +54,13 @@ class EventsViewModel @Inject constructor(
     private val invitationRepository: InvitationRepository,
     private val locationRepository: LocationRepository,
     private val eventSocketManager: EventSocketManager,
+    private val authRepository: AuthRepository,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<EventsUiState>(EventsUiState.Loading)
     val uiState: StateFlow<EventsUiState> = _uiState.asStateFlow()
+
+    private val _actionState = MutableStateFlow<EventActionState>(EventActionState.Idle)
+    val actionState: StateFlow<EventActionState> = _actionState.asStateFlow()
 
     private val _selectedTab = MutableStateFlow(EventsTab.Upcoming)
     val selectedTab: StateFlow<EventsTab> = _selectedTab.asStateFlow()
@@ -71,7 +77,18 @@ class EventsViewModel @Inject constructor(
     private val _isRefreshing = MutableStateFlow(false)
     val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
 
+    private var currentUserId: String? = null
+
     init {
+        viewModelScope.launch {
+            authRepository.currentUser.collect { user ->
+                currentUserId = user?.id
+                // Cargar eventos DESPUÉS de obtener el usuario
+                if (currentUserId != null) {
+                    loadEvents()
+                }
+            }
+        }
         viewModelScope.launch {
             eventSocketManager.connect()
             eventSocketManager.events.collect { event ->
@@ -86,7 +103,6 @@ class EventsViewModel @Inject constructor(
                 }
             }
         }
-        loadEvents()
     }
 
     fun selectTab(tab: EventsTab) {
@@ -227,6 +243,8 @@ class EventsViewModel @Inject constructor(
                         friendPreviews = buildFriendPreviews(event, participants),
                         isPastItem = event.isPastEvent(BuildConfig.EVENT_PAST_THRESHOLD_HOURS),
                         startsAtEpoch = event.parseStartsAt().epochSecond,
+                        organizerId = event.organizerId,
+                        currentUserId = currentUserId,
                     )
                 } else {
                     val (avatars, extra) = buildAvatarPreview(participants)
@@ -237,10 +255,59 @@ class EventsViewModel @Inject constructor(
                         extraAvatarCount = extra,
                         isPastItem = event.isPastEvent(BuildConfig.EVENT_PAST_THRESHOLD_HOURS),
                         startsAtEpoch = event.parseStartsAt().epochSecond,
+                        organizerId = event.organizerId,
+                        currentUserId = currentUserId,
                     )
                 }
                 baseItem
             }
         }.awaitAll()
+    }
+
+    private suspend fun loadInvitationsIfOrganizer(event: Event): List<com.example.friendzone.domain.model.Invitation> {
+        if (!isOrganizer(event)) return emptyList()
+        return when (val result = invitationRepository.getByEvent(event.id)) {
+            is ApiResult.Success -> result.data
+            else -> emptyList()
+        }
+    }
+
+    private fun isOrganizer(event: Event): Boolean =
+        currentUserId != null && event.organizerId == currentUserId
+
+    fun deleteEvent(eventId: String) {
+        viewModelScope.launch {
+            _actionState.value = EventActionState.Loading
+            when (val result = eventRepository.delete(eventId)) {
+                is ApiResult.Success -> {
+                    _actionState.value = EventActionState.Success("Event deleted")
+                    loadEvents()
+                }
+                is ApiResult.Error -> {
+                    _actionState.value = EventActionState.Error(result.error.displayMessage())
+                }
+                ApiResult.Loading -> Unit
+            }
+        }
+    }
+
+    fun leaveEvent(eventId: String) {
+        viewModelScope.launch {
+            _actionState.value = EventActionState.Loading
+            when (val result = eventRepository.leave(eventId)) {
+                is ApiResult.Success -> {
+                    _actionState.value = EventActionState.Success("Left event")
+                    loadEvents()
+                }
+                is ApiResult.Error -> {
+                    _actionState.value = EventActionState.Error(result.error.displayMessage())
+                }
+                ApiResult.Loading -> Unit
+            }
+        }
+    }
+
+    fun resetActionState() {
+        _actionState.value = EventActionState.Idle
     }
 }

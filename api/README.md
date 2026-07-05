@@ -133,6 +133,7 @@ Event invitations require an accepted friendship between organizer and invitee.
 - `GET /events/:id`
 - `PATCH /events/:id`
 - `DELETE /events/:id`
+- `POST /events/:id/leave`
 
 ### Invitations
 - `POST /events/:eventId/invitations`

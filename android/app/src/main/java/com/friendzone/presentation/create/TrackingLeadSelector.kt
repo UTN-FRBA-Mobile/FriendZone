@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
@@ -22,22 +21,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.example.friendzone.ui.theme.FzBorder
-import com.example.friendzone.ui.theme.FzInk
-import com.example.friendzone.ui.theme.FzInk2
-import com.example.friendzone.ui.theme.FzInk3
+import com.example.friendzone.R
+import com.example.friendzone.ui.theme.FzBorderGray
+import com.example.friendzone.ui.theme.FzPrimary
+import com.example.friendzone.ui.theme.FzPrimaryLight
+import com.example.friendzone.ui.theme.FzTextMain
+import com.example.friendzone.ui.theme.FzTextSecondary
 import com.example.friendzone.ui.theme.FzSurface
 import com.example.friendzone.ui.theme.FzSurface2
-
-private data class TrackingPreset(val label: String, val minutes: Int)
-
-private val PRESETS = listOf(
-    TrackingPreset("15 minutes", 15),
-    TrackingPreset("30 minutes", 30),
-    TrackingPreset("1 hour", 60),
-    TrackingPreset("2 hours", 120),
-)
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -52,29 +45,34 @@ fun TrackingLeadSelector(
 
     Column(modifier = modifier) {
         Text(
-            "Start tracking before event",
+            stringResource(R.string.create_tracking_title),
             style = MaterialTheme.typography.labelLarge,
-            color = FzInk,
+            color = FzTextMain,
         )
         Text(
-            "Friends can share location starting this long before the event",
+            stringResource(R.string.create_tracking_desc),
             style = MaterialTheme.typography.bodySmall,
-            color = FzInk3,
+            color = FzTextSecondary,
             modifier = Modifier.padding(top = 4.dp, bottom = 10.dp),
         )
         FlowRow(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            PRESETS.forEach { preset ->
+            listOf(15, 30, 60, 120).forEach { mins ->
+                val label = when (mins) {
+                    60 -> stringResource(R.string.create_preset_hour)
+                    120 -> stringResource(R.string.create_preset_hours)
+                    else -> stringResource(R.string.create_preset_minutes, mins)
+                }
                 TrackingChip(
-                    label = preset.label,
-                    selected = !isCustom && selectedMinutes == preset.minutes,
-                    onClick = { onPresetSelected(preset.minutes) },
+                    label = label,
+                    selected = !isCustom && selectedMinutes == mins,
+                    onClick = { onPresetSelected(mins) },
                 )
             }
             TrackingChip(
-                label = if (isCustom) "Custom (${formatDuration(selectedMinutes)})" else "Custom",
+                label = if (isCustom) "${stringResource(R.string.create_custom_tracking)} (${formatDuration(selectedMinutes)})" else stringResource(R.string.create_custom_tracking),
                 selected = isCustom,
                 onClick = { showCustomDialog = true },
             )
@@ -99,15 +97,15 @@ private fun TrackingChip(
     selected: Boolean,
     onClick: () -> Unit,
 ) {
-    val bg = if (selected) FzInk else FzSurface2
-    val fg = if (selected) FzSurface else FzInk2
-    val border = if (selected) FzInk else FzBorder
+    val bg = if (selected) FzPrimary else FzSurface
+    val fg = if (selected) androidx.compose.ui.graphics.Color.White else FzTextSecondary
+    val border = if (selected) FzPrimary else com.example.friendzone.ui.theme.FzBorderGray
     Text(
         text = label,
         modifier = Modifier
             .clip(RoundedCornerShape(20.dp))
             .background(bg)
-            .border(1.5.dp, border, RoundedCornerShape(20.dp))
+            .border(1.dp, border, RoundedCornerShape(20.dp))
             .clickable(onClick = onClick)
             .padding(horizontal = 14.dp, vertical = 8.dp),
         style = MaterialTheme.typography.labelMedium,
@@ -126,17 +124,17 @@ private fun CustomDurationDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Custom tracking lead") },
+        title = { Text(stringResource(R.string.create_custom_tracking_dialog_title)) },
         text = {
             Column {
-                Text("Hours: $hours", color = FzInk2)
+                Text(stringResource(R.string.create_hours_label, hours), color = FzTextMain)
                 androidx.compose.foundation.layout.Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     TextButton(onClick = { hours = (hours - 1).coerceAtLeast(0) }) { Text("-") }
                     TextButton(onClick = { hours = (hours + 1).coerceAtMost(23) }) { Text("+") }
                 }
-                Text("Minutes: $minutes", color = FzInk2)
+                Text(stringResource(R.string.create_minutes_label, minutes), color = FzTextMain)
                 androidx.compose.foundation.layout.Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
@@ -152,11 +150,11 @@ private fun CustomDurationDialog(
                     onConfirm(total)
                 },
             ) {
-                Text("OK")
+                Text("OK", color = FzPrimary)
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel") }
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.btn_cancel), color = FzTextSecondary) }
         },
     )
 }

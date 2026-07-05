@@ -24,7 +24,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.example.friendzone.R
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.friendzone.presentation.components.CreateEventHeader
 import com.example.friendzone.presentation.components.FriendZonePrimaryButton
@@ -32,8 +34,9 @@ import com.example.friendzone.presentation.components.FriendZonePullToRefreshBox
 import com.example.friendzone.presentation.components.InviteFriendChip
 import com.example.friendzone.presentation.components.StepProgressBar
 import com.example.friendzone.ui.theme.FzBackground
-import com.example.friendzone.ui.theme.FzInk
-import com.example.friendzone.ui.theme.FzInk3
+import com.example.friendzone.ui.theme.FzPrimary
+import com.example.friendzone.ui.theme.FzTextMain
+import com.example.friendzone.ui.theme.FzTextSecondary
 
 @Composable
 fun CreateEventStep2Screen(
@@ -81,59 +84,59 @@ fun CreateEventStep2Screen(
                     .background(FzBackground)
                     .verticalScroll(rememberScrollState()),
             ) {
-            CreateEventHeader(title = "Create Event", onBackClick = onBack)
-            StepProgressBar(
-                stepLabel = "Step 2 of 2",
-                stepDescription = "Invite Friends",
-                progress = 1f,
-            )
+                    CreateEventHeader(title = stringResource(R.string.header_create_event), onBackClick = onBack)
+                StepProgressBar(
+                    stepLabel = stringResource(R.string.create_step_label, 2, 2),
+                    stepDescription = stringResource(R.string.create_step2_desc),
+                    progress = 1f,
+                )
 
-            Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-                Text(
-                    "Invite friends",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = FzInk,
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    "Tap friends to invite them to this event",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = FzInk3,
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                if (friends.isEmpty()) {
+                Column(modifier = Modifier.padding(horizontal = 16.dp)) {
                     Text(
-                        "No friends yet. Add friends from the Friends tab.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = FzInk3,
+                        stringResource(R.string.header_invite_friends),
+                        style = MaterialTheme.typography.labelLarge,
+                        color = FzTextMain,
                     )
-                } else {
-                    LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        items(friends, key = { it.id }) { friend ->
-                            InviteFriendChip(
-                                friend = friend,
-                                selected = friend.id in selectedFriendIds,
-                                onClick = { viewModel.toggleFriendSelection(friend.id) },
-                            )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        stringResource(R.string.create_invite_hint),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = FzTextSecondary,
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    if (friends.isEmpty()) {
+                        Text(
+                            stringResource(R.string.create_no_friends_hint),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = FzTextSecondary,
+                        )
+                    } else {
+                        LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            items(friends, key = { it.id }) { friend ->
+                                InviteFriendChip(
+                                    friend = friend,
+                                    selected = friend.id in selectedFriendIds,
+                                    onClick = { viewModel.toggleFriendSelection(friend.id) },
+                                )
+                            }
                         }
                     }
+                    Spacer(modifier = Modifier.height(32.dp))
+                    FriendZonePrimaryButton(
+                        text = if (isLoading) "Creating..." else "Create Event",
+                        onClick = { viewModel.createEvent() },
+                        enabled = !isLoading,
+                    )
+                    Spacer(modifier = Modifier.height(32.dp))
                 }
-                Spacer(modifier = Modifier.height(24.dp))
-                FriendZonePrimaryButton(
-                    text = if (isLoading) "Creating..." else "Create Event",
-                    onClick = { viewModel.createEvent() },
-                    enabled = !isLoading,
-                )
-                Spacer(modifier = Modifier.height(24.dp))
             }
-        }
         }
         if (isLoading) {
             Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center,
             ) {
-                CircularProgressIndicator(color = FzInk)
+                CircularProgressIndicator(color = FzPrimary)
             }
         }
         SnackbarHost(

@@ -6,7 +6,7 @@ import {
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
-import { Logger, UnauthorizedException } from '@nestjs/common';
+import { Logger, UnauthorizedException, Inject, forwardRef } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { Server, Socket } from 'socket.io';
@@ -19,6 +19,8 @@ export enum WsEvent {
   PARTICIPANT_JOINED = 'participant.joined',
   PARTICIPANT_ARRIVED = 'participant.arrived',
   EVENT_COMPLETED = 'event.completed',
+  EVENT_DELETED = 'event.deleted',
+  PARTICIPANT_LEFT = 'participant.left',
 }
 
 @WebSocketGateway({ cors: { origin: '*' } })
@@ -31,6 +33,7 @@ export class EventsGateway implements OnGatewayConnection {
   constructor(
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    @Inject(forwardRef(() => EventsRepository))
     private readonly eventsRepository: EventsRepository,
     private readonly usersRepository: UsersRepository,
   ) {}
@@ -116,6 +119,18 @@ export class EventsGateway implements OnGatewayConnection {
     this.server
       .to(this.eventRoom(eventId))
       .emit(WsEvent.EVENT_COMPLETED, payload);
+  }
+
+  broadcastEventDeleted(eventId: string) {
+    this.server
+      .to(this.eventRoom(eventId))
+      .emit(WsEvent.EVENT_DELETED, { eventId });
+  }
+
+  broadcastParticipantLeft(eventId: string, userId: string) {
+    this.server
+      .to(this.eventRoom(eventId))
+      .emit(WsEvent.PARTICIPANT_LEFT, { eventId, userId });
   }
 
   private eventRoom(eventId: string): string {

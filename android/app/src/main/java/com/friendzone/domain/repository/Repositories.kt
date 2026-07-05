@@ -69,6 +69,7 @@ interface EventRepository {
     ): ApiResult<com.example.friendzone.domain.model.Event>
     suspend fun uploadCover(id: String, bytes: ByteArray, mimeType: String): ApiResult<com.example.friendzone.domain.model.Event>
     suspend fun delete(id: String): ApiResult<Unit>
+    suspend fun leave(id: String): ApiResult<Unit>
 }
 
 interface InvitationRepository {

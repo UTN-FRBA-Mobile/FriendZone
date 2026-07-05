@@ -17,6 +17,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.HorizontalDivider
@@ -32,12 +33,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.friendzone.presentation.events.EventDetailStatusBadge
 import com.example.friendzone.presentation.events.EventListItemUi
-import com.example.friendzone.ui.theme.FzBorder
-import com.example.friendzone.ui.theme.FzGreen
-import com.example.friendzone.ui.theme.FzInk
-import com.example.friendzone.ui.theme.FzInk2
-import com.example.friendzone.ui.theme.FzInk3
-import com.example.friendzone.ui.theme.FzRequired
+import com.example.friendzone.ui.theme.FzBorderGray
+import com.example.friendzone.ui.theme.FzSuccess
+import com.example.friendzone.ui.theme.FzPrimary
+import com.example.friendzone.ui.theme.FzPrimaryDark
+import com.example.friendzone.ui.theme.FzPrimaryLight
+import com.example.friendzone.ui.theme.FzTextMain
+import com.example.friendzone.ui.theme.FzTextSecondary
+import com.example.friendzone.ui.theme.FzError
 import com.example.friendzone.ui.theme.FzSurface
 import com.example.friendzone.ui.theme.FzSurface2
 
@@ -46,15 +49,17 @@ fun EventLiveCard(
     item: EventListItemUi,
     onClick: () -> Unit,
     onViewMapClick: () -> Unit,
+    onDeleteClick: (() -> Unit)? = null,
+    onLeaveClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp)
+            .padding(horizontal = 16.dp, vertical = 8.dp)
             .clip(RoundedCornerShape(16.dp))
             .background(FzSurface)
-            .border(2.dp, FzInk, RoundedCornerShape(16.dp))
+            .border(1.dp, FzBorderGray, RoundedCornerShape(16.dp))
             .clickable(onClick = onClick),
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -63,51 +68,64 @@ fun EventLiveCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.Top,
             ) {
-                Text(
-                    text = item.title,
-                    style = MaterialTheme.typography.titleLarge,
-                    color = FzInk,
-                    modifier = Modifier.weight(1f),
-                )
-                Icon(
-                    Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                    contentDescription = null,
-                    tint = FzInk3,
-                )
-            }
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(9.dp)
-                        .clip(RoundedCornerShape(50))
-                        .background(FzGreen),
-                )
-                Text(
-                    "Happening Now",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = FzInk,
-                )
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = item.title,
+                        style = MaterialTheme.typography.titleLarge,
+                        color = FzTextMain,
+                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(8.dp)
+                                .clip(RoundedCornerShape(50))
+                                .background(FzSuccess),
+                        )
+                        Text(
+                            "Live",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = FzSuccess,
+                        )
+                    }
+                }
+                
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (item.isOrganizer && onDeleteClick != null) {
+                        IconButton(onClick = onDeleteClick) {
+                            Icon(Icons.Default.Delete, contentDescription = "Delete", tint = FzError)
+                        }
+                    }
+                    Icon(
+                        Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                        contentDescription = null,
+                        tint = FzTextSecondary,
+                    )
+                }
             }
             Spacer(modifier = Modifier.height(4.dp))
-            Text(item.dateText, style = MaterialTheme.typography.bodySmall, color = FzInk3)
+            Text(item.dateText, style = MaterialTheme.typography.bodySmall, color = FzTextSecondary)
             Spacer(modifier = Modifier.height(12.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 PillBadge(item.confirmedText, PillVariant.Green)
                 item.onTheWayText?.let { PillBadge(it, PillVariant.Amber) }
             }
         }
         if (item.friendPreviews.isNotEmpty()) {
-            HorizontalDivider(color = FzBorder)
+            HorizontalDivider(color = FzBorderGray)
             item.friendPreviews.forEach { friend ->
                 FriendRow(friend)
-                HorizontalDivider(color = FzBorder, modifier = Modifier.padding(horizontal = 16.dp))
             }
         }
         Box(modifier = Modifier.padding(14.dp)) {
-            FriendZonePrimaryButton(text = "🗺  View Live Map", onClick = onViewMapClick)
+            Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                FriendZonePrimaryButton(text = "🗺  View Live Map", onClick = onViewMapClick)
+                if (!item.isOrganizer && onLeaveClick != null) {
+                    FriendZoneOutlineButton(text = "Leave Event", onClick = onLeaveClick)
+                }
+            }
         }
     }
 }
@@ -116,30 +134,44 @@ fun EventLiveCard(
 fun EventUpcomingCard(
     item: EventListItemUi,
     onClick: () -> Unit,
+    onDeleteClick: (() -> Unit)? = null,
+    onLeaveClick: (() -> Unit)? = null,
 ) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 6.dp)
+            .padding(horizontal = 16.dp, vertical = 8.dp)
             .clip(RoundedCornerShape(16.dp))
             .background(FzSurface)
+            .border(1.dp, FzBorderGray, RoundedCornerShape(16.dp))
             .clickable(onClick = onClick),
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Top,
             ) {
-                Text(item.title, style = MaterialTheme.typography.titleMedium, color = FzInk)
-                Icon(
-                    Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                    contentDescription = null,
-                    tint = FzInk3,
-                )
-            }
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text(item.timeIcon)
-                Text(item.timeLabel, style = MaterialTheme.typography.labelMedium, color = FzInk2)
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(item.title, style = MaterialTheme.typography.titleMedium, color = FzTextMain)
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Text(item.timeIcon)
+                        Text(item.timeLabel, style = MaterialTheme.typography.labelMedium, color = FzTextSecondary)
+                    }
+                }
+                
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (item.isOrganizer && onDeleteClick != null) {
+                        IconButton(onClick = onDeleteClick) {
+                            Icon(Icons.Default.Delete, contentDescription = "Delete", tint = FzError)
+                        }
+                    }
+                    Icon(
+                        Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                        contentDescription = null,
+                        tint = FzTextSecondary,
+                    )
+                }
             }
             Spacer(modifier = Modifier.height(4.dp))
             EventListDateRow(dateText = item.dateText, statusBadge = item.statusBadge)
@@ -150,7 +182,7 @@ fun EventUpcomingCard(
             }
             if (item.avatars.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(12.dp))
-                HorizontalDivider(color = FzBorder)
+                HorizontalDivider(color = FzBorderGray)
                 Spacer(modifier = Modifier.height(12.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     AvatarStack(item.avatars, item.extraCount)
@@ -159,10 +191,14 @@ fun EventUpcomingCard(
                         Text(
                             "and ${item.extraCount} more",
                             style = MaterialTheme.typography.bodySmall,
-                            color = FzInk3,
+                            color = FzTextSecondary,
                         )
                     }
                 }
+            }
+            if (!item.isOrganizer && onLeaveClick != null) {
+                Spacer(modifier = Modifier.height(12.dp))
+                FriendZoneOutlineButton(text = "Leave Event", onClick = onLeaveClick)
             }
         }
     }
@@ -177,7 +213,7 @@ private fun EventListDateRow(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Text(dateText, style = MaterialTheme.typography.bodySmall, color = FzInk3)
+        Text(dateText, style = MaterialTheme.typography.bodySmall, color = FzTextSecondary)
         statusBadge?.let { EventListStatusBadge(it) }
     }
 }
@@ -185,8 +221,8 @@ private fun EventListDateRow(
 @Composable
 private fun EventListStatusBadge(badge: EventDetailStatusBadge) {
     val (dotColor, label) = when (badge) {
-        EventDetailStatusBadge.Completed -> FzInk3 to "Completed"
-        EventDetailStatusBadge.Cancelled -> FzRequired to "Cancelled"
+        EventDetailStatusBadge.Completed -> FzTextSecondary to "Completed"
+        EventDetailStatusBadge.Cancelled -> FzError to "Cancelled"
     }
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -201,7 +237,7 @@ private fun EventListStatusBadge(badge: EventDetailStatusBadge) {
         Text(
             label,
             style = MaterialTheme.typography.labelSmall,
-            color = FzInk2,
+            color = FzTextSecondary,
         )
     }
 }
@@ -220,7 +256,7 @@ fun CreateEventHeader(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .background(FzSurface.copy(alpha = 0.92f))
+            .background(FzSurface.copy(alpha = 0.95f))
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -230,12 +266,12 @@ fun CreateEventHeader(
                 .size(38.dp)
                 .background(FzSurface2, RoundedCornerShape(12.dp)),
         ) {
-            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = FzInk2)
+            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = FzTextSecondary)
         }
         Text(
             text = title,
-            style = MaterialTheme.typography.titleMedium,
-            color = FzInk,
+            style = MaterialTheme.typography.titleLarge,
+            color = FzTextMain,
             modifier = Modifier.weight(1f),
             textAlign = androidx.compose.ui.text.style.TextAlign.Center,
         )
@@ -247,7 +283,7 @@ fun CreateEventHeader(
                         .size(38.dp)
                         .background(FzSurface2, RoundedCornerShape(12.dp)),
                 ) {
-                    Icon(Icons.Filled.MoreVert, contentDescription = "Event options", tint = FzInk2)
+                    Icon(Icons.Filled.MoreVert, contentDescription = "Event options", tint = FzTextSecondary)
                 }
                 if (menuContent != null) {
                     DropdownMenu(
@@ -276,8 +312,8 @@ fun StepProgressBar(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
-            Text(stepLabel, style = MaterialTheme.typography.labelMedium, color = FzInk)
-            Text(stepDescription, style = MaterialTheme.typography.labelMedium, color = FzInk3)
+            Text(stepLabel, style = MaterialTheme.typography.labelMedium, color = FzTextMain)
+            Text(stepDescription, style = MaterialTheme.typography.labelMedium, color = FzTextSecondary)
         }
         Spacer(modifier = Modifier.height(10.dp))
         Box(
@@ -292,7 +328,7 @@ fun StepProgressBar(
                     .fillMaxWidth(progress.coerceIn(0f, 1f))
                     .height(4.dp)
                     .clip(RoundedCornerShape(2.dp))
-                    .background(FzInk),
+                    .background(FzPrimary),
             )
         }
         Spacer(modifier = Modifier.height(14.dp))
@@ -311,7 +347,7 @@ fun UploadZone(
             .height(120.dp)
             .clip(RoundedCornerShape(10.dp))
             .background(FzSurface2)
-            .border(1.5.dp, FzBorder, RoundedCornerShape(10.dp))
+            .border(1.5.dp, FzBorderGray, RoundedCornerShape(10.dp))
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
@@ -331,8 +367,8 @@ fun UploadZone(
                 verticalArrangement = Arrangement.Center,
             ) {
                 Text("🖼", style = MaterialTheme.typography.headlineMedium)
-                Text("Upload cover image", style = MaterialTheme.typography.labelMedium, color = FzInk2)
-                Text("JPG, PNG up to 20MB", style = MaterialTheme.typography.bodySmall, color = FzInk3)
+                Text("Upload cover image", style = MaterialTheme.typography.labelMedium, color = FzTextSecondary)
+                Text("JPG, PNG up to 20MB", style = MaterialTheme.typography.bodySmall, color = FzTextSecondary)
             }
         }
     }
@@ -346,7 +382,7 @@ fun LiveMapPlaceholder(modifier: Modifier = Modifier) {
             .height(200.dp)
             .clip(RoundedCornerShape(12.dp))
             .background(FzSurface2)
-            .border(1.5.dp, FzBorder, RoundedCornerShape(12.dp)),
+            .border(1.5.dp, FzBorderGray, RoundedCornerShape(12.dp)),
         contentAlignment = Alignment.Center,
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -354,7 +390,7 @@ fun LiveMapPlaceholder(modifier: Modifier = Modifier) {
             Text(
                 "Live map coming soon",
                 style = MaterialTheme.typography.bodyMedium,
-                color = FzInk3,
+                color = FzTextSecondary,
             )
         }
     }

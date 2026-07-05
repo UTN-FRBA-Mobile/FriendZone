@@ -24,6 +24,8 @@ fun Event.toListItemUi(
     extraAvatarCount: Int = 0,
     isPastItem: Boolean = false,
     startsAtEpoch: Long = 0L,
+    organizerId: String? = null,
+    currentUserId: String? = null,
 ): EventListItemUi {
     val (icon, label) = formatRelativeTimeLabel(startsAt)
     val statusBadge = when (status) {
@@ -45,6 +47,9 @@ fun Event.toListItemUi(
         avatars = participantAvatars,
         extraCount = extraAvatarCount,
         friendPreviews = friendPreviews,
+        isOrganizer = currentUserId != null && organizerId == currentUserId,
+        organizerId = organizerId,
+        currentUserId = currentUserId,
         coverImageUrl = resolveApiAssetUrl(coverImageUrl),
         isPastItem = isPastItem,
         startsAtEpoch = startsAtEpoch,

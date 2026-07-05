@@ -7,6 +7,8 @@ enum class SocketEventType {
     PARTICIPANT_JOINED,
     PARTICIPANT_ARRIVED,
     EVENT_COMPLETED,
+    EVENT_DELETED,
+    PARTICIPANT_LEFT,
     RECONNECTED,
 }
 
@@ -35,6 +37,17 @@ data class ParticipantArrivedPayload(
 @Serializable
 data class EventCompletedPayload(
     val completedAt: String,
+)
+
+@Serializable
+data class EventDeletedPayload(
+    val reason: String? = null,
+)
+
+@Serializable
+data class ParticipantLeftPayload(
+    val userId: String,
+    val displayName: String,
 )
 
 data class SocketEvent(

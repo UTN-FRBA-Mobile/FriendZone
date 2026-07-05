@@ -1,8 +1,10 @@
 package com.example.friendzone.presentation.invite
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.friendzone.BuildConfig
+import com.example.friendzone.R
 import com.example.friendzone.domain.repository.AuthRepository
 import com.example.friendzone.domain.repository.UserRepository
 import com.example.friendzone.domain.result.ApiResult
@@ -59,8 +61,8 @@ class InviteViewModel @Inject constructor(
     }
 
     /** Message shared through the native share sheet (WhatsApp, Instagram, etc.). */
-    fun shareMessage(link: String): String =
-        "Join me on FriendZone! Add me as a friend with this link: $link"
+    fun shareMessage(context: Context, link: String): String =
+        context.getString(R.string.msg_share_invite_text, link)
 
     private fun buildInviteLink(username: String): String =
         // API_BASE_URL always ends with "/" (normalized in build.gradle.kts).
