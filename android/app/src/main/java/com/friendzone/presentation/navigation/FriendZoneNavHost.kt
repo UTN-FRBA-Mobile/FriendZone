@@ -35,6 +35,7 @@ import com.example.friendzone.presentation.events.EventDetailScreen
 import com.example.friendzone.presentation.events.EventsScreen
 import com.example.friendzone.presentation.friends.FriendsBadgeViewModel
 import com.example.friendzone.presentation.friends.FriendsScreen
+import com.example.friendzone.presentation.invite.IncomingInviteBottomSheet
 import com.example.friendzone.presentation.notifications.NotificationsBadgeViewModel
 import com.example.friendzone.presentation.notifications.NotificationsScreen
 import com.example.friendzone.presentation.profile.ProfileScreen
@@ -72,6 +73,7 @@ fun FriendZoneNavHost(
     var eventsInitialTab by remember { mutableStateOf<com.example.friendzone.presentation.events.EventsTab?>(null) }
     var eventsOpenInvitationId by remember { mutableStateOf<String?>(null) }
     var friendsInitialTab by remember { mutableStateOf<com.example.friendzone.presentation.friends.FriendsTab?>(null) }
+    var pendingInviteUsername by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(isLoggedIn, pendingDeepLink) {
         val deepLink = pendingDeepLink ?: return@LaunchedEffect
@@ -94,6 +96,10 @@ fun FriendZoneNavHost(
                         launchSingleTop = true
                     }
                 }
+            }
+            deepLink.inviteUsername != null -> {
+                // Show the invite modal over whatever screen is active (no tab switch).
+                pendingInviteUsername = deepLink.inviteUsername
             }
         }
         deepLinkViewModel.clear()
@@ -310,6 +316,16 @@ fun FriendZoneNavHost(
                         },
                     )
                 }
+            }
+        }
+
+        if (isLoggedIn) {
+            pendingInviteUsername?.let { username ->
+                IncomingInviteBottomSheet(
+                    username = username,
+                    onDismiss = { pendingInviteUsername = null },
+                    onAdded = { friendsBadgeViewModel.refresh() },
+                )
             }
         }
     }

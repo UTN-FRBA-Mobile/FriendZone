@@ -10,6 +10,7 @@ import { DrizzleModule } from './drizzle/drizzle.module';
 import { FriendsModule } from './friends/friends.module';
 import { EventsModule } from './events/events.module';
 import { InvitationsModule } from './invitations/invitations.module';
+import { InviteModule } from './invite/invite.module';
 import { LocationsModule } from './locations/locations.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { UsersModule } from './users/users.module';
@@ -28,6 +29,7 @@ import { WebsocketModule } from './websocket/websocket.module';
     FriendsModule,
     EventsModule,
     InvitationsModule,
+    InviteModule,
     LocationsModule,
     NotificationsModule,
     WebsocketModule,

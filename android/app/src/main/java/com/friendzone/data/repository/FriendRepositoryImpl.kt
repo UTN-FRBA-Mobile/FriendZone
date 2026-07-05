@@ -2,6 +2,7 @@ package com.example.friendzone.data.repository
 
 import com.example.friendzone.data.mapper.DtoMapper
 import com.example.friendzone.data.remote.api.FriendsApi
+import com.example.friendzone.data.remote.dto.AddFriendByInviteBody
 import com.example.friendzone.data.remote.dto.CreateFriendRequestBody
 import com.example.friendzone.data.remote.dto.RespondFriendRequestBody
 import com.example.friendzone.data.remote.safeApiCall
@@ -35,6 +36,10 @@ class FriendRepositoryImpl @Inject constructor(
                 friendsApi.sendRequest(CreateFriendRequestBody(emailOrUsername)),
             )
         }
+
+    override suspend fun addByInvite(username: String): ApiResult<User> = safeApiCall {
+        DtoMapper.toUser(friendsApi.addByInvite(AddFriendByInviteBody(username)))
+    }
 
     override suspend fun respondToRequest(
         requestId: String,

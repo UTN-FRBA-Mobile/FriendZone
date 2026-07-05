@@ -33,6 +33,7 @@ interface FriendRepository {
     suspend fun getIncomingRequests(): ApiResult<List<com.example.friendzone.domain.model.FriendRequest>>
     suspend fun getPendingIncomingCount(): ApiResult<Int>
     suspend fun sendRequest(emailOrUsername: String): ApiResult<com.example.friendzone.domain.model.FriendRequest>
+    suspend fun addByInvite(username: String): ApiResult<User>
     suspend fun respondToRequest(
         requestId: String,
         status: com.example.friendzone.domain.model.FriendRequestStatus,
