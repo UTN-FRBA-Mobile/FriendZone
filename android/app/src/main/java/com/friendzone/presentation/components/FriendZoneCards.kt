@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -14,9 +15,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -209,6 +211,9 @@ fun CreateEventHeader(
     modifier: Modifier = Modifier,
     showMenu: Boolean = false,
     onMenuClick: () -> Unit = {},
+    menuExpanded: Boolean = false,
+    onMenuDismiss: () -> Unit = {},
+    menuContent: @Composable (ColumnScope.() -> Unit)? = null,
 ) {
     Row(
         modifier = modifier
@@ -233,13 +238,23 @@ fun CreateEventHeader(
             textAlign = androidx.compose.ui.text.style.TextAlign.Center,
         )
         if (showMenu) {
-            IconButton(
-                onClick = onMenuClick,
-                modifier = Modifier
-                    .size(38.dp)
-                    .background(FzSurface2, RoundedCornerShape(12.dp)),
-            ) {
-                Icon(Icons.Filled.Menu, contentDescription = "Event options", tint = FzInk2)
+            Box {
+                IconButton(
+                    onClick = onMenuClick,
+                    modifier = Modifier
+                        .size(38.dp)
+                        .background(FzSurface2, RoundedCornerShape(12.dp)),
+                ) {
+                    Icon(Icons.Filled.MoreVert, contentDescription = "Event options", tint = FzInk2)
+                }
+                if (menuContent != null) {
+                    DropdownMenu(
+                        expanded = menuExpanded,
+                        onDismissRequest = onMenuDismiss,
+                    ) {
+                        menuContent()
+                    }
+                }
             }
         } else {
             Spacer(modifier = Modifier.size(38.dp))

@@ -67,12 +67,31 @@ class CreateEventViewModel @Inject constructor(
     private val _submitState = MutableStateFlow<CreateEventSubmitState>(CreateEventSubmitState.Idle)
     val submitState: StateFlow<CreateEventSubmitState> = _submitState.asStateFlow()
 
+    private val _isRefreshing = MutableStateFlow(false)
+    val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
+
     fun loadFriends() {
         viewModelScope.launch {
-            when (val result = friendRepository.getFriends()) {
-                is ApiResult.Success -> _friends.value = result.data
-                else -> Unit
+            loadFriendsInternal()
+        }
+    }
+
+    fun refreshFriends() {
+        viewModelScope.launch {
+            if (_isRefreshing.value) return@launch
+            _isRefreshing.value = true
+            try {
+                loadFriendsInternal()
+            } finally {
+                _isRefreshing.value = false
             }
+        }
+    }
+
+    private suspend fun loadFriendsInternal() {
+        when (val result = friendRepository.getFriends()) {
+            is ApiResult.Success -> _friends.value = result.data
+            else -> Unit
         }
     }
 

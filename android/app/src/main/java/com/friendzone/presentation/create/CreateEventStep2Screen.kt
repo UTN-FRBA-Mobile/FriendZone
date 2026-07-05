@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.friendzone.presentation.components.CreateEventHeader
 import com.example.friendzone.presentation.components.FriendZonePrimaryButton
+import com.example.friendzone.presentation.components.FriendZonePullToRefreshBox
 import com.example.friendzone.presentation.components.InviteFriendChip
 import com.example.friendzone.presentation.components.StepProgressBar
 import com.example.friendzone.ui.theme.FzBackground
@@ -44,6 +45,7 @@ fun CreateEventStep2Screen(
     val submitState by viewModel.submitState.collectAsStateWithLifecycle()
     val friends by viewModel.friends.collectAsStateWithLifecycle()
     val selectedFriendIds by viewModel.selectedFriendIds.collectAsStateWithLifecycle()
+    val isRefreshing by viewModel.isRefreshing.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(Unit) {
@@ -68,12 +70,17 @@ fun CreateEventStep2Screen(
     val isLoading = submitState is CreateEventSubmitState.Loading
 
     Box(modifier = Modifier.fillMaxSize()) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(FzBackground)
-                .verticalScroll(rememberScrollState()),
+        FriendZonePullToRefreshBox(
+            isRefreshing = isRefreshing,
+            onRefresh = viewModel::refreshFriends,
+            modifier = Modifier.fillMaxSize(),
         ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(FzBackground)
+                    .verticalScroll(rememberScrollState()),
+            ) {
             CreateEventHeader(title = "Create Event", onBackClick = onBack)
             StepProgressBar(
                 stepLabel = "Step 2 of 2",
@@ -119,6 +126,7 @@ fun CreateEventStep2Screen(
                 )
                 Spacer(modifier = Modifier.height(24.dp))
             }
+        }
         }
         if (isLoading) {
             Box(

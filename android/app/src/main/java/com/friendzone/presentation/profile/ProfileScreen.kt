@@ -42,6 +42,7 @@ import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.friendzone.presentation.components.FriendZoneOutlineButton
+import com.example.friendzone.presentation.components.FriendZonePullToRefreshBox
 import com.example.friendzone.presentation.components.FriendZoneTopBar
 import com.example.friendzone.ui.theme.FzBackground
 import com.example.friendzone.ui.theme.FzBorder
@@ -57,6 +58,7 @@ fun ProfileScreen(
 ) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val isRefreshing by viewModel.isRefreshing.collectAsStateWithLifecycle()
     var proximityAlerts by rememberSaveable { mutableStateOf(true) }
     val user = uiState.user
     val locationPermissionLauncher = rememberLauncherForActivityResult(
@@ -87,12 +89,17 @@ fun ProfileScreen(
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(FzBackground)
-            .verticalScroll(rememberScrollState()),
+    FriendZonePullToRefreshBox(
+        isRefreshing = isRefreshing,
+        onRefresh = viewModel::refresh,
+        modifier = Modifier.fillMaxSize(),
     ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(FzBackground)
+                .verticalScroll(rememberScrollState()),
+        ) {
         FriendZoneTopBar(
             title = "Profile",
             showNotifications = true,
@@ -188,6 +195,7 @@ fun ProfileScreen(
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(message, color = MaterialTheme.colorScheme.error)
             }
+        }
         }
     }
 }

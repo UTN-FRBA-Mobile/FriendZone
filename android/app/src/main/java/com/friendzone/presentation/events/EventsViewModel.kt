@@ -69,6 +69,9 @@ class EventsViewModel @Inject constructor(
     private val _snackbarMessage = MutableStateFlow<String?>(null)
     val snackbarMessage: StateFlow<String?> = _snackbarMessage.asStateFlow()
 
+    private val _isRefreshing = MutableStateFlow(false)
+    val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
+
     init {
         viewModelScope.launch {
             eventSocketManager.connect()
@@ -138,42 +141,62 @@ class EventsViewModel @Inject constructor(
 
     fun loadEvents() {
         viewModelScope.launch {
-            _uiState.value = EventsUiState.Loading
-            val eventsResult = eventRepository.getMine()
-            val invitationsResult = invitationRepository.getMinePending()
+            loadEventsInternal(showFullLoading = true)
+        }
+    }
 
-            if (eventsResult is ApiResult.Error) {
-                _uiState.value = EventsUiState.Error(eventsResult.error.displayMessage())
-                return@launch
-            }
-
-            val events = (eventsResult as ApiResult.Success).data
-            val pendingInvitations = when (invitationsResult) {
-                is ApiResult.Success -> invitationsResult.data
-                else -> emptyList()
-            }
-
-            val enriched = enrichEvents(events)
-            val upcoming = enriched
-                .filter { !it.isPastItem }
-                .sortedWith(
-                    compareByDescending<EventListItemUi> { it.isLive }
-                        .thenBy { it.startsAtEpoch },
+    fun refresh() {
+        viewModelScope.launch {
+            if (_isRefreshing.value) return@launch
+            _isRefreshing.value = true
+            try {
+                loadEventsInternal(
+                    showFullLoading = _uiState.value !is EventsUiState.Data,
                 )
-            val past = enriched
-                .filter { it.isPastItem }
-                .sortedByDescending { it.startsAtEpoch }
+            } finally {
+                _isRefreshing.value = false
+            }
+        }
+    }
 
-            _uiState.value = EventsUiState.Data(
-                upcomingEvents = upcoming,
-                pastEvents = past,
-                pendingInvitations = pendingInvitations,
+    private suspend fun loadEventsInternal(showFullLoading: Boolean) {
+        if (showFullLoading) _uiState.value = EventsUiState.Loading
+        val eventsResult = eventRepository.getMine()
+        val invitationsResult = invitationRepository.getMinePending()
+
+        if (eventsResult is ApiResult.Error) {
+            if (showFullLoading || _uiState.value !is EventsUiState.Data) {
+                _uiState.value = EventsUiState.Error(eventsResult.error.displayMessage())
+            }
+            return
+        }
+
+        val events = (eventsResult as ApiResult.Success).data
+        val pendingInvitations = when (invitationsResult) {
+            is ApiResult.Success -> invitationsResult.data
+            else -> emptyList()
+        }
+
+        val enriched = enrichEvents(events)
+        val upcoming = enriched
+            .filter { !it.isPastItem }
+            .sortedWith(
+                compareByDescending<EventListItemUi> { it.isLive }
+                    .thenBy { it.startsAtEpoch },
             )
+        val past = enriched
+            .filter { it.isPastItem }
+            .sortedByDescending { it.startsAtEpoch }
 
-            _selectedInvitation.update { selected ->
-                selected?.let { current ->
-                    pendingInvitations.find { it.id == current.id }
-                }
+        _uiState.value = EventsUiState.Data(
+            upcomingEvents = upcoming,
+            pastEvents = past,
+            pendingInvitations = pendingInvitations,
+        )
+
+        _selectedInvitation.update { selected ->
+            selected?.let { current ->
+                pendingInvitations.find { it.id == current.id }
             }
         }
     }

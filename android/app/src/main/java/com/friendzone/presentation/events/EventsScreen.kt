@@ -40,6 +40,7 @@ import com.example.friendzone.presentation.components.EventLiveCard
 import com.example.friendzone.presentation.components.EventUpcomingCard
 import com.example.friendzone.presentation.components.FriendZoneOutlineButton
 import com.example.friendzone.presentation.components.FriendZonePrimaryButton
+import com.example.friendzone.presentation.components.FriendZonePullToRefreshBox
 import com.example.friendzone.presentation.components.FriendZoneTopBar
 import com.example.friendzone.presentation.components.PillBadge
 import com.example.friendzone.presentation.components.PillVariant
@@ -65,6 +66,7 @@ fun EventsScreen(
     val selectedInvitation by viewModel.selectedInvitation.collectAsStateWithLifecycle()
     val isInvitationActionLoading by viewModel.isInvitationActionLoading.collectAsStateWithLifecycle()
     val snackbarMessage by viewModel.snackbarMessage.collectAsStateWithLifecycle()
+    val isRefreshing by viewModel.isRefreshing.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
@@ -102,12 +104,17 @@ fun EventsScreen(
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(FzBackground),
-            contentPadding = PaddingValues(bottom = 16.dp),
+        FriendZonePullToRefreshBox(
+            isRefreshing = isRefreshing,
+            onRefresh = viewModel::refresh,
+            modifier = Modifier.fillMaxSize(),
         ) {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(FzBackground),
+                contentPadding = PaddingValues(bottom = 16.dp),
+            ) {
             item {
                 FriendZoneTopBar(
                     title = "My Events",
@@ -193,6 +200,7 @@ fun EventsScreen(
                     }
                 }
             }
+        }
         }
         SnackbarHost(
             hostState = snackbarHostState,

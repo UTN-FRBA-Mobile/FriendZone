@@ -39,6 +39,9 @@ class ProfileViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(ProfileUiState())
     val uiState: StateFlow<ProfileUiState> = _uiState.asStateFlow()
 
+    private val _isRefreshing = MutableStateFlow(false)
+    val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
+
     init {
         viewModelScope.launch {
             authRepository.currentUser.collect { cachedUser ->
@@ -52,40 +55,56 @@ class ProfileViewModel @Inject constructor(
 
     fun loadProfile() {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            loadProfileInternal(showFullLoading = _uiState.value.user == null)
+        }
+    }
 
-            when (val meResult = userRepository.getMe()) {
-                is ApiResult.Success -> {
-                    tokenManager.saveUserProfile(meResult.data)
-                    _uiState.update { it.copy(user = meResult.data) }
+    fun refresh() {
+        viewModelScope.launch {
+            if (_isRefreshing.value) return@launch
+            _isRefreshing.value = true
+            try {
+                loadProfileInternal(showFullLoading = false)
+            } finally {
+                _isRefreshing.value = false
+            }
+        }
+    }
+
+    private suspend fun loadProfileInternal(showFullLoading: Boolean) {
+        if (showFullLoading) _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+
+        when (val meResult = userRepository.getMe()) {
+            is ApiResult.Success -> {
+                tokenManager.saveUserProfile(meResult.data)
+                _uiState.update { it.copy(user = meResult.data) }
+            }
+            is ApiResult.Error -> {
+                _uiState.update {
+                    it.copy(errorMessage = meResult.error.displayMessage())
                 }
-                is ApiResult.Error -> {
-                    _uiState.update {
-                        it.copy(errorMessage = meResult.error.displayMessage())
-                    }
-                }
-                ApiResult.Loading -> Unit
             }
+            ApiResult.Loading -> Unit
+        }
 
-            val friendsCount = when (val friendsResult = friendRepository.getFriends()) {
-                is ApiResult.Success -> friendsResult.data.size
-                is ApiResult.Error -> null
-                ApiResult.Loading -> null
-            }
+        val friendsCount = when (val friendsResult = friendRepository.getFriends()) {
+            is ApiResult.Success -> friendsResult.data.size
+            is ApiResult.Error -> null
+            ApiResult.Loading -> null
+        }
 
-            val eventsCount = when (val eventsResult = eventRepository.getMine()) {
-                is ApiResult.Success -> eventsResult.data.size
-                is ApiResult.Error -> null
-                ApiResult.Loading -> null
-            }
+        val eventsCount = when (val eventsResult = eventRepository.getMine()) {
+            is ApiResult.Success -> eventsResult.data.size
+            is ApiResult.Error -> null
+            ApiResult.Loading -> null
+        }
 
-            _uiState.update {
-                it.copy(
-                    isLoading = false,
-                    friendsCount = friendsCount,
-                    eventsCount = eventsCount,
-                )
-            }
+        _uiState.update {
+            it.copy(
+                isLoading = false,
+                friendsCount = friendsCount,
+                eventsCount = eventsCount,
+            )
         }
     }
 
