@@ -17,7 +17,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -44,6 +43,7 @@ import com.example.friendzone.presentation.components.EventMapDialog
 import com.example.friendzone.presentation.components.EventMapPerson
 import com.example.friendzone.presentation.components.EventMapThumbnail
 import com.example.friendzone.presentation.components.FriendRow
+import com.example.friendzone.presentation.components.FriendZonePullToRefreshBox
 import com.example.friendzone.presentation.components.PillBadge
 import com.example.friendzone.presentation.components.PillVariant
 import com.example.friendzone.ui.theme.FzBackground
@@ -66,6 +66,7 @@ fun EventDetailScreen(
     val sharingMessage by viewModel.sharingMessage.collectAsStateWithLifecycle()
     val actionMessage by viewModel.actionMessage.collectAsStateWithLifecycle()
     val showCompletePrompt by viewModel.showCompletePrompt.collectAsStateWithLifecycle()
+    val isRefreshing by viewModel.isRefreshing.collectAsStateWithLifecycle()
     var mapOpen by remember { mutableStateOf(false) }
     var menuOpen by remember { mutableStateOf(false) }
 
@@ -113,21 +114,62 @@ fun EventDetailScreen(
         )
     }
 
-    Box {
+    val organizerState = uiState as? EventDetailUiState.Data
+
+    FriendZonePullToRefreshBox(
+        isRefreshing = isRefreshing,
+        onRefresh = viewModel::refresh,
+        modifier = Modifier.fillMaxSize(),
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .background(FzBackground)
                 .verticalScroll(rememberScrollState()),
         ) {
-            CreateEventHeader(
-                title = "Event",
-                onBackClick = onBack,
-                showMenu = (uiState as? EventDetailUiState.Data)?.showOrganizerMenu == true,
-                onMenuClick = { menuOpen = true },
-            )
+        CreateEventHeader(
+            title = "Event",
+            onBackClick = onBack,
+            showMenu = organizerState?.showOrganizerMenu == true,
+            onMenuClick = { menuOpen = true },
+            menuExpanded = menuOpen,
+            onMenuDismiss = { menuOpen = false },
+            menuContent = if (organizerState?.showOrganizerMenu == true) {
+                {
+                    if (organizerState.canInviteGuests) {
+                        DropdownMenuItem(
+                            text = { Text("Add guests") },
+                            onClick = {
+                                menuOpen = false
+                                viewModel.openInviteSheet()
+                            },
+                        )
+                    }
+                    if (organizerState.canMarkComplete) {
+                        DropdownMenuItem(
+                            text = { Text("Mark completed") },
+                            onClick = {
+                                menuOpen = false
+                                viewModel.markEventCompleted()
+                            },
+                        )
+                    }
+                    if (organizerState.canCancelEvent) {
+                        DropdownMenuItem(
+                            text = { Text("Cancel event", color = FzRequired) },
+                            onClick = {
+                                menuOpen = false
+                                viewModel.cancelEvent()
+                            },
+                        )
+                    }
+                }
+            } else {
+                null
+            },
+        )
 
-            when (val state = uiState) {
+        when (val state = uiState) {
                 is EventDetailUiState.Loading -> {
                     Box(
                         modifier = Modifier
@@ -228,42 +270,6 @@ fun EventDetailScreen(
                         ParticipantSection(state.delayed)
                         Spacer(modifier = Modifier.height(24.dp))
                     }
-                }
-            }
-        }
-
-        val organizerState = uiState as? EventDetailUiState.Data
-        if (organizerState?.showOrganizerMenu == true) {
-            DropdownMenu(
-                expanded = menuOpen,
-                onDismissRequest = { menuOpen = false },
-            ) {
-                if (organizerState.canInviteGuests) {
-                    DropdownMenuItem(
-                        text = { Text("Add guests") },
-                        onClick = {
-                            menuOpen = false
-                            viewModel.openInviteSheet()
-                        },
-                    )
-                }
-                if (organizerState.canMarkComplete) {
-                    DropdownMenuItem(
-                        text = { Text("Mark event as completed") },
-                        onClick = {
-                            menuOpen = false
-                            viewModel.markEventCompleted()
-                        },
-                    )
-                }
-                if (organizerState.canCancelEvent) {
-                    DropdownMenuItem(
-                        text = { Text("Cancel event") },
-                        onClick = {
-                            menuOpen = false
-                            viewModel.cancelEvent()
-                        },
-                    )
                 }
             }
         }

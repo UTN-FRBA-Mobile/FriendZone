@@ -47,6 +47,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.friendzone.domain.model.FriendRequest
 import com.example.friendzone.domain.model.User
 import com.example.friendzone.presentation.components.FriendZoneOutlineButton
+import com.example.friendzone.presentation.components.FriendZonePullToRefreshBox
 import com.example.friendzone.presentation.components.FriendZoneTextField
 import com.example.friendzone.presentation.components.FriendZoneTopBar
 import com.example.friendzone.presentation.components.UserInitialAvatar
@@ -67,6 +68,7 @@ fun FriendsScreen(
     viewModel: FriendsViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val isRefreshing by viewModel.isRefreshing.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     var showInviteSheet by rememberSaveable { mutableStateOf(false) }
 
@@ -105,8 +107,18 @@ fun FriendsScreen(
                 onTabSelected = viewModel::selectTab,
             )
 
-            when (uiState.selectedTab) {
-                FriendsTab.Friends -> FriendsListContent(
+            FriendZonePullToRefreshBox(
+                isRefreshing = isRefreshing,
+                onRefresh = {
+                    viewModel.refresh()
+                    onFriendsChanged()
+                },
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
+            ) {
+                when (uiState.selectedTab) {
+                    FriendsTab.Friends -> FriendsListContent(
                     isLoading = uiState.isLoading,
                     searchQuery = uiState.searchQuery,
                     lookupResult = uiState.lookupResult,
@@ -132,6 +144,7 @@ fun FriendsScreen(
                         onFriendsChanged()
                     },
                 )
+                }
             }
         }
         SnackbarHost(
@@ -342,36 +355,45 @@ private fun RequestsListContent(
     onAccept: (String) -> Unit,
     onReject: (String) -> Unit,
 ) {
-    if (isLoading) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(32.dp),
-            contentAlignment = Alignment.Center,
-        ) {
-            CircularProgressIndicator(color = FzInk)
-        }
-        return
-    }
-    if (requests.isEmpty()) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(32.dp),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text("No pending requests", color = FzInk3)
-        }
-        return
-    }
-    LazyColumn(modifier = Modifier.fillMaxSize()) {
-        items(requests, key = { it.id }) { request ->
-            RequestRow(
-                request = request,
-                onAccept = { onAccept(request.id) },
-                onReject = { onReject(request.id) },
-            )
-            HorizontalDivider(color = FzBorder, modifier = Modifier.padding(horizontal = 16.dp))
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 16.dp),
+    ) {
+        when {
+            isLoading -> {
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(32.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        CircularProgressIndicator(color = FzInk)
+                    }
+                }
+            }
+            requests.isEmpty() -> {
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(32.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text("No pending requests", color = FzInk3)
+                    }
+                }
+            }
+            else -> {
+                items(requests, key = { it.id }) { request ->
+                    RequestRow(
+                        request = request,
+                        onAccept = { onAccept(request.id) },
+                        onReject = { onReject(request.id) },
+                    )
+                    HorizontalDivider(color = FzBorder, modifier = Modifier.padding(horizontal = 16.dp))
+                }
+            }
         }
     }
 }

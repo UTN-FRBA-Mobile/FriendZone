@@ -40,6 +40,7 @@ import com.example.friendzone.domain.model.InboxNotification
 import com.example.friendzone.presentation.components.CreateEventHeader
 import com.example.friendzone.presentation.components.FriendZoneOutlineButton
 import com.example.friendzone.presentation.components.FriendZonePrimaryButton
+import com.example.friendzone.presentation.components.FriendZonePullToRefreshBox
 import com.example.friendzone.presentation.components.PillBadge
 import com.example.friendzone.presentation.components.PillVariant
 import com.example.friendzone.ui.theme.FzBackground
@@ -58,6 +59,7 @@ fun NotificationsScreen(
     BackHandler(onBack = onBack)
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val actionFinished by viewModel.actionFinished.collectAsStateWithLifecycle()
+    val isRefreshing by viewModel.isRefreshing.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
@@ -95,49 +97,61 @@ fun NotificationsScreen(
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(FzBackground),
+        FriendZonePullToRefreshBox(
+            isRefreshing = isRefreshing,
+            onRefresh = viewModel::refresh,
+            modifier = Modifier.fillMaxSize(),
         ) {
-            CreateEventHeader(title = "Notifications", onBackClick = onBack)
-
-            when {
-                uiState.isLoading -> {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(48.dp),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        CircularProgressIndicator(color = FzInk)
-                    }
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(FzBackground),
+            ) {
+                item {
+                    CreateEventHeader(title = "Notifications", onBackClick = onBack)
                 }
-                uiState.errorMessage != null -> {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(32.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                    ) {
-                        Text(uiState.errorMessage!!, color = FzInk3)
-                        TextButton(onClick = { viewModel.loadInbox() }) {
-                            Text("Retry", color = FzInk)
+
+                when {
+                    uiState.isLoading -> {
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(48.dp),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                CircularProgressIndicator(color = FzInk)
+                            }
                         }
                     }
-                }
-                uiState.items.isEmpty() -> {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(48.dp),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text("No notifications", color = FzInk3)
+                    uiState.errorMessage != null -> {
+                        item {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(32.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                            ) {
+                                Text(uiState.errorMessage!!, color = FzInk3)
+                                TextButton(onClick = { viewModel.loadInbox() }) {
+                                    Text("Retry", color = FzInk)
+                                }
+                            }
+                        }
                     }
-                }
-                else -> {
-                    LazyColumn(modifier = Modifier.fillMaxSize()) {
+                    uiState.items.isEmpty() -> {
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(48.dp),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Text("No notifications", color = FzInk3)
+                            }
+                        }
+                    }
+                    else -> {
                         items(uiState.items, key = { it.id }) { item ->
                             NotificationRow(
                                 item = item,

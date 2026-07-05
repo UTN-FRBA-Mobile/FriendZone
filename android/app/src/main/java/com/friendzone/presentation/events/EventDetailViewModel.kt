@@ -112,6 +112,9 @@ class EventDetailViewModel @Inject constructor(
     private val _uiState = MutableStateFlow<EventDetailUiState>(EventDetailUiState.Loading)
     val uiState: StateFlow<EventDetailUiState> = _uiState.asStateFlow()
 
+    private val _isRefreshing = MutableStateFlow(false)
+    val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
+
     private val _inviteSheetOpen = MutableStateFlow(false)
     val inviteSheetOpen: StateFlow<Boolean> = _inviteSheetOpen.asStateFlow()
 
@@ -208,49 +211,65 @@ class EventDetailViewModel @Inject constructor(
 
     fun loadDetail() {
         viewModelScope.launch {
-            // Refresco silencioso: si ya mostramos datos (p. ej. por una
-            // actualizacion de ubicacion via socket) no volvemos a "Loading"
-            // para no cerrar el mapa ni hacer parpadear la pantalla.
-            val hadData = _uiState.value is EventDetailUiState.Data
-            if (!hadData) _uiState.value = EventDetailUiState.Loading
-            when (val eventResult = eventRepository.getById(eventId)) {
-                is ApiResult.Error -> {
-                    if (!hadData) {
-                        _uiState.value = EventDetailUiState.Error(eventResult.error.displayMessage())
-                    }
-                }
-                is ApiResult.Success -> {
-                    val event = eventResult.data
-                    val invitations = loadInvitationsIfOrganizer(event)
-                    when (val participantsResult = locationRepository.getParticipants(eventId)) {
-                        is ApiResult.Error -> {
-                            if (!hadData) {
-                                _uiState.value = EventDetailUiState.Error(
-                                    participantsResult.error.displayMessage(),
-                                )
-                            }
-                        }
-                        is ApiResult.Success -> {
-                            syncMySharingState(participantsResult.data)
-                            if (isOrganizer(event)) {
-                                val friends = when (val friendsResult = friendRepository.getFriends()) {
-                                    is ApiResult.Success -> friendsResult.data
-                                    else -> emptyList()
-                                }
-                                applyInviteLists(friends, invitations)
-                            }
-                            _uiState.value = buildUiState(
-                                event = event,
-                                participants = participantsResult.data,
-                                invitations = invitations,
-                            )
-                            maybeShowCompletePrompt(event, invitations)
-                        }
-                        ApiResult.Loading -> Unit
-                    }
-                }
-                ApiResult.Loading -> Unit
+            loadDetailInternal()
+        }
+    }
+
+    fun refresh() {
+        viewModelScope.launch {
+            if (_isRefreshing.value) return@launch
+            _isRefreshing.value = true
+            try {
+                loadDetailInternal()
+            } finally {
+                _isRefreshing.value = false
             }
+        }
+    }
+
+    private suspend fun loadDetailInternal() {
+        // Refresco silencioso: si ya mostramos datos (p. ej. por una
+        // actualizacion de ubicacion via socket) no volvemos a "Loading"
+        // para no cerrar el mapa ni hacer parpadear la pantalla.
+        val hadData = _uiState.value is EventDetailUiState.Data
+        if (!hadData) _uiState.value = EventDetailUiState.Loading
+        when (val eventResult = eventRepository.getById(eventId)) {
+            is ApiResult.Error -> {
+                if (!hadData) {
+                    _uiState.value = EventDetailUiState.Error(eventResult.error.displayMessage())
+                }
+            }
+            is ApiResult.Success -> {
+                val event = eventResult.data
+                val invitations = loadInvitationsIfOrganizer(event)
+                when (val participantsResult = locationRepository.getParticipants(eventId)) {
+                    is ApiResult.Error -> {
+                        if (!hadData) {
+                            _uiState.value = EventDetailUiState.Error(
+                                participantsResult.error.displayMessage(),
+                            )
+                        }
+                    }
+                    is ApiResult.Success -> {
+                        syncMySharingState(participantsResult.data)
+                        if (isOrganizer(event)) {
+                            val friends = when (val friendsResult = friendRepository.getFriends()) {
+                                is ApiResult.Success -> friendsResult.data
+                                else -> emptyList()
+                            }
+                            applyInviteLists(friends, invitations)
+                        }
+                        _uiState.value = buildUiState(
+                            event = event,
+                            participants = participantsResult.data,
+                            invitations = invitations,
+                        )
+                        maybeShowCompletePrompt(event, invitations)
+                    }
+                    ApiResult.Loading -> Unit
+                }
+            }
+            ApiResult.Loading -> Unit
         }
     }
 

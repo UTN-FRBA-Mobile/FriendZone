@@ -45,35 +45,56 @@ class FriendsViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(FriendsUiState())
     val uiState: StateFlow<FriendsUiState> = _uiState.asStateFlow()
 
+    private val _isRefreshing = MutableStateFlow(false)
+    val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
+
     init {
         loadAll()
     }
 
     fun loadAll() {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true)
-            val friends = when (val result = friendRepository.getFriends()) {
-                is ApiResult.Success -> result.data
-                is ApiResult.Error -> {
-                    showMessage(result.error.displayMessage())
-                    emptyList()
-                }
-                ApiResult.Loading -> emptyList()
-            }
-            val requests = when (val result = friendRepository.getIncomingRequests()) {
-                is ApiResult.Success -> result.data
-                is ApiResult.Error -> {
-                    showMessage(result.error.displayMessage())
-                    emptyList()
-                }
-                ApiResult.Loading -> emptyList()
-            }
-            _uiState.value = _uiState.value.copy(
-                isLoading = false,
-                friends = friends,
-                requests = requests,
-            )
+            loadAllInternal(showFullLoading = true)
         }
+    }
+
+    fun refresh() {
+        viewModelScope.launch {
+            if (_isRefreshing.value) return@launch
+            _isRefreshing.value = true
+            try {
+                val hasContent = !_uiState.value.isLoading &&
+                    (_uiState.value.friends.isNotEmpty() || _uiState.value.requests.isNotEmpty())
+                loadAllInternal(showFullLoading = !hasContent)
+            } finally {
+                _isRefreshing.value = false
+            }
+        }
+    }
+
+    private suspend fun loadAllInternal(showFullLoading: Boolean) {
+        if (showFullLoading) _uiState.value = _uiState.value.copy(isLoading = true)
+        val friends = when (val result = friendRepository.getFriends()) {
+            is ApiResult.Success -> result.data
+            is ApiResult.Error -> {
+                showMessage(result.error.displayMessage())
+                emptyList()
+            }
+            ApiResult.Loading -> emptyList()
+        }
+        val requests = when (val result = friendRepository.getIncomingRequests()) {
+            is ApiResult.Success -> result.data
+            is ApiResult.Error -> {
+                showMessage(result.error.displayMessage())
+                emptyList()
+            }
+            ApiResult.Loading -> emptyList()
+        }
+        _uiState.value = _uiState.value.copy(
+            isLoading = false,
+            friends = friends,
+            requests = requests,
+        )
     }
 
     fun selectTab(tab: FriendsTab) {
