@@ -10,6 +10,7 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import com.example.friendzone.MainActivity
 import com.example.friendzone.R
+import com.example.friendzone.presentation.navigation.DeepLinkViewModel
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import dagger.hilt.android.AndroidEntryPoint
@@ -48,6 +49,7 @@ class FriendZoneFirebaseMessagingService : FirebaseMessagingService() {
 
         val intent = Intent(this, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            putExtra(DeepLinkViewModel.EXTRA_TYPE, data["type"])
             putExtra(EXTRA_NOTIFICATION_ID, data["notificationId"])
             putExtra(EXTRA_NOTIFICATION_TYPE, data["type"])
             putExtra(EXTRA_INVITATION_ID, data["invitationId"])

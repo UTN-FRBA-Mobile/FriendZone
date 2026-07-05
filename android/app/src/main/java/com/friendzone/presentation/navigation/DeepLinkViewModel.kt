@@ -23,7 +23,8 @@ class DeepLinkViewModel @Inject constructor() : ViewModel() {
 
     fun consumeFromIntent(intent: Intent?) {
         if (intent == null) return
-        val type = intent.getStringExtra(FriendZoneFirebaseMessagingService.EXTRA_NOTIFICATION_TYPE)
+        val type = intent.getStringExtra(EXTRA_TYPE)
+            ?: intent.getStringExtra(FriendZoneFirebaseMessagingService.EXTRA_NOTIFICATION_TYPE)
         val invitationId = intent.getStringExtra(FriendZoneFirebaseMessagingService.EXTRA_INVITATION_ID)
         val requestId = intent.getStringExtra(FriendZoneFirebaseMessagingService.EXTRA_REQUEST_ID)
         val eventId = intent.getStringExtra(FriendZoneFirebaseMessagingService.EXTRA_EVENT_ID)
@@ -35,6 +36,7 @@ class DeepLinkViewModel @Inject constructor() : ViewModel() {
                 eventId = eventId,
             )
         }
+        intent.removeExtra(EXTRA_TYPE)
         intent.removeExtra(FriendZoneFirebaseMessagingService.EXTRA_NOTIFICATION_TYPE)
         intent.removeExtra(FriendZoneFirebaseMessagingService.EXTRA_INVITATION_ID)
         intent.removeExtra(FriendZoneFirebaseMessagingService.EXTRA_REQUEST_ID)
@@ -44,5 +46,9 @@ class DeepLinkViewModel @Inject constructor() : ViewModel() {
 
     fun clear() {
         _pending.value = null
+    }
+
+    companion object {
+        const val EXTRA_TYPE = "type"
     }
 }

@@ -8,6 +8,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -19,8 +20,15 @@ class AppNavViewModel @Inject constructor(
 ) : ViewModel() {
     private val loggedInFlow = authRepository.isLoggedIn
 
-    val isLoggedIn: StateFlow<Boolean> = loggedInFlow
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
+    val authSession: StateFlow<AuthSessionState> = loggedInFlow
+        .map { loggedIn ->
+            if (loggedIn) AuthSessionState.LoggedIn else AuthSessionState.LoggedOut
+        }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, AuthSessionState.Loading)
+
+    val isLoggedIn: StateFlow<Boolean> = authSession
+        .map { it == AuthSessionState.LoggedIn }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
     init {
         viewModelScope.launch {
