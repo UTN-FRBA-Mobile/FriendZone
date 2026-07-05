@@ -29,9 +29,6 @@ import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -59,7 +56,6 @@ fun ProfileScreen(
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val isRefreshing by viewModel.isRefreshing.collectAsStateWithLifecycle()
-    var proximityAlerts by rememberSaveable { mutableStateOf(true) }
     val user = uiState.user
     val locationPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions(),
@@ -177,14 +173,6 @@ fun ProfileScreen(
                 checked = user?.locationSharingEnabled ?: false,
                 enabled = !uiState.isUpdatingLocationSharing && user != null,
                 onCheckedChange = ::handleLocationSharingChange,
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            SettingToggleRow(
-                title = "Proximity alerts",
-                subtitle = "Notify when friends are nearby",
-                checked = proximityAlerts,
-                enabled = true,
-                onCheckedChange = { proximityAlerts = it },
             )
             Spacer(modifier = Modifier.height(16.dp))
             FriendZoneOutlineButton(
