@@ -65,7 +65,21 @@ object DtoMapper {
         startsAt = dto.startsAt,
         completedAt = dto.completedAt,
         createdAt = dto.createdAt,
+        coverImageUrl = dto.coverImageUrl,
     )
+
+    fun toPendingInvitation(dto: com.example.friendzone.data.remote.dto.PendingInvitationDto): com.example.friendzone.domain.model.PendingInvitation =
+        com.example.friendzone.domain.model.PendingInvitation(
+            id = dto.id,
+            eventId = dto.eventId,
+            inviteeId = dto.inviteeId,
+            invitedById = dto.invitedById,
+            status = toInvitationStatus(dto.status),
+            createdAt = dto.createdAt,
+            eventTitle = dto.eventTitle,
+            eventStartsAt = dto.eventStartsAt,
+            organizerDisplayName = dto.organizerDisplayName,
+        )
 
     fun toInvitation(dto: InvitationDto): Invitation = Invitation(
         id = dto.id,
@@ -182,9 +196,12 @@ object DtoMapper {
     fun toAppNotificationType(value: String): com.example.friendzone.domain.model.AppNotificationType =
         when (value) {
             "friend.request" -> com.example.friendzone.domain.model.AppNotificationType.FRIEND_REQUEST
+            "friend.request.accepted" -> com.example.friendzone.domain.model.AppNotificationType.FRIEND_REQUEST_ACCEPTED
             "invitation.created" -> com.example.friendzone.domain.model.AppNotificationType.INVITATION_CREATED
             "participant.arrived" -> com.example.friendzone.domain.model.AppNotificationType.PARTICIPANT_ARRIVED
+            "organizer.self.arrived" -> com.example.friendzone.domain.model.AppNotificationType.ORGANIZER_SELF_ARRIVED
             "event.completed" -> com.example.friendzone.domain.model.AppNotificationType.EVENT_COMPLETED
+            "event.cancelled" -> com.example.friendzone.domain.model.AppNotificationType.EVENT_CANCELLED
             else -> com.example.friendzone.domain.model.AppNotificationType.EVENT_COMPLETED
         }
 }

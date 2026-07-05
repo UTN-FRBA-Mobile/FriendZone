@@ -10,6 +10,7 @@ import com.example.friendzone.domain.model.Event
 import com.example.friendzone.domain.model.EventStatus
 import com.example.friendzone.domain.model.Invitation
 import com.example.friendzone.domain.model.InvitationStatus
+import com.example.friendzone.domain.model.ParticipantRole
 import com.example.friendzone.domain.model.ParticipantWithUser
 import com.example.friendzone.domain.model.User
 import com.example.friendzone.domain.repository.AuthRepository
@@ -23,6 +24,7 @@ import com.example.friendzone.domain.util.ParticipantStatus
 import com.example.friendzone.domain.util.classifyParticipantWithUser
 import com.example.friendzone.domain.util.formatEventDate
 import com.example.friendzone.domain.util.isLive
+import com.example.friendzone.domain.util.resolveApiAssetUrl
 import com.example.friendzone.presentation.components.FriendRowUi
 import com.example.friendzone.presentation.components.PillVariant
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -60,11 +62,15 @@ sealed class EventDetailUiState {
         val dateText: String,
         val isLive: Boolean,
         val canInviteGuests: Boolean,
+        val showOrganizerMenu: Boolean,
+        val organizerSelfArrived: Boolean,
         val pendingInviteCount: Int,
+        val coverImageUrl: String?,
         val eventLatitude: Double,
         val eventLongitude: Double,
         val eventLocationLabel: String?,
         val participantLocations: List<ParticipantLocationUi>,
+        val invitedPending: ParticipantSectionUi,
         val arrived: ParticipantSectionUi,
         val inTransit: ParticipantSectionUi,
         val delayed: ParticipantSectionUi,
@@ -118,6 +124,39 @@ class EventDetailViewModel @Inject constructor(
     private val _sharingMessage = MutableStateFlow<String?>(null)
     val sharingMessage: StateFlow<String?> = _sharingMessage.asStateFlow()
 
+    private val _actionMessage = MutableStateFlow<String?>(null)
+    val actionMessage: StateFlow<String?> = _actionMessage.asStateFlow()
+
+    fun consumeActionMessage() {
+        _actionMessage.value = null
+    }
+
+    fun markEventCompleted() {
+        viewModelScope.launch {
+            when (val result = eventRepository.updateStatus(eventId, EventStatus.COMPLETED)) {
+                is ApiResult.Success -> {
+                    _actionMessage.value = "Event marked as completed"
+                    loadDetail()
+                }
+                is ApiResult.Error -> _actionMessage.value = result.error.displayMessage()
+                ApiResult.Loading -> Unit
+            }
+        }
+    }
+
+    fun cancelEvent() {
+        viewModelScope.launch {
+            when (val result = eventRepository.updateStatus(eventId, EventStatus.CANCELLED)) {
+                is ApiResult.Success -> {
+                    _actionMessage.value = "Event cancelled"
+                    loadDetail()
+                }
+                is ApiResult.Error -> _actionMessage.value = result.error.displayMessage()
+                ApiResult.Loading -> Unit
+            }
+        }
+    }
+
     init {
         viewModelScope.launch {
             authRepository.currentUser.collect { user ->
@@ -168,6 +207,13 @@ class EventDetailViewModel @Inject constructor(
                         }
                         is ApiResult.Success -> {
                             syncMySharingState(participantsResult.data)
+                            if (isOrganizer(event)) {
+                                val friends = when (val friendsResult = friendRepository.getFriends()) {
+                                    is ApiResult.Success -> friendsResult.data
+                                    else -> emptyList()
+                                }
+                                applyInviteLists(friends, invitations)
+                            }
                             _uiState.value = buildUiState(
                                 event = event,
                                 participants = participantsResult.data,
@@ -348,18 +394,34 @@ class EventDetailViewModel @Inject constructor(
 
     private fun buildUiState(
         event: Event,
-        participants: List<ParticipantWithUser>,
+        participants: List<com.example.friendzone.domain.model.ParticipantWithUser>,
         invitations: List<Invitation>,
     ): EventDetailUiState.Data {
+        val acceptedInviteeIds = invitations
+            .filter { it.status == InvitationStatus.ACCEPTED }
+            .map { it.inviteeId }
+            .toSet()
+        val trackingParticipants = participants.filter {
+            it.participant.role == ParticipantRole.ORGANIZER ||
+                acceptedInviteeIds.contains(it.participant.userId)
+        }
+
         val arrived = mutableListOf<FriendRowUi>()
         val inTransit = mutableListOf<FriendRowUi>()
         val delayed = mutableListOf<FriendRowUi>()
 
-        participants.forEach { item ->
+        trackingParticipants.forEach { item ->
             val row = when (val status = classifyParticipantWithUser(item, event)) {
                 is ParticipantStatus.Arrived -> participantToFriendRow(
                     displayName = item.user.displayName,
-                    subtitle = "Arrived",
+                    subtitle = if (
+                        isOrganizer(event) &&
+                        item.participant.userId == currentUserId
+                    ) {
+                        "You are already there"
+                    } else {
+                        "Arrived"
+                    },
                     pillText = "✓ Arrived",
                     pillVariant = PillVariant.Dark,
                 )
@@ -383,11 +445,22 @@ class EventDetailViewModel @Inject constructor(
             }
         }
 
-        val pendingCount = invitations.count { it.status == InvitationStatus.PENDING }
+        val invitedPendingRows = _pendingInvites.value
+            .filter { it.statusLabel == "Pending" }
+            .map { guest ->
+                participantToFriendRow(
+                    displayName = guest.displayName,
+                    subtitle = "Not accepted",
+                    pillText = guest.statusLabel,
+                    pillVariant = guest.pillVariant,
+                )
+            }
 
-        // Participantes (excepto yo) que comparten su ubicacion y tienen una
-        // posicion conocida. Mi propia posicion se muestra con el GPS del dispositivo.
-        val participantLocations = participants.mapNotNull { item ->
+        val pendingCount = invitations.count { it.status == InvitationStatus.PENDING }
+        val organizerSelfArrived = isOrganizer(event) &&
+            participants.any { it.participant.userId == currentUserId && it.participant.arrived }
+
+        val participantLocations = trackingParticipants.mapNotNull { item ->
             val p = item.participant
             val lat = p.lastLatitude
             val lng = p.lastLongitude
@@ -408,11 +481,15 @@ class EventDetailViewModel @Inject constructor(
             dateText = formatEventDate(event.startsAt),
             isLive = event.isLive(),
             canInviteGuests = canInviteGuests(event),
+            showOrganizerMenu = isOrganizer(event),
+            organizerSelfArrived = organizerSelfArrived,
             pendingInviteCount = pendingCount,
+            coverImageUrl = resolveApiAssetUrl(event.coverImageUrl),
             eventLatitude = event.latitude,
             eventLongitude = event.longitude,
             eventLocationLabel = event.address,
             participantLocations = participantLocations,
+            invitedPending = ParticipantSectionUi("Invited (pending)", invitedPendingRows.size, invitedPendingRows),
             arrived = ParticipantSectionUi("Arrived", arrived.size, arrived),
             inTransit = ParticipantSectionUi("In transit", inTransit.size, inTransit),
             delayed = ParticipantSectionUi("Delayed", delayed.size, delayed),

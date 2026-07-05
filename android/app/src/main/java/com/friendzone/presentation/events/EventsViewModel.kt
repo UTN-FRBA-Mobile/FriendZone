@@ -6,6 +6,9 @@ import com.example.friendzone.data.remote.websocket.EventSocketManager
 import com.example.friendzone.data.remote.websocket.SocketEventType
 import com.example.friendzone.domain.model.Event
 import com.example.friendzone.domain.model.EventStatus
+import com.example.friendzone.domain.model.InvitationStatus
+import com.example.friendzone.domain.model.ParticipantRole
+import com.example.friendzone.domain.model.PendingInvitation
 import com.example.friendzone.domain.repository.EventRepository
 import com.example.friendzone.domain.repository.InvitationRepository
 import com.example.friendzone.domain.repository.LocationRepository
@@ -14,6 +17,7 @@ import com.example.friendzone.domain.result.displayMessage
 import com.example.friendzone.domain.util.ParticipantStatus
 import com.example.friendzone.domain.util.classifyParticipantWithUser
 import com.example.friendzone.domain.util.isLive
+import com.example.friendzone.domain.util.parseStartsAt
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -21,15 +25,24 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.time.Instant
 import javax.inject.Inject
+
+enum class EventsTab {
+    Upcoming,
+    Past,
+    Invitations,
+}
 
 sealed class EventsUiState {
     data object Loading : EventsUiState()
     data class Error(val message: String) : EventsUiState()
     data class Data(
-        val liveEvents: List<EventListItemUi>,
         val upcomingEvents: List<EventListItemUi>,
+        val pastEvents: List<EventListItemUi>,
+        val pendingInvitations: List<PendingInvitation>,
     ) : EventsUiState()
 }
 
@@ -42,6 +55,18 @@ class EventsViewModel @Inject constructor(
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<EventsUiState>(EventsUiState.Loading)
     val uiState: StateFlow<EventsUiState> = _uiState.asStateFlow()
+
+    private val _selectedTab = MutableStateFlow(EventsTab.Upcoming)
+    val selectedTab: StateFlow<EventsTab> = _selectedTab.asStateFlow()
+
+    private val _selectedInvitation = MutableStateFlow<PendingInvitation?>(null)
+    val selectedInvitation: StateFlow<PendingInvitation?> = _selectedInvitation.asStateFlow()
+
+    private val _isInvitationActionLoading = MutableStateFlow(false)
+    val isInvitationActionLoading: StateFlow<Boolean> = _isInvitationActionLoading.asStateFlow()
+
+    private val _snackbarMessage = MutableStateFlow<String?>(null)
+    val snackbarMessage: StateFlow<String?> = _snackbarMessage.asStateFlow()
 
     init {
         viewModelScope.launch {
@@ -61,24 +86,93 @@ class EventsViewModel @Inject constructor(
         loadEvents()
     }
 
+    fun selectTab(tab: EventsTab) {
+        _selectedTab.value = tab
+    }
+
+    fun openInvitation(invitation: PendingInvitation) {
+        _selectedInvitation.value = invitation
+    }
+
+    fun dismissInvitationSheet() {
+        _selectedInvitation.value = null
+    }
+
+    fun clearSnackbar() {
+        _snackbarMessage.value = null
+    }
+
+    fun openInvitationById(invitationId: String) {
+        val state = _uiState.value as? EventsUiState.Data ?: return
+        state.pendingInvitations.find { it.id == invitationId }?.let {
+            _selectedTab.value = EventsTab.Invitations
+            _selectedInvitation.value = it
+        }
+    }
+
+    fun respondToSelectedInvitation(accept: Boolean) {
+        val invitation = _selectedInvitation.value ?: return
+        viewModelScope.launch {
+            _isInvitationActionLoading.value = true
+            when (
+                val result = invitationRepository.respond(
+                    invitation.id,
+                    if (accept) InvitationStatus.ACCEPTED else InvitationStatus.REJECTED,
+                )
+            ) {
+                is ApiResult.Success -> {
+                    _isInvitationActionLoading.value = false
+                    _selectedInvitation.value = null
+                    _snackbarMessage.value = if (accept) "Joined event" else "Declined"
+                    loadEvents()
+                }
+                is ApiResult.Error -> {
+                    _isInvitationActionLoading.value = false
+                    _snackbarMessage.value = result.error.displayMessage()
+                }
+                ApiResult.Loading -> Unit
+            }
+        }
+    }
+
     fun loadEvents() {
         viewModelScope.launch {
             _uiState.value = EventsUiState.Loading
-            when (val result = eventRepository.getMine()) {
-                is ApiResult.Error -> {
-                    _uiState.value = EventsUiState.Error(result.error.displayMessage())
+            val eventsResult = eventRepository.getMine()
+            val invitationsResult = invitationRepository.getMinePending()
+
+            if (eventsResult is ApiResult.Error) {
+                _uiState.value = EventsUiState.Error(eventsResult.error.displayMessage())
+                return@launch
+            }
+
+            val events = (eventsResult as ApiResult.Success).data
+            val pendingInvitations = when (invitationsResult) {
+                is ApiResult.Success -> invitationsResult.data
+                else -> emptyList()
+            }
+
+            val enriched = enrichEvents(events)
+            val upcoming = enriched
+                .filter { !it.isPastItem }
+                .sortedWith(
+                    compareByDescending<EventListItemUi> { it.isLive }
+                        .thenBy { it.startsAtEpoch },
+                )
+            val past = enriched
+                .filter { it.isPastItem }
+                .sortedByDescending { it.startsAtEpoch }
+
+            _uiState.value = EventsUiState.Data(
+                upcomingEvents = upcoming,
+                pastEvents = past,
+                pendingInvitations = pendingInvitations,
+            )
+
+            _selectedInvitation.update { selected ->
+                selected?.let { current ->
+                    pendingInvitations.find { it.id == current.id }
                 }
-                is ApiResult.Success -> {
-                    val events = result.data.filter {
-                        it.status != EventStatus.COMPLETED && it.status != EventStatus.CANCELLED
-                    }
-                    val items = enrichEvents(events)
-                    _uiState.value = EventsUiState.Data(
-                        liveEvents = items.filter { it.isLive },
-                        upcomingEvents = items.filter { !it.isLive },
-                    )
-                }
-                ApiResult.Loading -> Unit
             }
         }
     }
@@ -87,16 +181,25 @@ class EventsViewModel @Inject constructor(
         events.map { event ->
             async {
                 val invitationsResult = invitationRepository.getByEvent(event.id)
-                val (confirmed, pending) = when (invitationsResult) {
-                    is ApiResult.Success -> countInvitations(invitationsResult.data)
-                    else -> 0 to 0
+                val invitations = when (invitationsResult) {
+                    is ApiResult.Success -> invitationsResult.data
+                    else -> emptyList()
+                }
+                val acceptedInviteeIds = invitations
+                    .filter { it.status == InvitationStatus.ACCEPTED }
+                    .map { it.inviteeId }
+                    .toSet()
+                val (confirmed, pending) = countInvitations(invitations)
+
+                val participants = when (val p = locationRepository.getParticipants(event.id)) {
+                    is ApiResult.Success -> p.data.filter {
+                        it.participant.role == ParticipantRole.ORGANIZER ||
+                            acceptedInviteeIds.contains(it.participant.userId)
+                    }
+                    else -> emptyList()
                 }
 
-                if (event.isLive()) {
-                    val participants = when (val p = locationRepository.getParticipants(event.id)) {
-                        is ApiResult.Success -> p.data
-                        else -> emptyList()
-                    }
+                val baseItem = if (event.isLive()) {
                     val onTheWay = participants.count { item ->
                         classifyParticipantWithUser(item, event) is ParticipantStatus.InTransit ||
                             classifyParticipantWithUser(item, event) is ParticipantStatus.Delayed
@@ -106,21 +209,27 @@ class EventsViewModel @Inject constructor(
                         pendingCount = pending,
                         onTheWayCount = onTheWay,
                         friendPreviews = buildFriendPreviews(event, participants),
+                        isPastItem = event.isPast(),
+                        startsAtEpoch = event.parseStartsAt().epochSecond,
                     )
                 } else {
-                    val participants = when (val p = locationRepository.getParticipants(event.id)) {
-                        is ApiResult.Success -> p.data
-                        else -> emptyList()
-                    }
                     val (avatars, extra) = buildAvatarPreview(participants)
                     event.toListItemUi(
                         confirmedCount = confirmed,
                         pendingCount = pending,
                         participantAvatars = avatars,
                         extraAvatarCount = extra,
+                        isPastItem = event.isPast(),
+                        startsAtEpoch = event.parseStartsAt().epochSecond,
                     )
                 }
+                baseItem
             }
         }.awaitAll()
     }
 }
+
+private fun Event.isPast(now: Instant = Instant.now()): Boolean =
+    status == EventStatus.COMPLETED ||
+        status == EventStatus.CANCELLED ||
+        parseStartsAt().isBefore(now)

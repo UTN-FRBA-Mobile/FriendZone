@@ -62,12 +62,18 @@ interface EventRepository {
         startsAt: String?,
         arrivalThresholdM: Int?,
     ): ApiResult<com.example.friendzone.domain.model.Event>
+    suspend fun updateStatus(
+        id: String,
+        status: com.example.friendzone.domain.model.EventStatus,
+    ): ApiResult<com.example.friendzone.domain.model.Event>
+    suspend fun uploadCover(id: String, bytes: ByteArray, mimeType: String): ApiResult<com.example.friendzone.domain.model.Event>
     suspend fun delete(id: String): ApiResult<Unit>
 }
 
 interface InvitationRepository {
     suspend fun create(eventId: String, emailOrUsername: String): ApiResult<com.example.friendzone.domain.model.Invitation>
     suspend fun getByEvent(eventId: String): ApiResult<List<com.example.friendzone.domain.model.Invitation>>
+    suspend fun getMinePending(): ApiResult<List<com.example.friendzone.domain.model.PendingInvitation>>
     suspend fun respond(
         invitationId: String,
         status: com.example.friendzone.domain.model.InvitationStatus,

@@ -31,10 +31,10 @@
       "breakpoints": true
     },
     {
-      "idx": 4,
+      "idx": 5,
       "version": "7",
-      "when": 1780876203321,
-      "tag": "0004_backfill_invitation_notifications",
+      "when": 1780876203322,
+      "tag": "0005_cover_image_threshold",
       "breakpoints": true
     }
   ]

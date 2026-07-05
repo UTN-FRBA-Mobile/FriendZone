@@ -20,6 +20,18 @@ import { InvitationsRepository } from './invitations.repository';
 import { Invitation } from '../../drizzle/schema';
 import { EventsGateway } from '../websocket/events.gateway';
 
+export interface PendingInvitationWithEvent {
+  id: string;
+  eventId: string;
+  inviteeId: string;
+  invitedById: string;
+  status: string;
+  createdAt: string;
+  eventTitle: string;
+  eventStartsAt: string;
+  organizerDisplayName: string;
+}
+
 @Injectable()
 export class InvitationsService {
   constructor(
@@ -79,6 +91,22 @@ export class InvitationsService {
     );
 
     return invitation;
+  }
+
+  async findMinePending(userId: string): Promise<PendingInvitationWithEvent[]> {
+    const rows =
+      await this.invitationsRepository.findPendingByInviteeId(userId);
+    return rows.map((row) => ({
+      id: row.invitation.id,
+      eventId: row.invitation.eventId,
+      inviteeId: row.invitation.inviteeId,
+      invitedById: row.invitation.invitedById,
+      status: row.invitation.status,
+      createdAt: row.invitation.createdAt.toISOString(),
+      eventTitle: row.event.title,
+      eventStartsAt: row.event.startsAt.toISOString(),
+      organizerDisplayName: row.organizer.displayName,
+    }));
   }
 
   async findByEvent(

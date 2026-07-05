@@ -134,6 +134,15 @@ export class FriendsService {
         request.requesterId,
         request.addresseeId,
       );
+
+      const accepter = await this.usersRepository.findById(userId);
+      if (accepter) {
+        await this.notificationsService.notifyFriendRequestAccepted(
+          request.requesterId,
+          accepter.displayName,
+          requestId,
+        );
+      }
     }
 
     await this.notificationsService.resolveFriendRequestNotification(

@@ -90,6 +90,7 @@ data class UpdateEventRequest(
     val startsAt: String? = null,
     val arrivalThresholdM: Int? = null,
     val trackingLeadMinutes: Int? = null,
+    val status: String? = null,
 )
 
 @Serializable
@@ -107,6 +108,20 @@ data class EventDto(
     val startsAt: String,
     val completedAt: String? = null,
     val createdAt: String,
+    val coverImageUrl: String? = null,
+)
+
+@Serializable
+data class PendingInvitationDto(
+    val id: String,
+    val eventId: String,
+    val inviteeId: String,
+    val invitedById: String,
+    val status: String,
+    val createdAt: String,
+    val eventTitle: String,
+    val eventStartsAt: String,
+    val organizerDisplayName: String,
 )
 
 @Serializable

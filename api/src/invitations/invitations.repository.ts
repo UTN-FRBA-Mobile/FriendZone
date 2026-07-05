@@ -1,9 +1,13 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { and, eq } from 'drizzle-orm';
 import {
+  events,
   invitations,
+  users,
   Invitation,
   NewInvitation,
+  Event,
+  User,
 } from '../../drizzle/schema';
 import { DRIZZLE } from '../drizzle/drizzle.module';
 import type { DrizzleDB } from '../drizzle/drizzle.module';
@@ -63,5 +67,31 @@ export class InvitationsRepository {
       .where(eq(invitations.id, id))
       .returning();
     return invitation;
+  }
+
+  async findPendingByInviteeId(inviteeId: string): Promise<
+    Array<{
+      invitation: Invitation;
+      event: Event;
+      organizer: User;
+    }>
+  > {
+    const rows = await this.db
+      .select({
+        invitation: invitations,
+        event: events,
+        organizer: users,
+      })
+      .from(invitations)
+      .innerJoin(events, eq(invitations.eventId, events.id))
+      .innerJoin(users, eq(events.organizerId, users.id))
+      .where(
+        and(
+          eq(invitations.inviteeId, inviteeId),
+          eq(invitations.status, 'pending'),
+        ),
+      );
+
+    return rows;
   }
 }

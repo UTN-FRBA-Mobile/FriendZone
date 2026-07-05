@@ -53,7 +53,7 @@ export class ProximityService {
 
     const threshold =
       event.arrivalThresholdM ??
-      this.configService.get<number>('ARRIVAL_THRESHOLD', 500);
+      this.configService.get<number>('ARRIVAL_THRESHOLD', 150);
 
     let arrived = participant.arrived;
     let eventCompleted = false;
@@ -76,12 +76,20 @@ export class ProximityService {
         arrivedAt: new Date().toISOString(),
       });
 
-      await this.notificationsService.notifyParticipantArrived(
-        event.organizerId,
-        user.displayName,
-        event.id,
-        event.title,
-      );
+      if (userId === event.organizerId) {
+        await this.notificationsService.notifyOrganizerSelfArrived(
+          event.organizerId,
+          event.id,
+          event.title,
+        );
+      } else {
+        await this.notificationsService.notifyParticipantArrived(
+          event.organizerId,
+          user.displayName,
+          event.id,
+          event.title,
+        );
+      }
 
       if (updated) {
         eventCompleted = await this.checkAllArrived(event);

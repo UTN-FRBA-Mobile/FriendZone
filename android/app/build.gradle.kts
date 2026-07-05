@@ -18,11 +18,7 @@ fun buildConfigString(value: String): String =
 val configuredApiBaseUrl = providers.environmentVariable("FRIENDZONE_API_BASE_URL")
     .orElse(providers.gradleProperty("friendzoneApiBaseUrl"))
 
-val debugApiBaseUrl = normalizeApiBaseUrl(
-    configuredApiBaseUrl.orNull ?: "http://10.0.2.2:3000/",
-)
-
-val releaseApiBaseUrl = normalizeApiBaseUrl(
+val defaultApiBaseUrl = normalizeApiBaseUrl(
     configuredApiBaseUrl.orNull ?: "https://friendzone-api-zrvr.onrender.com/",
 )
 
@@ -74,11 +70,11 @@ android {
 
     buildTypes {
         debug {
-            buildConfigField("String", "API_BASE_URL", buildConfigString(debugApiBaseUrl))
+            buildConfigField("String", "API_BASE_URL", buildConfigString(defaultApiBaseUrl))
         }
         release {
             isMinifyEnabled = false
-            buildConfigField("String", "API_BASE_URL", buildConfigString(releaseApiBaseUrl))
+            buildConfigField("String", "API_BASE_URL", buildConfigString(defaultApiBaseUrl))
             if (hasReleaseSigningConfig) {
                 signingConfig = signingConfigs.getByName("release")
             }
@@ -127,6 +123,7 @@ dependencies {
     implementation(libs.osmdroid.android)
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.messaging)
+    implementation(libs.coil.compose)
 
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))

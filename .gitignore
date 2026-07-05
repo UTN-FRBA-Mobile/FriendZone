@@ -65,3 +65,6 @@ coverage/
 
 # Compose previews / screenshots
 screenshots/
+
+# API uploads
+api/uploads/

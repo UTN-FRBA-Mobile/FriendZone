@@ -10,7 +10,9 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -55,6 +57,7 @@ private fun AnimatedContentTransitionScope<*>.slideOutToRight() =
 @Composable
 fun FriendZoneNavHost(
     appNavViewModel: AppNavViewModel = hiltViewModel(),
+    deepLinkViewModel: DeepLinkViewModel = hiltViewModel(),
 ) {
     val isLoggedIn by appNavViewModel.isLoggedIn.collectAsStateWithLifecycle()
     val friendsBadgeViewModel: FriendsBadgeViewModel = hiltViewModel()
@@ -65,6 +68,36 @@ fun FriendZoneNavHost(
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
     val showBottomBar = currentRoute in Screen.bottomBarRoutes
+    val pendingDeepLink by deepLinkViewModel.pending.collectAsStateWithLifecycle()
+    var eventsInitialTab by remember { mutableStateOf<com.example.friendzone.presentation.events.EventsTab?>(null) }
+    var eventsOpenInvitationId by remember { mutableStateOf<String?>(null) }
+    var friendsInitialTab by remember { mutableStateOf<com.example.friendzone.presentation.friends.FriendsTab?>(null) }
+
+    LaunchedEffect(isLoggedIn, pendingDeepLink) {
+        val deepLink = pendingDeepLink ?: return@LaunchedEffect
+        if (!isLoggedIn) return@LaunchedEffect
+
+        when {
+            deepLink.type == "invitation.created" || deepLink.invitationId != null -> {
+                eventsInitialTab = com.example.friendzone.presentation.events.EventsTab.Invitations
+                eventsOpenInvitationId = deepLink.invitationId
+                if (currentRoute != Screen.Events) {
+                    navController.navigate(Screen.Events) {
+                        launchSingleTop = true
+                    }
+                }
+            }
+            deepLink.type == "friend.request" -> {
+                friendsInitialTab = com.example.friendzone.presentation.friends.FriendsTab.Requests
+                if (currentRoute != Screen.Friends) {
+                    navController.navigate(Screen.Friends) {
+                        launchSingleTop = true
+                    }
+                }
+            }
+        }
+        deepLinkViewModel.clear()
+    }
 
     LaunchedEffect(isLoggedIn) {
         if (isLoggedIn) {
@@ -179,6 +212,8 @@ fun FriendZoneNavHost(
                     onEventDetailClick = { eventId ->
                         navController.navigate(Screen.eventDetail(eventId))
                     },
+                    initialTab = eventsInitialTab,
+                    openInvitationId = eventsOpenInvitationId,
                 )
             }
             composable(
@@ -207,6 +242,7 @@ fun FriendZoneNavHost(
                         friendsBadgeViewModel.refresh()
                         notificationsBadgeViewModel.refresh()
                     },
+                    initialTab = friendsInitialTab,
                 )
             }
             composable(

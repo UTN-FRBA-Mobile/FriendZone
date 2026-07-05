@@ -16,6 +16,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -29,16 +31,17 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil.compose.AsyncImage
 import com.example.friendzone.presentation.components.CreateEventHeader
 import com.example.friendzone.presentation.components.EventMapDialog
 import com.example.friendzone.presentation.components.EventMapPerson
 import com.example.friendzone.presentation.components.EventMapThumbnail
 import com.example.friendzone.presentation.components.FriendRow
-import com.example.friendzone.presentation.components.FriendZoneOutlineButton
 import com.example.friendzone.presentation.components.PillBadge
 import com.example.friendzone.presentation.components.PillVariant
 import com.example.friendzone.ui.theme.FzBackground
@@ -58,13 +61,21 @@ fun EventDetailScreen(
     val inviteSheetOpen by viewModel.inviteSheetOpen.collectAsStateWithLifecycle()
     val isSharingLocation by viewModel.isSharingLocation.collectAsStateWithLifecycle()
     val sharingMessage by viewModel.sharingMessage.collectAsStateWithLifecycle()
+    val actionMessage by viewModel.actionMessage.collectAsStateWithLifecycle()
     var mapOpen by remember { mutableStateOf(false) }
+    var menuOpen by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
     LaunchedEffect(sharingMessage) {
         sharingMessage?.let { message ->
             Toast.makeText(context, message, Toast.LENGTH_LONG).show()
             viewModel.consumeSharingMessage()
+        }
+    }
+    LaunchedEffect(actionMessage) {
+        actionMessage?.let { message ->
+            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+            viewModel.consumeActionMessage()
         }
     }
 
@@ -75,115 +86,159 @@ fun EventDetailScreen(
         )
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(FzBackground)
-            .verticalScroll(rememberScrollState()),
-    ) {
-        CreateEventHeader(title = "Event", onBackClick = onBack)
+    Box {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(FzBackground)
+                .verticalScroll(rememberScrollState()),
+        ) {
+            CreateEventHeader(
+                title = "Event",
+                onBackClick = onBack,
+                showMenu = (uiState as? EventDetailUiState.Data)?.showOrganizerMenu == true,
+                onMenuClick = { menuOpen = true },
+            )
 
-        when (val state = uiState) {
-            is EventDetailUiState.Loading -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(48.dp),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    CircularProgressIndicator(color = FzInk)
-                }
-            }
-            is EventDetailUiState.Error -> {
-                Column(
-                    modifier = Modifier.padding(32.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Text(state.message, color = FzInk3)
-                    TextButton(onClick = { viewModel.loadDetail() }) {
-                        Text("Retry", color = FzInk)
+            when (val state = uiState) {
+                is EventDetailUiState.Loading -> {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(48.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        CircularProgressIndicator(color = FzInk)
                     }
                 }
-            }
-            is EventDetailUiState.Data -> {
-                Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-                    Text(
-                        state.title,
-                        style = MaterialTheme.typography.headlineSmall,
-                        color = FzInk,
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        state.dateText,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = FzInk3,
-                    )
-                    if (state.isLive) {
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(6.dp),
-                        ) {
-                            Box(
+                is EventDetailUiState.Error -> {
+                    Column(
+                        modifier = Modifier.padding(32.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        Text(state.message, color = FzInk3)
+                        TextButton(onClick = { viewModel.loadDetail() }) {
+                            Text("Retry", color = FzInk)
+                        }
+                    }
+                }
+                is EventDetailUiState.Data -> {
+                    Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                        state.coverImageUrl?.let { coverUrl ->
+                            AsyncImage(
+                                model = coverUrl,
+                                contentDescription = "Event cover",
                                 modifier = Modifier
-                                    .size(9.dp)
-                                    .clip(RoundedCornerShape(50))
-                                    .background(FzGreen),
+                                    .fillMaxWidth()
+                                    .height(160.dp)
+                                    .clip(RoundedCornerShape(12.dp)),
+                                contentScale = ContentScale.Crop,
                             )
-                            Text(
-                                "Live",
-                                style = MaterialTheme.typography.labelMedium,
-                                color = FzInk,
-                            )
+                            Spacer(modifier = Modifier.height(12.dp))
                         }
-                    }
-                    if (state.canInviteGuests) {
-                        Spacer(modifier = Modifier.height(16.dp))
-                        FriendZoneOutlineButton(
-                            text = "Add guests",
-                            onClick = { viewModel.openInviteSheet() },
+                        Text(
+                            state.title,
+                            style = MaterialTheme.typography.headlineSmall,
+                            color = FzInk,
                         )
-                        if (state.pendingInviteCount > 0) {
-                            Spacer(modifier = Modifier.height(6.dp))
-                            Text(
-                                "${state.pendingInviteCount} pending",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = FzInk3,
-                            )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            state.dateText,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = FzInk3,
+                        )
+                        if (state.isLive) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(6.dp),
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(9.dp)
+                                        .clip(RoundedCornerShape(50))
+                                        .background(FzGreen),
+                                )
+                                Text(
+                                    "Live",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = FzInk,
+                                )
+                            }
                         }
-                    }
-                    Spacer(modifier = Modifier.height(16.dp))
-                    EventMapThumbnail(
-                        eventLatitude = state.eventLatitude,
-                        eventLongitude = state.eventLongitude,
-                        onClick = { mapOpen = true },
-                    )
-                    if (mapOpen) {
-                        EventMapDialog(
+                        if (state.organizerSelfArrived) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            PillBadge("You are already there", PillVariant.Green)
+                        }
+                        Spacer(modifier = Modifier.height(16.dp))
+                        EventMapThumbnail(
                             eventLatitude = state.eventLatitude,
                             eventLongitude = state.eventLongitude,
-                            eventLabel = state.eventLocationLabel ?: state.title,
-                            people = state.participantLocations.map { person ->
-                                EventMapPerson(
-                                    label = person.displayName,
-                                    latitude = person.latitude,
-                                    longitude = person.longitude,
-                                    arrived = person.arrived,
-                                )
-                            },
-                            isSharingLocation = isSharingLocation,
-                            onSharingChange = viewModel::setLocationSharing,
-                            onDismiss = { mapOpen = false },
+                            onClick = { mapOpen = true },
                         )
+                        if (mapOpen) {
+                            EventMapDialog(
+                                eventLatitude = state.eventLatitude,
+                                eventLongitude = state.eventLongitude,
+                                eventLabel = state.eventLocationLabel ?: state.title,
+                                people = state.participantLocations.map { person ->
+                                    EventMapPerson(
+                                        label = person.displayName,
+                                        latitude = person.latitude,
+                                        longitude = person.longitude,
+                                        arrived = person.arrived,
+                                    )
+                                },
+                                isSharingLocation = isSharingLocation,
+                                onSharingChange = viewModel::setLocationSharing,
+                                onDismiss = { mapOpen = false },
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(20.dp))
+                        if (state.invitedPending.rows.isNotEmpty()) {
+                            ParticipantSection(state.invitedPending)
+                            Spacer(modifier = Modifier.height(12.dp))
+                        }
+                        ParticipantSection(state.arrived)
+                        Spacer(modifier = Modifier.height(12.dp))
+                        ParticipantSection(state.inTransit)
+                        Spacer(modifier = Modifier.height(12.dp))
+                        ParticipantSection(state.delayed)
+                        Spacer(modifier = Modifier.height(24.dp))
                     }
-                    Spacer(modifier = Modifier.height(20.dp))
-                    ParticipantSection(state.arrived)
-                    Spacer(modifier = Modifier.height(12.dp))
-                    ParticipantSection(state.inTransit)
-                    Spacer(modifier = Modifier.height(12.dp))
-                    ParticipantSection(state.delayed)
-                    Spacer(modifier = Modifier.height(24.dp))
                 }
+            }
+        }
+
+        val organizerState = uiState as? EventDetailUiState.Data
+        if (organizerState?.showOrganizerMenu == true) {
+            DropdownMenu(
+                expanded = menuOpen,
+                onDismissRequest = { menuOpen = false },
+            ) {
+                if (organizerState.canInviteGuests) {
+                    DropdownMenuItem(
+                        text = { Text("Add guests") },
+                        onClick = {
+                            menuOpen = false
+                            viewModel.openInviteSheet()
+                        },
+                    )
+                }
+                DropdownMenuItem(
+                    text = { Text("Mark event as completed") },
+                    onClick = {
+                        menuOpen = false
+                        viewModel.markEventCompleted()
+                    },
+                )
+                DropdownMenuItem(
+                    text = { Text("Cancel event") },
+                    onClick = {
+                        menuOpen = false
+                        viewModel.cancelEvent()
+                    },
+                )
             }
         }
     }
