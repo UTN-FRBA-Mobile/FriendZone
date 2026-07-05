@@ -104,9 +104,9 @@ fun classifyParticipant(
 ): ParticipantStatus {
     if (participant.arrived) return ParticipantStatus.Arrived
 
+    val eventStarted = event.hasStarted(now)
     val untilStart = minutesUntilStart(event, now)
     val eta = estimateMinutesAway(participant, event)
-    val eventStarted = untilStart == 0
 
     if (eta == null) {
         return if (eventStarted) {
@@ -116,11 +116,25 @@ fun classifyParticipant(
         }
     }
 
-    return if (eta > untilStart) {
+    return if (eventStarted || eta > untilStart) {
         ParticipantStatus.Delayed(eta)
     } else {
         ParticipantStatus.InTransit(eta)
     }
+}
+
+fun ParticipantStatus.travelEtaSubtitle(): String = when (this) {
+    is ParticipantStatus.InTransit ->
+        etaMinutes?.let { "$it min away" } ?: "Arrival time unavailable"
+    is ParticipantStatus.Delayed ->
+        etaMinutes?.let { "$it min away" } ?: "Arrival time unavailable"
+    is ParticipantStatus.Arrived -> error("Arrived participants do not have travel ETA subtitles")
+}
+
+fun ParticipantStatus.statusPillText(): String = when (this) {
+    is ParticipantStatus.Arrived -> "✓ Arrived"
+    is ParticipantStatus.InTransit -> "In Transit"
+    is ParticipantStatus.Delayed -> "Delayed"
 }
 
 fun classifyParticipantWithUser(

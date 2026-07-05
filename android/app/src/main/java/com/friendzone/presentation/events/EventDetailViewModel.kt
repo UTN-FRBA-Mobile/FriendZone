@@ -469,34 +469,20 @@ class EventDetailViewModel @Inject constructor(
         val delayed = mutableListOf<FriendRowUi>()
 
         trackingParticipants.forEach { item ->
-            val row = when (val status = classifyParticipantWithUser(item, event)) {
-                is ParticipantStatus.Arrived -> participantToFriendRow(
-                    displayName = item.user.displayName,
-                    subtitle = if (
-                        isOrganizer(event) &&
-                        item.participant.userId == currentUserId
-                    ) {
-                        "You are already there"
-                    } else {
-                        "Arrived"
-                    },
-                    pillText = "✓ Arrived",
-                    pillVariant = PillVariant.Dark,
-                )
-                is ParticipantStatus.InTransit -> participantToFriendRow(
-                    displayName = item.user.displayName,
-                    subtitle = status.etaMinutes?.let { "$it min away" } ?: "On the way",
-                    pillText = status.etaMinutes?.let { "✈ $it min" } ?: "In route",
-                    pillVariant = PillVariant.Light,
-                )
-                is ParticipantStatus.Delayed -> participantToFriendRow(
-                    displayName = item.user.displayName,
-                    subtitle = status.etaMinutes?.let { "$it min away" } ?: "Running late",
-                    pillText = status.etaMinutes?.let { "🕐 $it min" } ?: "Delayed",
-                    pillVariant = PillVariant.Amber,
-                )
-            }
-            when (classifyParticipantWithUser(item, event)) {
+            val status = classifyParticipantWithUser(item, event)
+            val row = friendRowForParticipantStatus(
+                displayName = item.user.displayName,
+                status = status,
+                arrivedSubtitle = if (
+                    isOrganizer(event) &&
+                    item.participant.userId == currentUserId
+                ) {
+                    "You are already there"
+                } else {
+                    "Arrived"
+                },
+            )
+            when (status) {
                 is ParticipantStatus.Arrived -> arrived.add(row)
                 is ParticipantStatus.InTransit -> inTransit.add(row)
                 is ParticipantStatus.Delayed -> delayed.add(row)

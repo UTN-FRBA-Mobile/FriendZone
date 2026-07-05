@@ -10,6 +10,9 @@ import com.example.friendzone.domain.util.formatEventDate
 import com.example.friendzone.domain.util.formatRelativeTimeLabel
 import com.example.friendzone.domain.util.isLive
 import com.example.friendzone.domain.util.resolveApiAssetUrl
+import com.example.friendzone.domain.util.statusPillText
+import com.example.friendzone.domain.util.travelEtaSubtitle
+import com.example.friendzone.presentation.components.FriendRowUi
 import com.example.friendzone.presentation.components.PillVariant
 
 fun Event.toListItemUi(
@@ -52,33 +55,42 @@ fun buildFriendPreviews(
     event: Event,
     participants: List<ParticipantWithUser>,
     limit: Int = 3,
-): List<com.example.friendzone.presentation.components.FriendRowUi> =
+): List<FriendRowUi> =
     participants
         .filter { it.participant.sharingLocation || it.participant.arrived }
         .take(limit)
         .map { item ->
-            val status = classifyParticipantWithUser(item, event)
-            when (status) {
-                is ParticipantStatus.Arrived -> participantToFriendRow(
-                    displayName = item.user.displayName,
-                    subtitle = "Already there",
-                    pillText = "✓ Arrived",
-                    pillVariant = PillVariant.Dark,
-                )
-                is ParticipantStatus.InTransit -> participantToFriendRow(
-                    displayName = item.user.displayName,
-                    subtitle = status.etaMinutes?.let { "$it mins away" } ?: "On the way",
-                    pillText = status.etaMinutes?.let { "✈ $it min" } ?: "On the way",
-                    pillVariant = PillVariant.Light,
-                )
-                is ParticipantStatus.Delayed -> participantToFriendRow(
-                    displayName = item.user.displayName,
-                    subtitle = "Running late",
-                    pillText = status.etaMinutes?.let { "🕐 $it min" } ?: "Delayed",
-                    pillVariant = PillVariant.Amber,
-                )
-            }
+            friendRowForParticipantStatus(
+                displayName = item.user.displayName,
+                status = classifyParticipantWithUser(item, event),
+                arrivedSubtitle = "Already there",
+            )
         }
+
+fun friendRowForParticipantStatus(
+    displayName: String,
+    status: ParticipantStatus,
+    arrivedSubtitle: String = "Arrived",
+): FriendRowUi = when (status) {
+    is ParticipantStatus.Arrived -> participantToFriendRow(
+        displayName = displayName,
+        subtitle = arrivedSubtitle,
+        pillText = status.statusPillText(),
+        pillVariant = PillVariant.Dark,
+    )
+    is ParticipantStatus.InTransit -> participantToFriendRow(
+        displayName = displayName,
+        subtitle = status.travelEtaSubtitle(),
+        pillText = status.statusPillText(),
+        pillVariant = PillVariant.Light,
+    )
+    is ParticipantStatus.Delayed -> participantToFriendRow(
+        displayName = displayName,
+        subtitle = status.travelEtaSubtitle(),
+        pillText = status.statusPillText(),
+        pillVariant = PillVariant.Amber,
+    )
+}
 
 fun countInvitations(
     invitations: List<com.example.friendzone.domain.model.Invitation>,
