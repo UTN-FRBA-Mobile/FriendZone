@@ -29,6 +29,8 @@ interface UserRepository {
 }
 
 interface FriendRepository {
+    suspend fun getCachedFriends(): List<User>?
+    suspend fun getCachedIncomingRequests(): List<com.example.friendzone.domain.model.FriendRequest>?
     suspend fun getFriends(): ApiResult<List<User>>
     suspend fun getIncomingRequests(): ApiResult<List<com.example.friendzone.domain.model.FriendRequest>>
     suspend fun getPendingIncomingCount(): ApiResult<Int>
@@ -41,6 +43,7 @@ interface FriendRepository {
 }
 
 interface EventRepository {
+    suspend fun getCachedMine(): List<com.example.friendzone.domain.model.Event>?
     suspend fun create(
         title: String,
         description: String?,
@@ -73,6 +76,8 @@ interface EventRepository {
 }
 
 interface InvitationRepository {
+    suspend fun getCachedByEvent(eventId: String): List<com.example.friendzone.domain.model.Invitation>?
+    suspend fun getCachedMinePending(): List<com.example.friendzone.domain.model.PendingInvitation>?
     suspend fun create(eventId: String, emailOrUsername: String): ApiResult<com.example.friendzone.domain.model.Invitation>
     suspend fun getByEvent(eventId: String): ApiResult<List<com.example.friendzone.domain.model.Invitation>>
     suspend fun getMinePending(): ApiResult<List<com.example.friendzone.domain.model.PendingInvitation>>
@@ -83,6 +88,7 @@ interface InvitationRepository {
 }
 
 interface LocationRepository {
+    suspend fun getCachedParticipants(eventId: String): List<com.example.friendzone.domain.model.ParticipantWithUser>?
     suspend fun updateSharing(eventId: String, enabled: Boolean): ApiResult<com.example.friendzone.domain.model.EventParticipant>
     suspend fun updateLocation(
         eventId: String,
@@ -93,6 +99,8 @@ interface LocationRepository {
 }
 
 interface NotificationRepository {
+    suspend fun getCachedInbox(): List<com.example.friendzone.domain.model.InboxNotification>?
+    suspend fun removeFromCache(notificationId: String)
     suspend fun registerFcmToken(token: String): ApiResult<User>
     suspend fun getInbox(): ApiResult<List<com.example.friendzone.domain.model.InboxNotification>>
     suspend fun getBadgeCount(): ApiResult<Int>

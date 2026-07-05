@@ -1,5 +1,6 @@
 package com.example.friendzone.data.repository
 
+import com.example.friendzone.data.local.LocalCacheManager
 import com.example.friendzone.data.local.TokenManager
 import com.example.friendzone.data.mapper.DtoMapper
 import com.example.friendzone.data.remote.api.AuthApi
@@ -19,6 +20,7 @@ import javax.inject.Singleton
 class AuthRepositoryImpl @Inject constructor(
     private val authApi: AuthApi,
     private val tokenManager: TokenManager,
+    private val cacheManager: LocalCacheManager,
 ) : AuthRepository {
     override val isLoggedIn: Flow<Boolean> = tokenManager.isLoggedIn
 
@@ -72,6 +74,7 @@ class AuthRepositoryImpl @Inject constructor(
             safeApiCall { authApi.logout(RefreshTokenRequest(refreshToken)) }
         }
         tokenManager.clearSession()
+        cacheManager.clearAll()
         return ApiResult.Success(Unit)
     }
 }

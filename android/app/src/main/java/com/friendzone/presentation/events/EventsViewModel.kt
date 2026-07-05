@@ -99,7 +99,7 @@ class EventsViewModel @Inject constructor(
                     event.type == SocketEventType.PARTICIPANT_ARRIVED ||
                     event.type == SocketEventType.RECONNECTED
                 ) {
-                    loadEvents()
+                    loadEventsInternal(showFullLoading = false)
                 }
             }
         }
@@ -156,7 +156,7 @@ class EventsViewModel @Inject constructor(
 
     fun loadEvents() {
         viewModelScope.launch {
-            loadEventsInternal(showFullLoading = true)
+            loadEventsInternal(showFullLoading = _uiState.value !is EventsUiState.Data)
         }
     }
 
@@ -175,12 +175,33 @@ class EventsViewModel @Inject constructor(
     }
 
     private suspend fun loadEventsInternal(showFullLoading: Boolean) {
-        if (showFullLoading) _uiState.value = EventsUiState.Loading
+        val cachedEvents = eventRepository.getCachedMine()
+        val cachedInvitations = invitationRepository.getCachedMinePending()
+        if (cachedEvents != null) {
+            val enriched = enrichEvents(cachedEvents, useCache = true)
+            val upcoming = enriched
+                .filter { !it.isPastItem }
+                .sortedWith(
+                    compareByDescending<EventListItemUi> { it.isLive }
+                        .thenBy { it.startsAtEpoch },
+                )
+            val past = enriched
+                .filter { it.isPastItem }
+                .sortedByDescending { it.startsAtEpoch }
+            _uiState.value = EventsUiState.Data(
+                upcomingEvents = upcoming,
+                pastEvents = past,
+                pendingInvitations = cachedInvitations.orEmpty(),
+            )
+        } else if (showFullLoading) {
+            _uiState.value = EventsUiState.Loading
+        }
+
         val eventsResult = eventRepository.getMine()
         val invitationsResult = invitationRepository.getMinePending()
 
         if (eventsResult is ApiResult.Error) {
-            if (showFullLoading || _uiState.value !is EventsUiState.Data) {
+            if (_uiState.value !is EventsUiState.Data) {
                 _uiState.value = EventsUiState.Error(eventsResult.error.displayMessage())
             }
             return
@@ -189,10 +210,10 @@ class EventsViewModel @Inject constructor(
         val events = (eventsResult as ApiResult.Success).data
         val pendingInvitations = when (invitationsResult) {
             is ApiResult.Success -> invitationsResult.data
-            else -> emptyList()
+            else -> cachedInvitations.orEmpty()
         }
 
-        val enriched = enrichEvents(events)
+        val enriched = enrichEvents(events, useCache = false)
         val upcoming = enriched
             .filter { !it.isPastItem }
             .sortedWith(
@@ -216,19 +237,34 @@ class EventsViewModel @Inject constructor(
         }
     }
 
-    private suspend fun enrichEvents(events: List<Event>): List<EventListItemUi> = coroutineScope {
+    private suspend fun enrichEvents(events: List<Event>, useCache: Boolean): List<EventListItemUi> = coroutineScope {
         events.map { event ->
             async {
-                val invitationsResult = invitationRepository.getByEvent(event.id)
-                val invitations = when (invitationsResult) {
-                    is ApiResult.Success -> invitationsResult.data
-                    else -> emptyList()
+                val invitations = if (useCache) {
+                    invitationRepository.getCachedByEvent(event.id)
+                        ?: when (val result = invitationRepository.getByEvent(event.id)) {
+                            is ApiResult.Success -> result.data
+                            else -> emptyList()
+                        }
+                } else {
+                    when (val result = invitationRepository.getByEvent(event.id)) {
+                        is ApiResult.Success -> result.data
+                        else -> emptyList()
+                    }
                 }
                 val (confirmed, pending) = countInvitations(invitations)
 
-                val participants = when (val p = locationRepository.getParticipants(event.id)) {
-                    is ApiResult.Success -> p.data
-                    else -> emptyList()
+                val participants = if (useCache) {
+                    locationRepository.getCachedParticipants(event.id)
+                        ?: when (val p = locationRepository.getParticipants(event.id)) {
+                            is ApiResult.Success -> p.data
+                            else -> emptyList()
+                        }
+                } else {
+                    when (val p = locationRepository.getParticipants(event.id)) {
+                        is ApiResult.Success -> p.data
+                        else -> emptyList()
+                    }
                 }
 
                 val baseItem = if (event.isLive()) {

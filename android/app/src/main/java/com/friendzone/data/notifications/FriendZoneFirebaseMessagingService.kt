@@ -10,6 +10,7 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import com.example.friendzone.MainActivity
 import com.example.friendzone.R
+import com.example.friendzone.data.notifications.InboxSyncCoordinator
 import com.example.friendzone.presentation.navigation.DeepLinkViewModel
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
@@ -22,11 +23,15 @@ class FriendZoneFirebaseMessagingService : FirebaseMessagingService() {
     @Inject
     lateinit var fcmTokenRegistrar: FcmTokenRegistrar
 
+    @Inject
+    lateinit var inboxSyncCoordinator: InboxSyncCoordinator
+
     override fun onNewToken(token: String) {
         fcmTokenRegistrar.uploadTokenIfLoggedIn(token)
     }
 
     override fun onMessageReceived(message: RemoteMessage) {
+        inboxSyncCoordinator.invalidateInbox()
         val title = message.notification?.title ?: message.data["title"] ?: getString(R.string.app_name)
         val body = message.notification?.body ?: message.data["body"] ?: return
         showNotification(title, body, message.data)

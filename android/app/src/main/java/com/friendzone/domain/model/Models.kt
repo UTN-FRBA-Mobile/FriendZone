@@ -1,5 +1,8 @@
 package com.example.friendzone.domain.model
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class User(
     val id: String,
     val email: String,
@@ -10,12 +13,14 @@ data class User(
     val createdAt: String,
 )
 
+@Serializable
 data class AuthSession(
     val accessToken: String,
     val refreshToken: String,
     val user: User,
 )
 
+@Serializable
 enum class EventStatus {
     SCHEDULED,
     ACTIVE,
@@ -23,6 +28,7 @@ enum class EventStatus {
     CANCELLED,
 }
 
+@Serializable
 data class Event(
     val id: String,
     val organizerId: String,
@@ -40,12 +46,14 @@ data class Event(
     val coverImageUrl: String? = null,
 )
 
+@Serializable
 enum class InvitationStatus {
     PENDING,
     ACCEPTED,
     REJECTED,
 }
 
+@Serializable
 data class Invitation(
     val id: String,
     val eventId: String,
@@ -55,6 +63,7 @@ data class Invitation(
     val createdAt: String,
 )
 
+@Serializable
 data class PendingInvitation(
     val id: String,
     val eventId: String,
@@ -67,11 +76,13 @@ data class PendingInvitation(
     val organizerDisplayName: String,
 )
 
+@Serializable
 enum class ParticipantRole {
     ORGANIZER,
     PARTICIPANT,
 }
 
+@Serializable
 data class EventParticipant(
     val id: String,
     val eventId: String,
@@ -86,17 +97,20 @@ data class EventParticipant(
     val createdAt: String,
 )
 
+@Serializable
 data class ParticipantWithUser(
     val participant: EventParticipant,
     val user: User,
 )
 
+@Serializable
 enum class FriendRequestStatus {
     PENDING,
     ACCEPTED,
     REJECTED,
 }
 
+@Serializable
 data class FriendRequest(
     val id: String,
     val requesterId: String,
@@ -117,6 +131,7 @@ data class LocationUpdateResult(
     val proximity: ProximityResult,
 )
 
+@Serializable
 enum class AppNotificationType {
     FRIEND_REQUEST,
     FRIEND_REQUEST_ACCEPTED,
@@ -127,6 +142,7 @@ enum class AppNotificationType {
     EVENT_CANCELLED,
 }
 
+@Serializable
 data class InboxNotification(
     val id: String,
     val type: AppNotificationType,
