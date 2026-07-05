@@ -1,0 +1,7 @@
+# Copy to local.properties and adjust paths for your machine.
+sdk.dir=/path/to/Android/sdk
+org.gradle.java.home=/path/to/jdk-17
+
+# macOS example:
+# sdk.dir=/Users/you/Library/Android/sdk
+# org.gradle.java.home=/Library/Java/JavaVirtualMachines/zulu-17.jdk/Contents/Home

@@ -1,6 +1,7 @@
 package com.example.friendzone.presentation.events
 
 import android.widget.Toast
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -17,6 +18,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -37,6 +40,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -63,7 +67,7 @@ import com.example.friendzone.ui.theme.FzTextMain
 import com.example.friendzone.ui.theme.FzTextSecondary
 import com.example.friendzone.ui.theme.FzSurface
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun EventsScreen(
     onCreateClick: () -> Unit,
@@ -83,12 +87,27 @@ fun EventsScreen(
     val isRefreshing by viewModel.isRefreshing.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val pagerState = rememberPagerState(
+        initialPage = selectedTab.ordinal,
+        pageCount = { EventsTab.entries.size },
+    )
 
-    var eventIdToConfirmAction by remember { mutableStateOf<Pair<String, Boolean>?>(null) } // ID to (isDelete)
+    var eventIdToConfirmAction by remember { mutableStateOf<Pair<String, Boolean>?>(null) }
     val context = LocalContext.current
 
-    LaunchedEffect(Unit) {
-        viewModel.loadEvents()
+    LaunchedEffect(pagerState) {
+        snapshotFlow { pagerState.settledPage }.collect { page ->
+            val tab = EventsTab.entries[page]
+            if (tab != selectedTab) {
+                viewModel.selectTab(tab)
+            }
+        }
+    }
+
+    LaunchedEffect(selectedTab) {
+        if (pagerState.currentPage != selectedTab.ordinal) {
+            pagerState.animateScrollToPage(selectedTab.ordinal)
+        }
     }
 
     LaunchedEffect(actionState) {
@@ -159,110 +178,77 @@ fun EventsScreen(
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        FriendZonePullToRefreshBox(
-            isRefreshing = isRefreshing,
-            onRefresh = viewModel::refresh,
-            modifier = Modifier.fillMaxSize(),
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(FzBackground),
         ) {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(FzBackground),
-                contentPadding = PaddingValues(bottom = 16.dp),
-            ) {
-                item {
-                    FriendZoneTopBar(
-                        title = stringResource(R.string.header_events),
-                        showNotifications = true,
-                        notificationBadgeCount = notificationBadgeCount,
-                        onNotificationsClick = onNotificationsClick,
-                    )
-                }
-                item {
-                    EventsSegmentedControl(
-                        selectedTab = selectedTab,
-                        invitationCount = (uiState as? EventsUiState.Data)?.pendingInvitations?.size ?: 0,
-                        onTabSelected = viewModel::selectTab,
-                    )
-                }
+            FriendZoneTopBar(
+                title = stringResource(R.string.header_events),
+                showNotifications = true,
+                notificationBadgeCount = notificationBadgeCount,
+                onNotificationsClick = onNotificationsClick,
+            )
+            EventsSegmentedControl(
+                selectedTab = selectedTab,
+                invitationCount = (uiState as? EventsUiState.Data)?.pendingInvitations?.size ?: 0,
+                onTabSelected = viewModel::selectTab,
+            )
 
+            FriendZonePullToRefreshBox(
+                isRefreshing = isRefreshing,
+                onRefresh = viewModel::refresh,
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
+            ) {
                 when (val state = uiState) {
                     is EventsUiState.Loading -> {
-                        item {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(48.dp),
-                                contentAlignment = Alignment.Center,
-                            ) {
-                                CircularProgressIndicator(color = FzPrimary)
-                            }
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(48.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            CircularProgressIndicator(color = FzPrimary)
                         }
                     }
                     is EventsUiState.Error -> {
-                        item {
-                            ColumnError(
-                                message = state.message,
-                                onRetry = { viewModel.loadEvents() },
-                            )
-                        }
+                        ColumnError(
+                            message = state.message,
+                            onRetry = { viewModel.loadEvents() },
+                            modifier = Modifier.fillMaxSize(),
+                        )
                     }
-                    is EventsUiState.Data -> when (selectedTab) {
-                        EventsTab.Upcoming -> {
-                            if (state.upcomingEvents.isEmpty()) {
-                                item { EmptyTabMessage(stringResource(R.string.msg_no_upcoming_events)) }
-                            } else {
-                                items(state.upcomingEvents, key = { it.eventId }) { item ->
-                                    if (item.isLive) {
-                                        EventLiveCard(
-                                            item = item,
-                                            onClick = { onEventDetailClick(item.eventId, false) },
-                                            onViewMapClick = { onEventDetailClick(item.eventId, true) },
-                                            onDeleteClick = { eventIdToConfirmAction = item.eventId to true },
-                                            onLeaveClick = { eventIdToConfirmAction = item.eventId to false },
-                                        )
-                                    } else {
-                                        EventUpcomingCard(
-                                            item = item,
-                                            onClick = { onEventDetailClick(item.eventId, false) },
-                                            onDeleteClick = { eventIdToConfirmAction = item.eventId to true },
-                                            onLeaveClick = { eventIdToConfirmAction = item.eventId to false },
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                        EventsTab.Past -> {
-                            if (state.pastEvents.isEmpty()) {
-                                item { EmptyTabMessage(stringResource(R.string.msg_no_past_events)) }
-                            } else {
-                                items(state.pastEvents, key = { it.eventId }) { item ->
-                                    EventUpcomingCard(
-                                        item = item,
-                                        onClick = { onEventDetailClick(item.eventId, false) },
-                                        onDeleteClick = { eventIdToConfirmAction = item.eventId to true },
-                                        onLeaveClick = { eventIdToConfirmAction = item.eventId to false },
-                                    )
-                                }
-                            }
-                        }
-                        EventsTab.Invitations -> {
-                            if (state.pendingInvitations.isEmpty()) {
-                                item { EmptyTabMessage(stringResource(R.string.msg_no_invites)) }
-                            } else {
-                                items(state.pendingInvitations, key = { it.id }) { invitation ->
-                                    InvitationRow(
-                                        invitation = invitation,
-                                        onClick = { viewModel.openInvitation(invitation) },
-                                    )
-                                }
+                    is EventsUiState.Data -> {
+                        HorizontalPager(
+                            state = pagerState,
+                            modifier = Modifier.fillMaxSize(),
+                        ) { page ->
+                            when (EventsTab.entries[page]) {
+                                EventsTab.Upcoming -> UpcomingEventsPage(
+                                    events = state.upcomingEvents,
+                                    onEventDetailClick = onEventDetailClick,
+                                    onDeleteClick = { eventIdToConfirmAction = it to true },
+                                    onLeaveClick = { eventIdToConfirmAction = it to false },
+                                )
+                                EventsTab.Past -> PastEventsPage(
+                                    events = state.pastEvents,
+                                    onEventDetailClick = onEventDetailClick,
+                                    onDeleteClick = { eventIdToConfirmAction = it to true },
+                                    onLeaveClick = { eventIdToConfirmAction = it to false },
+                                )
+                                EventsTab.Invitations -> InvitationsPage(
+                                    invitations = state.pendingInvitations,
+                                    onInvitationClick = viewModel::openInvitation,
+                                )
                             }
                         }
                     }
                 }
             }
         }
-        
+
         FloatingActionButton(
             onClick = onCreateClick,
             modifier = Modifier
@@ -277,6 +263,90 @@ fun EventsScreen(
             hostState = snackbarHostState,
             modifier = Modifier.align(Alignment.BottomCenter),
         )
+    }
+}
+
+@Composable
+private fun UpcomingEventsPage(
+    events: List<EventListItemUi>,
+    onEventDetailClick: (String, Boolean) -> Unit,
+    onDeleteClick: (String) -> Unit,
+    onLeaveClick: (String) -> Unit,
+) {
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(bottom = 16.dp),
+    ) {
+        if (events.isEmpty()) {
+            item { EmptyTabMessage(stringResource(R.string.msg_no_upcoming_events)) }
+        } else {
+            items(events, key = { it.eventId }) { item ->
+                if (item.isLive) {
+                    EventLiveCard(
+                        item = item,
+                        onClick = { onEventDetailClick(item.eventId, false) },
+                        onViewMapClick = { onEventDetailClick(item.eventId, true) },
+                        onDeleteClick = { onDeleteClick(item.eventId) },
+                        onLeaveClick = { onLeaveClick(item.eventId) },
+                    )
+                } else {
+                    EventUpcomingCard(
+                        item = item,
+                        onClick = { onEventDetailClick(item.eventId, false) },
+                        onDeleteClick = { onDeleteClick(item.eventId) },
+                        onLeaveClick = { onLeaveClick(item.eventId) },
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun PastEventsPage(
+    events: List<EventListItemUi>,
+    onEventDetailClick: (String, Boolean) -> Unit,
+    onDeleteClick: (String) -> Unit,
+    onLeaveClick: (String) -> Unit,
+) {
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(bottom = 16.dp),
+    ) {
+        if (events.isEmpty()) {
+            item { EmptyTabMessage(stringResource(R.string.msg_no_past_events)) }
+        } else {
+            items(events, key = { it.eventId }) { item ->
+                EventUpcomingCard(
+                    item = item,
+                    onClick = { onEventDetailClick(item.eventId, false) },
+                    onDeleteClick = { onDeleteClick(item.eventId) },
+                    onLeaveClick = { onLeaveClick(item.eventId) },
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun InvitationsPage(
+    invitations: List<PendingInvitation>,
+    onInvitationClick: (PendingInvitation) -> Unit,
+) {
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(bottom = 16.dp),
+    ) {
+        if (invitations.isEmpty()) {
+            item { EmptyTabMessage(stringResource(R.string.msg_no_invites)) }
+        } else {
+            items(invitations, key = { it.id }) { invitation ->
+                InvitationRow(
+                    invitation = invitation,
+                    onClick = { onInvitationClick(invitation) },
+                )
+            }
+        }
     }
 }
 
@@ -412,11 +482,10 @@ private fun EmptyTabMessage(message: String) {
 private fun ColumnError(
     message: String,
     onRetry: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(32.dp),
+        modifier = modifier.padding(32.dp),
         contentAlignment = Alignment.Center,
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {

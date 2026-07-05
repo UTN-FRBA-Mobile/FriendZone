@@ -3,6 +3,9 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ANDROID_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+# shellcheck source=resolve-gradle-jdk.sh
+source "$SCRIPT_DIR/resolve-gradle-jdk.sh"
 ENV_FILE="${1:-$ANDROID_DIR/env/production.env}"
 DIST_DIR="$ANDROID_DIR/dist"
 
@@ -23,7 +26,7 @@ export FRIENDZONE_API_BASE_URL
 
 cd "$ANDROID_DIR"
 
-./gradlew clean assembleRelease bundleRelease
+run_gradlew clean assembleRelease bundleRelease
 
 mkdir -p "$DIST_DIR"
 

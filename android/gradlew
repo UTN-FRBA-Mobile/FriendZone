@@ -117,6 +117,28 @@ esac
 CLASSPATH="\\\"\\\""
 
 
+# FriendZone: use a full JDK (Cursor/VS Code extension JREs lack jlink).
+if [ -n "$JAVA_HOME" ] && [ ! -x "$JAVA_HOME/bin/jlink" ]; then
+    JAVA_HOME=
+fi
+case "${JAVA_HOME:-}" in
+    *".cursor/extensions"*|*".vscode/extensions"*)
+        JAVA_HOME=
+        ;;
+esac
+if [ -z "$JAVA_HOME" ] || [ ! -x "$JAVA_HOME/bin/jlink" ]; then
+    if [ "$darwin" = "true" ] && [ -x /usr/libexec/java_home ]; then
+        for jdk_version in 21 17 22 11; do
+            candidate=$(/usr/libexec/java_home -v "$jdk_version" 2>/dev/null || true)
+            if [ -n "$candidate" ] && [ -x "$candidate/bin/jlink" ]; then
+                JAVA_HOME=$candidate
+                break
+            fi
+        done
+    fi
+fi
+
+
 # Determine the Java command to use to start the JVM.
 if [ -n "$JAVA_HOME" ] ; then
     if [ -x "$JAVA_HOME/jre/sh/java" ] ; then
