@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">FriendZone</string>
+    <string name="default_notification_channel_name">FriendZone notifications</string>
 </resources>

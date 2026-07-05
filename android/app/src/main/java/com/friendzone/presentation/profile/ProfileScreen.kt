@@ -1,5 +1,10 @@
 package com.example.friendzone.presentation.profile
 
+import android.Manifest
+import android.content.Context
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -31,7 +36,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.friendzone.presentation.components.FriendZoneOutlineButton
@@ -48,9 +55,37 @@ fun ProfileScreen(
     notificationBadgeCount: Int = 0,
     viewModel: ProfileViewModel = hiltViewModel(),
 ) {
+    val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var proximityAlerts by rememberSaveable { mutableStateOf(true) }
     val user = uiState.user
+    val locationPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions(),
+    ) { result ->
+        if (result.values.any { it }) {
+            viewModel.setLocationSharing(true)
+        } else {
+            viewModel.showLocationPermissionRequired()
+        }
+    }
+
+    fun handleLocationSharingChange(enabled: Boolean) {
+        if (enabled) {
+            if (hasLocationPermission(context)) {
+                viewModel.setLocationSharing(true)
+            } else {
+                locationPermissionLauncher.launch(
+                    arrayOf(
+                        Manifest.permission.ACCESS_FINE_LOCATION,
+                        Manifest.permission.ACCESS_COARSE_LOCATION,
+                    ),
+                )
+            }
+        } else {
+            viewModel.setLocationSharing(false)
+            context.revokeLocationPermissionsOnKill()
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -134,7 +169,7 @@ fun ProfileScreen(
                 subtitle = "Friends can see where you are",
                 checked = user?.locationSharingEnabled ?: false,
                 enabled = !uiState.isUpdatingLocationSharing && user != null,
-                onCheckedChange = viewModel::setLocationSharing,
+                onCheckedChange = ::handleLocationSharingChange,
             )
             Spacer(modifier = Modifier.height(8.dp))
             SettingToggleRow(
@@ -155,6 +190,21 @@ fun ProfileScreen(
             }
         }
     }
+}
+
+private fun hasLocationPermission(context: Context): Boolean =
+    ContextCompat.checkSelfPermission(
+        context,
+        Manifest.permission.ACCESS_FINE_LOCATION,
+    ) == PackageManager.PERMISSION_GRANTED ||
+        ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.ACCESS_COARSE_LOCATION,
+        ) == PackageManager.PERMISSION_GRANTED
+
+private fun Context.revokeLocationPermissionsOnKill() {
+    revokeSelfPermissionOnKill(Manifest.permission.ACCESS_FINE_LOCATION)
+    revokeSelfPermissionOnKill(Manifest.permission.ACCESS_COARSE_LOCATION)
 }
 
 @Composable
