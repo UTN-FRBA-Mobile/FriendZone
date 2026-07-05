@@ -44,6 +44,7 @@ import com.example.friendzone.presentation.events.EventsTab
 import com.example.friendzone.presentation.invite.IncomingInviteBottomSheet
 import com.example.friendzone.presentation.notifications.NotificationsBadgeViewModel
 import com.example.friendzone.presentation.notifications.NotificationsScreen
+import com.example.friendzone.presentation.notifications.RequestNotificationPermissionWhenLoggedIn
 import com.example.friendzone.presentation.profile.ProfileScreen
 import com.example.friendzone.ui.theme.FzBackground
 import com.example.friendzone.ui.theme.FzInk
@@ -88,6 +89,8 @@ fun FriendZoneNavHost(
     var eventsOpenInvitationId by remember { mutableStateOf<String?>(null) }
     var friendsInitialTab by remember { mutableStateOf<FriendsTab?>(null) }
     var pendingInviteUsername by remember { mutableStateOf<String?>(null) }
+
+    RequestNotificationPermissionWhenLoggedIn(isLoggedIn)
 
     LaunchedEffect(authSession, pendingDeepLink, currentRoute) {
         when (authSession) {
