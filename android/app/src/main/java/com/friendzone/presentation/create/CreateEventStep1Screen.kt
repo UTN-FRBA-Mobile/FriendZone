@@ -58,8 +58,9 @@ import com.example.friendzone.ui.theme.FzBackground
 import com.example.friendzone.ui.theme.FzGreen
 import com.example.friendzone.ui.theme.FzInk
 import java.time.Instant
+import java.time.LocalDate
 import java.time.LocalTime
-import java.time.ZoneId
+import java.time.ZoneOffset
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -85,10 +86,7 @@ fun CreateEventStep1Screen(
     }
 
     val initialDateMillis = remember(draft.selectedDate) {
-        draft.selectedDate
-            ?.atStartOfDay(ZoneId.systemDefault())
-            ?.toInstant()
-            ?.toEpochMilli()
+        draft.selectedDate?.toDatePickerUtcMillis()
     }
     val datePickerState = rememberDatePickerState(initialSelectedDateMillis = initialDateMillis)
     val timePickerState = rememberTimePickerState(
@@ -238,10 +236,7 @@ fun CreateEventStep1Screen(
                 TextButton(
                     onClick = {
                         datePickerState.selectedDateMillis?.let { millis ->
-                            val date = Instant.ofEpochMilli(millis)
-                                .atZone(ZoneId.systemDefault())
-                                .toLocalDate()
-                            viewModel.updateDate(date)
+                            viewModel.updateDate(millis.toDatePickerLocalDate())
                         }
                         showDatePicker = false
                     },
@@ -281,3 +276,9 @@ fun CreateEventStep1Screen(
         }
     }
 }
+
+private fun LocalDate.toDatePickerUtcMillis(): Long =
+    atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
+
+private fun Long.toDatePickerLocalDate(): LocalDate =
+    Instant.ofEpochMilli(this).atZone(ZoneOffset.UTC).toLocalDate()
