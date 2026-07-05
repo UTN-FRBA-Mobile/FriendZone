@@ -21,6 +21,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
@@ -41,9 +43,35 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import com.example.friendzone.ui.theme.FzBorder
 import com.example.friendzone.ui.theme.FzInk
+import com.example.friendzone.ui.theme.FzInk2
 import com.example.friendzone.ui.theme.FzInk3
 import com.example.friendzone.ui.theme.FzRequired
 import com.example.friendzone.ui.theme.FzSurface
+
+@Composable
+fun FriendZoneSwitch(
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+) {
+    Switch(
+        checked = checked,
+        onCheckedChange = onCheckedChange,
+        enabled = enabled,
+        modifier = modifier,
+        colors = SwitchDefaults.colors(
+            checkedTrackColor = FzInk,
+            checkedThumbColor = Color.White,
+            checkedBorderColor = FzInk,
+            uncheckedTrackColor = FzInk3,
+            uncheckedThumbColor = Color.White,
+            uncheckedBorderColor = FzInk3,
+            disabledCheckedTrackColor = FzInk.copy(alpha = 0.5f),
+            disabledUncheckedTrackColor = FzSurface.copy(alpha = 0.5f),
+        ),
+    )
+}
 
 @Composable
 fun FriendZonePrimaryButton(

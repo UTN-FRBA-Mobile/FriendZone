@@ -48,7 +48,7 @@ fun EventLiveCard(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp)
+            .padding(horizontal = 16.dp, vertical = 8.dp)
             .clip(RoundedCornerShape(16.dp))
             .background(FzSurface)
             .border(2.dp, FzInk, RoundedCornerShape(16.dp))
@@ -127,7 +127,7 @@ fun EventUpcomingCard(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 6.dp)
+            .padding(horizontal = 16.dp, vertical = 8.dp)
             .clip(RoundedCornerShape(16.dp))
             .background(FzSurface)
             .clickable(onClick = onCardClick),

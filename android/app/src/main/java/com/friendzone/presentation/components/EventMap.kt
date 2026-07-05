@@ -30,7 +30,6 @@ import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -272,7 +271,7 @@ private fun ShareLocationToggle(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Text("Compartir mi ubicacion", color = FzInk)
-        Switch(checked = checked, onCheckedChange = onCheckedChange)
+        FriendZoneSwitch(checked = checked, onCheckedChange = onCheckedChange)
     }
 }
 

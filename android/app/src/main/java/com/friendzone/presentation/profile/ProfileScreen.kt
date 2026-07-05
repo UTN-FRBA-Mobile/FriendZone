@@ -19,8 +19,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -35,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.friendzone.presentation.components.FriendZoneOutlineButton
+import com.example.friendzone.presentation.components.FriendZoneSwitch
 import com.example.friendzone.presentation.components.FriendZoneTopBar
 import com.example.friendzone.ui.theme.FzBackground
 import com.example.friendzone.ui.theme.FzBorder
@@ -194,14 +193,10 @@ private fun SettingToggleRow(
             Text(title, style = MaterialTheme.typography.bodyMedium, color = FzInk)
             Text(subtitle, style = MaterialTheme.typography.bodySmall, color = FzInk3)
         }
-        Switch(
+        FriendZoneSwitch(
             checked = checked,
             onCheckedChange = onCheckedChange,
             enabled = enabled,
-            colors = SwitchDefaults.colors(
-                checkedTrackColor = FzInk,
-                checkedThumbColor = Color.White,
-            ),
         )
     }
 }
