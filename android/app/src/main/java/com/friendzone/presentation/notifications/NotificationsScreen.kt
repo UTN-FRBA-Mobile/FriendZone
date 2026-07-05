@@ -23,13 +23,17 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -52,12 +56,14 @@ import com.example.friendzone.ui.theme.FzPrimary
 import com.example.friendzone.ui.theme.FzTextMain
 import com.example.friendzone.ui.theme.FzTextSecondary
 import com.example.friendzone.ui.theme.FzSurface
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotificationsScreen(
     onBack: () -> Unit,
     onActionFinished: () -> Unit,
+    onBadgeRefresh: () -> Unit = {},
     viewModel: NotificationsViewModel = hiltViewModel(),
 ) {
     BackHandler(onBack = onBack)
@@ -69,6 +75,12 @@ fun NotificationsScreen(
 
     LaunchedEffect(Unit) {
         viewModel.loadInbox()
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.badgeRefreshNeeded.collect {
+            onBadgeRefresh()
+        }
     }
 
     LaunchedEffect(uiState.snackbarMessage) {
@@ -157,9 +169,10 @@ fun NotificationsScreen(
                     }
                     else -> {
                         items(uiState.items, key = { it.id }) { item ->
-                            NotificationRow(
+                            DismissibleNotificationRow(
                                 item = item,
                                 onClick = { viewModel.selectNotification(item) },
+                                onDismiss = { viewModel.dismissNotification(item) },
                             )
                             HorizontalDivider(
                                 color = FzBorderGray,
@@ -179,8 +192,49 @@ fun NotificationsScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun NotificationRow(
+private fun DismissibleNotificationRow(
+    item: InboxNotification,
+    onClick: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val scope = rememberCoroutineScope()
+    val dismissState = rememberSwipeToDismissBoxState(
+        confirmValueChange = { value ->
+            if (value == SwipeToDismissBoxValue.EndToStart) {
+                onDismiss()
+                true
+            } else {
+                false
+            }
+        },
+    )
+
+    SwipeToDismissBox(
+        state = dismissState,
+        enableDismissFromStartToEnd = false,
+        enableDismissFromEndToStart = true,
+        backgroundContent = {},
+        content = {
+            NotificationRowContent(
+                item = item,
+                onClick = {
+                    if (item.actionable) {
+                        onClick()
+                    } else {
+                        scope.launch {
+                            dismissState.dismiss(SwipeToDismissBoxValue.EndToStart)
+                        }
+                    }
+                },
+            )
+        },
+    )
+}
+
+@Composable
+private fun NotificationRowContent(
     item: InboxNotification,
     onClick: () -> Unit,
 ) {

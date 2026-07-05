@@ -3,6 +3,9 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ANDROID_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+# shellcheck source=resolve-gradle-jdk.sh
+source "$SCRIPT_DIR/resolve-gradle-jdk.sh"
 ENV_FILE="${1:-$ANDROID_DIR/env/production.env}"
 LOCAL_PROPERTIES="$ANDROID_DIR/local.properties"
 DIST_DIR="$ANDROID_DIR/dist"
@@ -95,7 +98,7 @@ export RELEASE_KEY_PASSWORD
 
 cd "$ANDROID_DIR"
 
-./gradlew clean assembleRelease
+run_gradlew clean assembleRelease
 
 mkdir -p "$DIST_DIR"
 

@@ -2,6 +2,7 @@ package com.example.friendzone.presentation.notifications
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.friendzone.data.notifications.InboxSyncCoordinator
 import com.example.friendzone.domain.model.AppNotificationType
 import com.example.friendzone.domain.model.FriendRequestStatus
 import com.example.friendzone.domain.model.InboxNotification
@@ -13,8 +14,11 @@ import com.example.friendzone.domain.result.ApiResult
 import com.example.friendzone.domain.result.displayMessage
 import com.example.friendzone.domain.util.formatEventDate
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -34,6 +38,7 @@ class NotificationsViewModel @Inject constructor(
     private val notificationRepository: NotificationRepository,
     private val friendRepository: FriendRepository,
     private val invitationRepository: InvitationRepository,
+    inboxSyncCoordinator: InboxSyncCoordinator,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(NotificationsUiState())
     val uiState: StateFlow<NotificationsUiState> = _uiState.asStateFlow()
@@ -41,12 +46,23 @@ class NotificationsViewModel @Inject constructor(
     private val _actionFinished = MutableStateFlow(false)
     val actionFinished: StateFlow<Boolean> = _actionFinished.asStateFlow()
 
+    private val _badgeRefreshNeeded = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+    val badgeRefreshNeeded: SharedFlow<Unit> = _badgeRefreshNeeded.asSharedFlow()
+
     private val _isRefreshing = MutableStateFlow(false)
     val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
 
+    init {
+        viewModelScope.launch {
+            inboxSyncCoordinator.invalidations.collect {
+                refresh()
+            }
+        }
+    }
+
     fun loadInbox() {
         viewModelScope.launch {
-            loadInboxInternal(showFullLoading = true)
+            loadInboxInternal(showFullLoading = _uiState.value.items.isEmpty())
         }
     }
 
@@ -63,7 +79,15 @@ class NotificationsViewModel @Inject constructor(
     }
 
     private suspend fun loadInboxInternal(showFullLoading: Boolean) {
-        if (showFullLoading) _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+        val cached = notificationRepository.getCachedInbox()
+        if (cached != null) {
+            _uiState.update {
+                it.copy(isLoading = false, items = cached, errorMessage = null)
+            }
+        } else if (showFullLoading) {
+            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+        }
+
         when (val result = notificationRepository.getInbox()) {
             is ApiResult.Success -> {
                 _uiState.update {
@@ -71,11 +95,15 @@ class NotificationsViewModel @Inject constructor(
                 }
             }
             is ApiResult.Error -> {
-                _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        errorMessage = result.error.displayMessage(),
-                    )
+                if (cached == null) {
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            errorMessage = result.error.displayMessage(),
+                        )
+                    }
+                } else {
+                    _uiState.update { it.copy(isLoading = false) }
                 }
             }
             ApiResult.Loading -> Unit
@@ -86,7 +114,34 @@ class NotificationsViewModel @Inject constructor(
         if (notification.actionable) {
             _uiState.update { it.copy(selectedNotification = notification) }
         } else {
-            markRead(notification.id)
+            dismissNotification(notification)
+        }
+    }
+
+    fun dismissNotification(notification: InboxNotification) {
+        val previousItems = _uiState.value.items
+        if (previousItems.none { it.id == notification.id }) return
+
+        _uiState.update { state ->
+            state.copy(items = state.items.filter { it.id != notification.id })
+        }
+
+        viewModelScope.launch {
+            notificationRepository.removeFromCache(notification.id)
+            when (val result = notificationRepository.markRead(notification.id)) {
+                is ApiResult.Success -> {
+                    _badgeRefreshNeeded.tryEmit(Unit)
+                }
+                is ApiResult.Error -> {
+                    _uiState.update {
+                        it.copy(
+                            items = previousItems,
+                            snackbarMessage = result.error.displayMessage(),
+                        )
+                    }
+                }
+                ApiResult.Loading -> Unit
+            }
         }
     }
 
@@ -100,20 +155,6 @@ class NotificationsViewModel @Inject constructor(
 
     fun resetActionFinished() {
         _actionFinished.value = false
-    }
-
-    fun markRead(notificationId: String) {
-        viewModelScope.launch {
-            when (val result = notificationRepository.markRead(notificationId)) {
-                is ApiResult.Success -> loadInbox()
-                is ApiResult.Error -> {
-                    _uiState.update {
-                        it.copy(snackbarMessage = result.error.displayMessage())
-                    }
-                }
-                ApiResult.Loading -> Unit
-            }
-        }
     }
 
     fun acceptSelected() {
@@ -149,10 +190,11 @@ class NotificationsViewModel @Inject constructor(
 
             when (result) {
                 is ApiResult.Success -> {
-                    _uiState.update {
-                        it.copy(
+                    _uiState.update { state ->
+                        state.copy(
                             isActionLoading = false,
                             selectedNotification = null,
+                            items = state.items.filter { it.id != notification.id },
                             snackbarMessage = when {
                                 accept && notification.type == AppNotificationType.INVITATION_CREATED ->
                                     "Joined event"
@@ -161,6 +203,8 @@ class NotificationsViewModel @Inject constructor(
                             },
                         )
                     }
+                    notificationRepository.removeFromCache(notification.id)
+                    _badgeRefreshNeeded.tryEmit(Unit)
                     _actionFinished.value = true
                 }
                 is ApiResult.Error -> {

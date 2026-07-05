@@ -1,5 +1,6 @@
 package com.example.friendzone.presentation.friends
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -16,6 +17,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -37,6 +40,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -58,12 +62,11 @@ import com.example.friendzone.presentation.invite.InviteFriendsBottomSheet
 import com.example.friendzone.ui.theme.FzBackground
 import com.example.friendzone.ui.theme.FzBorderGray
 import com.example.friendzone.ui.theme.FzPrimary
-import com.example.friendzone.ui.theme.FzPrimaryLight
 import com.example.friendzone.ui.theme.FzTextMain
 import com.example.friendzone.ui.theme.FzTextSecondary
 import com.example.friendzone.ui.theme.FzSurface
-import com.example.friendzone.ui.theme.FzSurface2
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun FriendsScreen(
     onFriendsChanged: () -> Unit,
@@ -76,10 +79,28 @@ fun FriendsScreen(
     val isRefreshing by viewModel.isRefreshing.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     var showInviteSheet by rememberSaveable { mutableStateOf(false) }
+    val pagerState = rememberPagerState(
+        initialPage = uiState.selectedTab.ordinal,
+        pageCount = { FriendsTab.entries.size },
+    )
 
     LaunchedEffect(Unit) {
-        viewModel.loadAll()
         onFriendsChanged()
+    }
+
+    LaunchedEffect(pagerState) {
+        snapshotFlow { pagerState.settledPage }.collect { page ->
+            val tab = FriendsTab.entries[page]
+            if (tab != uiState.selectedTab) {
+                viewModel.selectTab(tab)
+            }
+        }
+    }
+
+    LaunchedEffect(uiState.selectedTab) {
+        if (pagerState.currentPage != uiState.selectedTab.ordinal) {
+            pagerState.animateScrollToPage(uiState.selectedTab.ordinal)
+        }
     }
 
     LaunchedEffect(initialTab) {
@@ -122,33 +143,38 @@ fun FriendsScreen(
                     .weight(1f)
                     .fillMaxWidth(),
             ) {
-                when (uiState.selectedTab) {
-                    FriendsTab.Friends -> FriendsListContent(
-                        isLoading = uiState.isLoading,
-                        searchQuery = uiState.searchQuery,
-                        lookupResult = uiState.lookupResult,
-                        isSendingRequest = uiState.isSendingRequest,
-                        friends = uiState.friends,
-                        onSearchChange = viewModel::updateSearchQuery,
-                        onSearchSubmit = viewModel::lookupUser,
-                        onSendRequest = { user ->
-                            viewModel.sendFriendRequest(user.username)
-                            onFriendsChanged()
-                        },
-                        onInviteClick = { showInviteSheet = true },
-                    )
-                    FriendsTab.Requests -> RequestsListContent(
-                        isLoading = uiState.isLoading,
-                        requests = uiState.requests,
-                        onAccept = { id ->
-                            viewModel.respondToRequest(id, accept = true)
-                            onFriendsChanged()
-                        },
-                        onReject = { id ->
-                            viewModel.respondToRequest(id, accept = false)
-                            onFriendsChanged()
-                        },
-                    )
+                HorizontalPager(
+                    state = pagerState,
+                    modifier = Modifier.fillMaxSize(),
+                ) { page ->
+                    when (FriendsTab.entries[page]) {
+                        FriendsTab.Friends -> FriendsListContent(
+                            isLoading = uiState.isLoading,
+                            searchQuery = uiState.searchQuery,
+                            lookupResult = uiState.lookupResult,
+                            isSendingRequest = uiState.isSendingRequest,
+                            friends = uiState.friends,
+                            onSearchChange = viewModel::updateSearchQuery,
+                            onSearchSubmit = viewModel::lookupUser,
+                            onSendRequest = { user ->
+                                viewModel.sendFriendRequest(user.username)
+                                onFriendsChanged()
+                            },
+                            onInviteClick = { showInviteSheet = true },
+                        )
+                        FriendsTab.Requests -> RequestsListContent(
+                            isLoading = uiState.isLoading,
+                            requests = uiState.requests,
+                            onAccept = { id ->
+                                viewModel.respondToRequest(id, accept = true)
+                                onFriendsChanged()
+                            },
+                            onReject = { id ->
+                                viewModel.respondToRequest(id, accept = false)
+                                onFriendsChanged()
+                            },
+                        )
+                    }
                 }
             }
         }

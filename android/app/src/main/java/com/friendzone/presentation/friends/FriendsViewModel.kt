@@ -54,7 +54,8 @@ class FriendsViewModel @Inject constructor(
 
     fun loadAll() {
         viewModelScope.launch {
-            loadAllInternal(showFullLoading = true)
+            val hasContent = _uiState.value.friends.isNotEmpty() || _uiState.value.requests.isNotEmpty()
+            loadAllInternal(showFullLoading = !hasContent)
         }
     }
 
@@ -73,22 +74,37 @@ class FriendsViewModel @Inject constructor(
     }
 
     private suspend fun loadAllInternal(showFullLoading: Boolean) {
-        if (showFullLoading) _uiState.value = _uiState.value.copy(isLoading = true)
+        val cachedFriends = friendRepository.getCachedFriends()
+        val cachedRequests = friendRepository.getCachedIncomingRequests()
+        if (cachedFriends != null || cachedRequests != null) {
+            _uiState.value = _uiState.value.copy(
+                isLoading = false,
+                friends = cachedFriends.orEmpty(),
+                requests = cachedRequests.orEmpty(),
+            )
+        } else if (showFullLoading) {
+            _uiState.value = _uiState.value.copy(isLoading = true)
+        }
+
         val friends = when (val result = friendRepository.getFriends()) {
             is ApiResult.Success -> result.data
             is ApiResult.Error -> {
-                showMessage(result.error.displayMessage())
-                emptyList()
+                if (cachedFriends == null) {
+                    showMessage(result.error.displayMessage())
+                }
+                cachedFriends.orEmpty()
             }
-            ApiResult.Loading -> emptyList()
+            ApiResult.Loading -> cachedFriends.orEmpty()
         }
         val requests = when (val result = friendRepository.getIncomingRequests()) {
             is ApiResult.Success -> result.data
             is ApiResult.Error -> {
-                showMessage(result.error.displayMessage())
-                emptyList()
+                if (cachedRequests == null && cachedFriends == null) {
+                    showMessage(result.error.displayMessage())
+                }
+                cachedRequests.orEmpty()
             }
-            ApiResult.Loading -> emptyList()
+            ApiResult.Loading -> cachedRequests.orEmpty()
         }
         _uiState.value = _uiState.value.copy(
             isLoading = false,
@@ -175,7 +191,7 @@ class FriendsViewModel @Inject constructor(
             when (val result = friendRepository.respondToRequest(requestId, status)) {
                 is ApiResult.Success -> {
                     showMessage(if (accept) "Friend added" else "Request rejected")
-                    loadAll()
+                    loadAllInternal(showFullLoading = false)
                 }
                 is ApiResult.Error -> showMessage(result.error.displayMessage())
                 ApiResult.Loading -> Unit
