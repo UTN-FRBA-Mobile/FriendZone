@@ -3,8 +3,13 @@ package com.example.friendzone.presentation.components
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Paint
+import android.graphics.Path
+import android.graphics.RectF
+import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
-import android.graphics.drawable.GradientDrawable
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -28,7 +33,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.MyLocation
-import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -42,7 +46,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -61,10 +69,13 @@ import com.example.friendzone.ui.theme.FzSurface
 import com.example.friendzone.ui.theme.FzSurface2
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
+import org.osmdroid.views.CustomZoomButtonsController
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
+import kotlin.math.cos
+import kotlin.math.sin
 
 /** Persona (distinta a mi) que comparte su ubicacion en el evento. */
 data class EventMapPerson(
@@ -74,9 +85,10 @@ data class EventMapPerson(
     val arrived: Boolean,
 )
 
-private val EventMarkerColor = Color(0xFF1C6B3A) // verde, igual que FzGreen
-private val PersonMarkerColor = Color(0xFFE0772D) // naranja
-private val MyMarkerColor = Color(0xFF2D6CDF) // azul (referencia para la leyenda)
+private val EventMarkerColor = Color(0xFF1C6B3A) // green, same as FzGreen
+private val PersonMarkerColor = Color(0xFFE0772D) // orange
+private val MyMarkerColor = Color(0xFF2D6CDF) // blue (used in the legend)
+private val ArrivedBadgeColor = Color(0xFF2FA05A) // green check badge for arrived people
 
 /**
  * Miniatura del mapa centrada en la ubicacion del evento. Al tocarla se abre
@@ -109,8 +121,8 @@ fun EventMapThumbnail(
                 map.overlays.add(
                     Marker(map).apply {
                         position = point
-                        setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
-                        icon = dotDrawable(EventMarkerColor, map.context)
+                        setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+                        icon = eventPinDrawable(map.context)
                         setInfoWindow(null)
                     },
                 )
@@ -140,7 +152,7 @@ fun EventMapThumbnail(
                 tint = Color.White,
                 modifier = Modifier.size(16.dp),
             )
-            Text("Ver mapa", color = Color.White, modifier = Modifier)
+            Text("View map", color = Color.White, modifier = Modifier)
         }
     }
 }
@@ -227,7 +239,7 @@ fun EventMapDialog(
             ) {
                 Icon(
                     imageVector = Icons.Filled.Close,
-                    contentDescription = "Cerrar",
+                    contentDescription = "Close",
                     tint = FzInk,
                     modifier = Modifier.size(22.dp),
                 )
@@ -271,7 +283,7 @@ private fun ShareLocationToggle(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Text("Compartir mi ubicacion", color = FzInk)
+        Text("Share my location", color = FzInk)
         Switch(checked = checked, onCheckedChange = onCheckedChange)
     }
 }
@@ -310,7 +322,9 @@ fun LocationPickerDialog(
 
     val mapView = rememberMapViewWithLifecycle()
     val myLocationOverlay = remember(mapView) {
-        MyLocationNewOverlay(GpsMyLocationProvider(context.applicationContext), mapView)
+        MyLocationNewOverlay(GpsMyLocationProvider(context.applicationContext), mapView).apply {
+            applyMyLocationIcon(context)
+        }
     }
     val hasInitial = initialLatitude != null && initialLongitude != null
 
@@ -331,19 +345,15 @@ fun LocationPickerDialog(
                 update = {},
             )
 
-            // Pin fijo en el centro de la pantalla (la punta apunta al centro).
-            Icon(
-                imageVector = Icons.Filled.Place,
-                contentDescription = null,
-                tint = EventMarkerColor,
+            // Fixed pin at the screen center; its tip points to the map center.
+            EventLocationPin(
                 modifier = Modifier
                     .align(Alignment.Center)
-                    .size(48.dp)
-                    .offset(y = (-24).dp),
+                    .offset(y = (-25).dp),
             )
 
             Text(
-                text = "Move el mapa para ubicar el pin",
+                text = "Move the map to place the pin",
                 color = FzInk,
                 modifier = Modifier
                     .align(Alignment.TopStart)
@@ -367,14 +377,14 @@ fun LocationPickerDialog(
             ) {
                 Icon(
                     imageVector = Icons.Filled.Close,
-                    contentDescription = "Cerrar",
+                    contentDescription = "Close",
                     tint = FzInk,
                     modifier = Modifier.size(22.dp),
                 )
             }
 
             FriendZonePrimaryButton(
-                text = "Confirmar ubicacion",
+                text = "Confirm location",
                 onClick = {
                     val center = mapView.mapCenter
                     onConfirm(center.latitude, center.longitude)
@@ -436,7 +446,9 @@ private fun EventMapContent(
     val context = LocalContext.current
     val mapView = rememberMapViewWithLifecycle()
     val myLocationOverlay = remember(mapView) {
-        MyLocationNewOverlay(GpsMyLocationProvider(context.applicationContext), mapView)
+        MyLocationNewOverlay(GpsMyLocationProvider(context.applicationContext), mapView).apply {
+            applyMyLocationIcon(context)
+        }
     }
 
     Box(modifier = modifier) {
@@ -448,18 +460,18 @@ private fun EventMapContent(
                 map.overlays.add(
                     Marker(map).apply {
                         position = GeoPoint(eventLatitude, eventLongitude)
-                        setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
+                        setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
                         title = eventLabel
-                        icon = dotDrawable(EventMarkerColor, map.context)
+                        icon = eventPinDrawable(map.context)
                     },
                 )
                 people.forEach { person ->
                     map.overlays.add(
                         Marker(map).apply {
                             position = GeoPoint(person.latitude, person.longitude)
-                            setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
-                            title = if (person.arrived) "${person.label} · llego" else person.label
-                            icon = dotDrawable(PersonMarkerColor, map.context)
+                            setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+                            title = if (person.arrived) "${person.label} · arrived" else person.label
+                            icon = personPinDrawable(map.context, person.label, person.arrived)
                         },
                     )
                 }
@@ -486,7 +498,7 @@ private fun EventMapContent(
         ) {
             Icon(
                 imageVector = Icons.Filled.MyLocation,
-                contentDescription = "Centrar en mi ubicacion",
+                contentDescription = "Center on my location",
                 tint = FzInk,
                 modifier = Modifier.size(24.dp),
             )
@@ -524,9 +536,10 @@ private fun MapLegend(modifier: Modifier = Modifier) {
             .padding(horizontal = 12.dp, vertical = 10.dp),
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-        LegendItem(MyMarkerColor, "Yo")
-        LegendItem(EventMarkerColor, "Evento")
-        LegendItem(PersonMarkerColor, "Personas")
+        LegendItem(MyMarkerColor, "Me")
+        LegendItem(EventMarkerColor, "Event")
+        LegendItem(PersonMarkerColor, "People")
+        LegendItem(ArrivedBadgeColor, "Arrived")
     }
 }
 
@@ -555,6 +568,7 @@ private fun rememberMapViewWithLifecycle(): MapView {
         MapView(context).apply {
             setTileSource(TileSourceFactory.MAPNIK)
             setMultiTouchControls(true)
+            zoomController.setVisibility(CustomZoomButtonsController.Visibility.NEVER)
             clipToOutline = true
         }
     }
@@ -576,17 +590,208 @@ private fun rememberMapViewWithLifecycle(): MapView {
     return mapView
 }
 
-/** Punto de color (relleno con borde blanco) usado como icono de marcador. */
-private fun dotDrawable(color: Color, context: Context): Drawable {
-    val density = context.resources.displayMetrics.density
-    val sizePx = (18 * density).toInt()
-    val strokePx = (2 * density).toInt()
-    return GradientDrawable().apply {
-        shape = GradientDrawable.OVAL
-        setColor(color.toArgb())
-        setStroke(strokePx, android.graphics.Color.WHITE)
-        setSize(sizePx, sizePx)
+/** Teardrop pin for the event marker (green pin with a white-backed star). */
+private fun eventPinDrawable(context: Context): Drawable =
+    buildPinDrawable(context, EventMarkerColor, arrived = false) { canvas, cx, cy, innerR, glyphColor ->
+        drawStar(canvas, cx, cy, innerR * 0.95f, glyphColor)
     }
+
+/** Teardrop pin for a person, showing their initial and a check badge if arrived. */
+private fun personPinDrawable(context: Context, label: String, arrived: Boolean): Drawable =
+    buildPinDrawable(context, PersonMarkerColor, arrived = arrived) { canvas, cx, cy, innerR, glyphColor ->
+        drawInitial(canvas, cx, cy, innerR, glyphColor, label)
+    }
+
+/**
+ * Compose pin drawn for the location picker: a teardrop whose tip marks the
+ * point being selected. Matches the map marker style.
+ */
+@Composable
+private fun EventLocationPin(modifier: Modifier = Modifier) {
+    androidx.compose.foundation.Canvas(
+        modifier = modifier.size(width = 40.dp, height = 50.dp),
+    ) {
+        val stroke = 2.dp.toPx()
+        val r = size.width / 2f - stroke
+        val cx = size.width / 2f
+        val cy = r + stroke
+        val tipY = size.height - stroke
+
+        drawOval(
+            color = Color.Black.copy(alpha = 0.16f),
+            topLeft = Offset(cx - r * 0.45f, tipY - 4.dp.toPx()),
+            size = Size(r * 0.9f, 4.dp.toPx()),
+        )
+        val pin = androidx.compose.ui.graphics.Path().apply {
+            arcTo(
+                rect = Rect(cx - r, cy - r, cx + r, cy + r),
+                startAngleDegrees = 135f,
+                sweepAngleDegrees = 270f,
+                forceMoveTo = true,
+            )
+            lineTo(cx, tipY)
+            close()
+        }
+        drawPath(pin, color = EventMarkerColor)
+        drawPath(pin, color = Color.White, style = Stroke(width = stroke))
+        drawCircle(color = Color.White, radius = r * 0.5f, center = Offset(cx, cy))
+        drawCircle(color = EventMarkerColor, radius = r * 0.26f, center = Offset(cx, cy))
+    }
+}
+
+/** Applies a Google-Maps-style blue location dot (with halo) to the overlay. */
+private fun MyLocationNewOverlay.applyMyLocationIcon(context: Context) {
+    val dot = myLocationDot(context)
+    setPersonIcon(dot)
+    setPersonAnchor(0.5f, 0.5f)
+    setDirectionIcon(dot)
+    setDirectionAnchor(0.5f, 0.5f)
+}
+
+/** Blue "current location" dot: translucent halo + white ring + solid blue center. */
+private fun myLocationDot(context: Context): Bitmap {
+    val d = context.resources.displayMetrics.density
+    val halo = 13f * d
+    val size = (halo * 2).toInt()
+    val c = size / 2f
+    val blue = MyMarkerColor.toArgb()
+    val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+    val canvas = Canvas(bitmap)
+    canvas.drawCircle(c, c, halo, Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = blue
+        alpha = 38
+    })
+    canvas.drawCircle(c, c, 8f * d, Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = android.graphics.Color.WHITE
+    })
+    canvas.drawCircle(c, c, 5.5f * d, Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = blue
+    })
+    return bitmap
+}
+
+/**
+ * Draws a map "teardrop" pin (colored head + pointed tip) into a bitmap.
+ * The tip is at the bottom-center, so markers should anchor at
+ * [Marker.ANCHOR_BOTTOM]. [drawGlyph] paints the inner symbol over a white
+ * disc; when [arrived] is true a small green check badge is added on the head.
+ */
+private fun buildPinDrawable(
+    context: Context,
+    fillColor: Color,
+    arrived: Boolean,
+    drawGlyph: (canvas: Canvas, cx: Float, cy: Float, innerRadius: Float, glyphColor: Int) -> Unit,
+): Drawable {
+    val d = context.resources.displayMetrics.density
+    val headRadius = 13f * d
+    val stroke = 2f * d
+    val tail = headRadius * 1.15f
+    val pad = 3f * d
+    val width = (2 * headRadius + pad * 2)
+    val height = (2 * headRadius + tail + pad * 2)
+    val cx = width / 2f
+    val cy = headRadius + pad
+    val tipY = height - pad
+
+    val bitmap = Bitmap.createBitmap(width.toInt(), height.toInt(), Bitmap.Config.ARGB_8888)
+    val canvas = Canvas(bitmap)
+
+    // Teardrop: top ~3/4 of a circle closed off with a point at the bottom.
+    val head = RectF(cx - headRadius, cy - headRadius, cx + headRadius, cy + headRadius)
+    val pin = Path().apply {
+        arcTo(head, 135f, 270f)
+        lineTo(cx, tipY)
+        close()
+    }
+    canvas.drawPath(pin, Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = fillColor.toArgb()
+        style = Paint.Style.FILL
+    })
+    canvas.drawPath(pin, Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = android.graphics.Color.WHITE
+        style = Paint.Style.STROKE
+        strokeWidth = stroke
+    })
+
+    val innerRadius = headRadius * 0.6f
+    canvas.drawCircle(cx, cy, innerRadius, Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = android.graphics.Color.WHITE
+        style = Paint.Style.FILL
+    })
+
+    drawGlyph(canvas, cx, cy, innerRadius, fillColor.toArgb())
+
+    if (arrived) {
+        val bx = cx + headRadius * 0.72f
+        val by = cy - headRadius * 0.72f
+        val br = headRadius * 0.5f
+        canvas.drawCircle(bx, by, br, Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = ArrivedBadgeColor.toArgb()
+            style = Paint.Style.FILL
+        })
+        canvas.drawCircle(bx, by, br, Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = android.graphics.Color.WHITE
+            style = Paint.Style.STROKE
+            strokeWidth = 1.5f * d
+        })
+        drawCheck(canvas, bx, by, br * 0.95f, android.graphics.Color.WHITE, 1.8f * d)
+    }
+
+    return BitmapDrawable(context.resources, bitmap)
+}
+
+private fun drawInitial(
+    canvas: Canvas,
+    cx: Float,
+    cy: Float,
+    innerRadius: Float,
+    color: Int,
+    label: String,
+) {
+    val initial = label.trim().firstOrNull()?.uppercaseChar()?.toString() ?: "?"
+    val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        this.color = color
+        textAlign = Paint.Align.CENTER
+        isFakeBoldText = true
+        textSize = innerRadius * 1.5f
+    }
+    val metrics = paint.fontMetrics
+    val baseline = cy - (metrics.ascent + metrics.descent) / 2f
+    canvas.drawText(initial, cx, baseline, paint)
+}
+
+private fun drawStar(canvas: Canvas, cx: Float, cy: Float, radius: Float, color: Int) {
+    val inner = radius * 0.45f
+    val step = Math.PI / 5
+    var angle = -Math.PI / 2
+    val path = Path()
+    path.moveTo((cx + cos(angle) * radius).toFloat(), (cy + sin(angle) * radius).toFloat())
+    repeat(5) {
+        angle += step
+        path.lineTo((cx + cos(angle) * inner).toFloat(), (cy + sin(angle) * inner).toFloat())
+        angle += step
+        path.lineTo((cx + cos(angle) * radius).toFloat(), (cy + sin(angle) * radius).toFloat())
+    }
+    path.close()
+    canvas.drawPath(path, Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        this.color = color
+        style = Paint.Style.FILL
+    })
+}
+
+private fun drawCheck(canvas: Canvas, cx: Float, cy: Float, size: Float, color: Int, strokeWidth: Float) {
+    val path = Path().apply {
+        moveTo(cx - size * 0.55f, cy)
+        lineTo(cx - size * 0.1f, cy + size * 0.45f)
+        lineTo(cx + size * 0.6f, cy - size * 0.45f)
+    }
+    canvas.drawPath(path, Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        this.color = color
+        style = Paint.Style.STROKE
+        this.strokeWidth = strokeWidth
+        strokeCap = Paint.Cap.ROUND
+        strokeJoin = Paint.Join.ROUND
+    })
 }
 
 private fun hasLocationPermission(context: Context): Boolean =
