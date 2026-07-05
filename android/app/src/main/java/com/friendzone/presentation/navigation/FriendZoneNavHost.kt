@@ -322,6 +322,7 @@ fun FriendZoneNavHost(
             ) {
                 NotificationsScreen(
                     onBack = { navController.popBackStack() },
+                    onBadgeRefresh = { notificationsBadgeViewModel.refresh() },
                     onActionFinished = {
                         notificationsBadgeViewModel.refresh()
                         friendsBadgeViewModel.refresh()
