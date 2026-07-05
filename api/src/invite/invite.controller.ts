@@ -48,11 +48,11 @@ export class InviteController {
   invitePage(@Param('username') username: string): string {
     const safe = escapeHtml(username);
     return `<!doctype html>
-<html lang="es">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>FriendZone · Invitación</title>
+    <title>FriendZone · Invitation</title>
     <style>
       body { font-family: -apple-system, Segoe UI, Roboto, sans-serif; background: #f5f5f4; color: #1c1917; margin: 0; display: flex; min-height: 100vh; align-items: center; justify-content: center; }
       .card { background: #fff; border: 1.5px solid #e7e5e4; border-radius: 16px; padding: 32px; max-width: 360px; text-align: center; }
@@ -64,8 +64,8 @@ export class InviteController {
   <body>
     <div class="card">
       <h1>FriendZone</h1>
-      <p><span class="user">@${safe}</span> te invitó a ser su amigo.</p>
-      <p>Instalá FriendZone y abrí este link desde tu teléfono para agregarlo automáticamente.</p>
+      <p><span class="user">@${safe}</span> invited you to be their friend.</p>
+      <p>Install FriendZone and open this link from your phone to add them automatically.</p>
     </div>
   </body>
 </html>`;

@@ -65,15 +65,33 @@ fun IncomingInviteBottomSheet(
                     }
                 }
 
-                uiState.inviter == null -> {
+                uiState.isSelf -> {
                     Text(
-                        uiState.errorMessage ?: "No encontramos a este usuario.",
+                        "This is your own invite link",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = FzInk,
+                        textAlign = TextAlign.Center,
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(
+                        "Share it with your friends so they can add you.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = FzInk3,
                         textAlign = TextAlign.Center,
                     )
                     Spacer(modifier = Modifier.height(20.dp))
-                    FriendZoneOutlineButton(text = "Cerrar", onClick = onDismiss)
+                    FriendZoneOutlineButton(text = "Close", onClick = onDismiss)
+                }
+
+                uiState.inviter == null -> {
+                    Text(
+                        uiState.errorMessage ?: "We couldn't find this user.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = FzInk3,
+                        textAlign = TextAlign.Center,
+                    )
+                    Spacer(modifier = Modifier.height(20.dp))
+                    FriendZoneOutlineButton(text = "Close", onClick = onDismiss)
                 }
 
                 else -> {
@@ -92,36 +110,51 @@ fun IncomingInviteBottomSheet(
                     )
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    if (uiState.added) {
-                        Text(
-                            "¡Ya son amigos! 🎉",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = FzGreen,
-                            textAlign = TextAlign.Center,
-                        )
-                        Spacer(modifier = Modifier.height(20.dp))
-                        FriendZoneOutlineButton(text = "Cerrar", onClick = onDismiss)
-                    } else {
-                        Text(
-                            "${inviter.displayName} te invitó a ser su amigo",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = FzInk,
-                            textAlign = TextAlign.Center,
-                        )
-                        Spacer(modifier = Modifier.height(24.dp))
-                        FriendZonePrimaryButton(
-                            text = "Agregar",
-                            onClick = viewModel::add,
-                            isLoading = uiState.isAdding,
-                        )
-                        uiState.errorMessage?.let { message ->
-                            Spacer(modifier = Modifier.height(10.dp))
+                    when {
+                        uiState.added -> {
                             Text(
-                                message,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.error,
+                                "You and ${inviter.displayName} are now friends! 🎉",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = FzGreen,
                                 textAlign = TextAlign.Center,
                             )
+                            Spacer(modifier = Modifier.height(20.dp))
+                            FriendZoneOutlineButton(text = "Close", onClick = onDismiss)
+                        }
+
+                        uiState.alreadyFriend -> {
+                            Text(
+                                "You and ${inviter.displayName} are already friends",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = FzInk,
+                                textAlign = TextAlign.Center,
+                            )
+                            Spacer(modifier = Modifier.height(20.dp))
+                            FriendZoneOutlineButton(text = "Close", onClick = onDismiss)
+                        }
+
+                        else -> {
+                            Text(
+                                "${inviter.displayName} invited you to be their friend",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = FzInk,
+                                textAlign = TextAlign.Center,
+                            )
+                            Spacer(modifier = Modifier.height(24.dp))
+                            FriendZonePrimaryButton(
+                                text = "Add",
+                                onClick = viewModel::add,
+                                isLoading = uiState.isAdding,
+                            )
+                            uiState.errorMessage?.let { message ->
+                                Spacer(modifier = Modifier.height(10.dp))
+                                Text(
+                                    message,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.error,
+                                    textAlign = TextAlign.Center,
+                                )
+                            }
                         }
                     }
                 }
