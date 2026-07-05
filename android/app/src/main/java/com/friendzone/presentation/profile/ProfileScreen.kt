@@ -1,5 +1,10 @@
 package com.example.friendzone.presentation.profile
 
+import android.Manifest
+import android.content.Context
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -22,17 +27,17 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.friendzone.presentation.components.FriendZoneOutlineButton
+import com.example.friendzone.presentation.components.FriendZonePullToRefreshBox
 import com.example.friendzone.presentation.components.FriendZoneSwitch
 import com.example.friendzone.presentation.components.FriendZoneTopBar
 import com.example.friendzone.ui.theme.FzBackground
@@ -47,16 +52,49 @@ fun ProfileScreen(
     notificationBadgeCount: Int = 0,
     viewModel: ProfileViewModel = hiltViewModel(),
 ) {
+    val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    var proximityAlerts by rememberSaveable { mutableStateOf(true) }
+    val isRefreshing by viewModel.isRefreshing.collectAsStateWithLifecycle()
     val user = uiState.user
+    val locationPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions(),
+    ) { result ->
+        if (result.values.any { it }) {
+            viewModel.setLocationSharing(true)
+        } else {
+            viewModel.showLocationPermissionRequired()
+        }
+    }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(FzBackground)
-            .verticalScroll(rememberScrollState()),
+    fun handleLocationSharingChange(enabled: Boolean) {
+        if (enabled) {
+            if (hasLocationPermission(context)) {
+                viewModel.setLocationSharing(true)
+            } else {
+                locationPermissionLauncher.launch(
+                    arrayOf(
+                        Manifest.permission.ACCESS_FINE_LOCATION,
+                        Manifest.permission.ACCESS_COARSE_LOCATION,
+                    ),
+                )
+            }
+        } else {
+            viewModel.setLocationSharing(false)
+            context.revokeLocationPermissionsOnKill()
+        }
+    }
+
+    FriendZonePullToRefreshBox(
+        isRefreshing = isRefreshing,
+        onRefresh = viewModel::refresh,
+        modifier = Modifier.fillMaxSize(),
     ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(FzBackground)
+                .verticalScroll(rememberScrollState()),
+        ) {
         FriendZoneTopBar(
             title = "Profile",
             showNotifications = true,
@@ -133,15 +171,7 @@ fun ProfileScreen(
                 subtitle = "Friends can see where you are",
                 checked = user?.locationSharingEnabled ?: false,
                 enabled = !uiState.isUpdatingLocationSharing && user != null,
-                onCheckedChange = viewModel::setLocationSharing,
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            SettingToggleRow(
-                title = "Proximity alerts",
-                subtitle = "Notify when friends are nearby",
-                checked = proximityAlerts,
-                enabled = true,
-                onCheckedChange = { proximityAlerts = it },
+                onCheckedChange = ::handleLocationSharingChange,
             )
             Spacer(modifier = Modifier.height(16.dp))
             FriendZoneOutlineButton(
@@ -153,7 +183,23 @@ fun ProfileScreen(
                 Text(message, color = MaterialTheme.colorScheme.error)
             }
         }
+        }
     }
+}
+
+private fun hasLocationPermission(context: Context): Boolean =
+    ContextCompat.checkSelfPermission(
+        context,
+        Manifest.permission.ACCESS_FINE_LOCATION,
+    ) == PackageManager.PERMISSION_GRANTED ||
+        ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.ACCESS_COARSE_LOCATION,
+        ) == PackageManager.PERMISSION_GRANTED
+
+private fun Context.revokeLocationPermissionsOnKill() {
+    revokeSelfPermissionOnKill(Manifest.permission.ACCESS_FINE_LOCATION)
+    revokeSelfPermissionOnKill(Manifest.permission.ACCESS_COARSE_LOCATION)
 }
 
 @Composable

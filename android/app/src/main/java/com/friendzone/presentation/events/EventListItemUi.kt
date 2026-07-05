@@ -9,6 +9,7 @@ data class EventListItemUi(
     val timeIcon: String,
     val timeLabel: String,
     val dateText: String,
+    val statusBadge: EventDetailStatusBadge? = null,
     val confirmedText: String,
     val pendingText: String,
     val onTheWayText: String? = null,
@@ -19,6 +20,9 @@ data class EventListItemUi(
     val isOrganizer: Boolean = false,
     val organizerId: String? = null,
     val currentUserId: String? = null,
+    val coverImageUrl: String? = null,
+    val isPastItem: Boolean = false,
+    val startsAtEpoch: Long = 0L,
 )
 
 fun participantToFriendRow(

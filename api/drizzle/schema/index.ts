@@ -70,8 +70,9 @@ export const events = pgTable('events', {
   longitude: doublePrecision('longitude').notNull(),
   address: varchar('address', { length: 500 }),
   status: eventStatusEnum('status').notNull().default('scheduled'),
-  arrivalThresholdM: integer('arrival_threshold_m').notNull().default(500),
+  arrivalThresholdM: integer('arrival_threshold_m').notNull().default(150),
   trackingLeadMinutes: integer('tracking_lead_minutes').notNull().default(30),
+  coverImageUrl: text('cover_image_url'),
   startsAt: timestamp('starts_at', { withTimezone: true }).notNull(),
   completedAt: timestamp('completed_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true })

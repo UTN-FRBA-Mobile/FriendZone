@@ -1,6 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsDateString,
+  IsIn,
   IsInt,
   IsNumber,
   IsOptional,
@@ -46,7 +47,7 @@ export class CreateEventDto {
   @IsDateString()
   startsAt!: string;
 
-  @ApiPropertyOptional({ example: 500 })
+  @ApiPropertyOptional({ example: 150 })
   @IsOptional()
   @IsNumber()
   @Min(50)
@@ -113,4 +114,9 @@ export class UpdateEventDto {
   @Min(1)
   @Max(1440)
   trackingLeadMinutes?: number;
+
+  @ApiPropertyOptional({ enum: ['completed', 'cancelled'] })
+  @IsOptional()
+  @IsIn(['completed', 'cancelled'])
+  status?: 'completed' | 'cancelled';
 }

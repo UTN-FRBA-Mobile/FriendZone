@@ -10,6 +10,7 @@ import com.example.friendzone.data.remote.api.LocationsApi
 import com.example.friendzone.data.remote.api.UsersApi
 import com.example.friendzone.data.remote.interceptor.AuthInterceptor
 import com.example.friendzone.data.remote.interceptor.TokenAuthenticator
+import com.example.friendzone.data.remote.interceptor.UnauthorizedInterceptor
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
 import dagger.Module
 import dagger.Provides
@@ -72,11 +73,13 @@ object NetworkModule {
     @Singleton
     fun provideOkHttpClient(
         authInterceptor: AuthInterceptor,
+        unauthorizedInterceptor: UnauthorizedInterceptor,
         tokenAuthenticator: TokenAuthenticator,
     ): OkHttpClient = OkHttpClient.Builder()
         .connectTimeout(30, TimeUnit.SECONDS)
         .readTimeout(30, TimeUnit.SECONDS)
         .addInterceptor(authInterceptor)
+        .addInterceptor(unauthorizedInterceptor)
         .addInterceptor(
             HttpLoggingInterceptor().apply {
                 level = HttpLoggingInterceptor.Level.BASIC

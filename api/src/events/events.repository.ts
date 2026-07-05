@@ -53,6 +53,7 @@ export class EventsRepository {
         | 'completedAt'
         | 'arrivalThresholdM'
         | 'trackingLeadMinutes'
+        | 'coverImageUrl'
       >
     >,
   ): Promise<Event | undefined> {

@@ -2,6 +2,7 @@ package com.example.friendzone
 
 import android.app.Application
 import android.content.Context
+import com.example.friendzone.data.notifications.NotificationChannels
 import dagger.hilt.android.HiltAndroidApp
 import org.osmdroid.config.Configuration
 
@@ -9,6 +10,7 @@ import org.osmdroid.config.Configuration
 class FriendZoneApp : Application() {
     override fun onCreate() {
         super.onCreate()
+        NotificationChannels.ensureDefaultChannel(this)
         // osmdroid requiere un user agent (idealmente el package) para poder
         // descargar los tiles de OpenStreetMap sin que el servidor los rechace.
         Configuration.getInstance().apply {

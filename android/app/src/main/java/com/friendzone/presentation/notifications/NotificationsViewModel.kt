@@ -41,25 +41,44 @@ class NotificationsViewModel @Inject constructor(
     private val _actionFinished = MutableStateFlow(false)
     val actionFinished: StateFlow<Boolean> = _actionFinished.asStateFlow()
 
+    private val _isRefreshing = MutableStateFlow(false)
+    val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
+
     fun loadInbox() {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
-            when (val result = notificationRepository.getInbox()) {
-                is ApiResult.Success -> {
-                    _uiState.update {
-                        it.copy(isLoading = false, items = result.data)
-                    }
-                }
-                is ApiResult.Error -> {
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            errorMessage = result.error.displayMessage(),
-                        )
-                    }
-                }
-                ApiResult.Loading -> Unit
+            loadInboxInternal(showFullLoading = true)
+        }
+    }
+
+    fun refresh() {
+        viewModelScope.launch {
+            if (_isRefreshing.value) return@launch
+            _isRefreshing.value = true
+            try {
+                loadInboxInternal(showFullLoading = false)
+            } finally {
+                _isRefreshing.value = false
             }
+        }
+    }
+
+    private suspend fun loadInboxInternal(showFullLoading: Boolean) {
+        if (showFullLoading) _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+        when (val result = notificationRepository.getInbox()) {
+            is ApiResult.Success -> {
+                _uiState.update {
+                    it.copy(isLoading = false, items = result.data, errorMessage = null)
+                }
+            }
+            is ApiResult.Error -> {
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        errorMessage = result.error.displayMessage(),
+                    )
+                }
+            }
+            ApiResult.Loading -> Unit
         }
     }
 

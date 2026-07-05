@@ -1,5 +1,7 @@
 package com.example.friendzone.presentation.create
 
+import android.content.Context
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.friendzone.data.location.GeocoderHelper
@@ -31,6 +33,9 @@ data class CreateEventDraft(
     val guestLimit: String = "",
     val trackingLeadMinutes: Int = 30,
     val isCustomTracking: Boolean = false,
+    val coverImageBytes: ByteArray? = null,
+    val coverMimeType: String? = null,
+    val coverPreviewUri: String? = null,
 )
 
 sealed class CreateEventSubmitState {
@@ -62,12 +67,31 @@ class CreateEventViewModel @Inject constructor(
     private val _submitState = MutableStateFlow<CreateEventSubmitState>(CreateEventSubmitState.Idle)
     val submitState: StateFlow<CreateEventSubmitState> = _submitState.asStateFlow()
 
+    private val _isRefreshing = MutableStateFlow(false)
+    val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
+
     fun loadFriends() {
         viewModelScope.launch {
-            when (val result = friendRepository.getFriends()) {
-                is ApiResult.Success -> _friends.value = result.data
-                else -> Unit
+            loadFriendsInternal()
+        }
+    }
+
+    fun refreshFriends() {
+        viewModelScope.launch {
+            if (_isRefreshing.value) return@launch
+            _isRefreshing.value = true
+            try {
+                loadFriendsInternal()
+            } finally {
+                _isRefreshing.value = false
             }
+        }
+    }
+
+    private suspend fun loadFriendsInternal() {
+        when (val result = friendRepository.getFriends()) {
+            is ApiResult.Success -> _friends.value = result.data
+            else -> Unit
         }
     }
 
@@ -132,12 +156,33 @@ class CreateEventViewModel @Inject constructor(
         _locationMessage.value = null
     }
 
-    fun updateDescription(value: String) {
-        _draft.value = _draft.value.copy(description = value)
-    }
-
     fun updateGuestLimit(value: String) {
         _draft.value = _draft.value.copy(guestLimit = value)
+    }
+
+    fun setCoverImage(context: Context, uri: Uri) {
+        viewModelScope.launch {
+            val resolver = context.contentResolver
+            val mimeType = resolver.getType(uri)
+            if (mimeType != "image/jpeg" && mimeType != "image/png") {
+                _locationMessage.value = "Only JPEG and PNG images are allowed"
+                return@launch
+            }
+            val bytes = resolver.openInputStream(uri)?.use { it.readBytes() } ?: return@launch
+            if (bytes.size > 20 * 1024 * 1024) {
+                _locationMessage.value = "Cover image must be 20 MB or smaller"
+                return@launch
+            }
+            _draft.value = _draft.value.copy(
+                coverImageBytes = bytes,
+                coverMimeType = mimeType,
+                coverPreviewUri = uri.toString(),
+            )
+        }
+    }
+
+    fun updateDescription(value: String) {
+        _draft.value = _draft.value.copy(description = value)
     }
 
     fun updateDate(date: LocalDate) {
@@ -194,6 +239,9 @@ class CreateEventViewModel @Inject constructor(
             ) {
                 is ApiResult.Success -> {
                     val eventId = result.data.id
+                    if (d.coverImageBytes != null && d.coverMimeType != null) {
+                        eventRepository.uploadCover(eventId, d.coverImageBytes, d.coverMimeType)
+                    }
                     val selected = _friends.value.filter {
                         _selectedFriendIds.value.contains(it.id)
                     }

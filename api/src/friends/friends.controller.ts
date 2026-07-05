@@ -12,6 +12,7 @@ import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import type { SafeUser } from '../common/utils/user.mapper';
 import {
+  AddFriendByInviteDto,
   CreateFriendRequestDto,
   RespondFriendRequestDto,
 } from './dto/friend.dto';
@@ -51,6 +52,15 @@ export class FriendsController {
     @Body() dto: CreateFriendRequestDto,
   ) {
     return this.friendsService.createRequest(user.id, dto);
+  }
+
+  @Post('add-by-invite')
+  @ApiOperation({ summary: 'Add a friend instantly via an invite link' })
+  addByInvite(
+    @CurrentUser() user: SafeUser,
+    @Body() dto: AddFriendByInviteDto,
+  ): Promise<SafeUser> {
+    return this.friendsService.addByInvite(user.id, dto.username);
   }
 
   @Patch('requests/:id')

@@ -26,10 +26,36 @@ sealed class ParticipantStatus {
 
 fun Event.parseStartsAt(): Instant = Instant.parse(startsAt)
 
+fun Event.hasStarted(now: Instant = Instant.now()): Boolean = !now.isBefore(parseStartsAt())
+
+fun Event.canPromptOrganizerToComplete(acceptedGuestCount: Int): Boolean =
+    hasStarted() &&
+        status != EventStatus.COMPLETED &&
+        status != EventStatus.CANCELLED &&
+        acceptedGuestCount >= 1
+
 fun Event.isLive(now: Instant = Instant.now()): Boolean {
     if (status == EventStatus.COMPLETED || status == EventStatus.CANCELLED) return false
     if (status == EventStatus.ACTIVE) return true
     return parseStartsAt() <= now
+}
+
+fun Event.isPastEvent(
+    pastThresholdHours: Int,
+    now: Instant = Instant.now(),
+): Boolean {
+    val startsAt = parseStartsAt()
+    val thresholdHours = pastThresholdHours.coerceAtLeast(0)
+
+    when (status) {
+        EventStatus.CANCELLED -> return true
+        EventStatus.COMPLETED -> return true
+        else -> {
+            if (now.isBefore(startsAt)) return false
+            val pastAt = startsAt.plus(thresholdHours.toLong(), ChronoUnit.HOURS)
+            return !now.isBefore(pastAt)
+        }
+    }
 }
 
 fun Event.isTrackingOpen(now: Instant = Instant.now()): Boolean {
@@ -78,9 +104,9 @@ fun classifyParticipant(
 ): ParticipantStatus {
     if (participant.arrived) return ParticipantStatus.Arrived
 
+    val eventStarted = event.hasStarted(now)
     val untilStart = minutesUntilStart(event, now)
     val eta = estimateMinutesAway(participant, event)
-    val eventStarted = untilStart == 0
 
     if (eta == null) {
         return if (eventStarted) {
@@ -90,11 +116,25 @@ fun classifyParticipant(
         }
     }
 
-    return if (eta > untilStart) {
+    return if (eventStarted || eta > untilStart) {
         ParticipantStatus.Delayed(eta)
     } else {
         ParticipantStatus.InTransit(eta)
     }
+}
+
+fun ParticipantStatus.travelEtaSubtitle(): String = when (this) {
+    is ParticipantStatus.InTransit ->
+        etaMinutes?.let { "$it min away" } ?: "Arrival time unavailable"
+    is ParticipantStatus.Delayed ->
+        etaMinutes?.let { "$it min away" } ?: "Arrival time unavailable"
+    is ParticipantStatus.Arrived -> error("Arrived participants do not have travel ETA subtitles")
+}
+
+fun ParticipantStatus.statusPillText(): String = when (this) {
+    is ParticipantStatus.Arrived -> "✓ Arrived"
+    is ParticipantStatus.InTransit -> "In Transit"
+    is ParticipantStatus.Delayed -> "Delayed"
 }
 
 fun classifyParticipantWithUser(

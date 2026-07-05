@@ -34,7 +34,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -44,9 +47,12 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.friendzone.domain.model.FriendRequest
 import com.example.friendzone.domain.model.User
+import com.example.friendzone.presentation.components.FriendZoneOutlineButton
+import com.example.friendzone.presentation.components.FriendZonePullToRefreshBox
 import com.example.friendzone.presentation.components.FriendZoneTextField
 import com.example.friendzone.presentation.components.FriendZoneTopBar
 import com.example.friendzone.presentation.components.UserInitialAvatar
+import com.example.friendzone.presentation.invite.InviteFriendsBottomSheet
 import com.example.friendzone.ui.theme.FzBackground
 import com.example.friendzone.ui.theme.FzBorder
 import com.example.friendzone.ui.theme.FzInk
@@ -59,14 +65,21 @@ fun FriendsScreen(
     onFriendsChanged: () -> Unit,
     onNotificationsClick: () -> Unit = {},
     notificationBadgeCount: Int = 0,
+    initialTab: FriendsTab? = null,
     viewModel: FriendsViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val isRefreshing by viewModel.isRefreshing.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
+    var showInviteSheet by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         viewModel.loadAll()
         onFriendsChanged()
+    }
+
+    LaunchedEffect(initialTab) {
+        initialTab?.let(viewModel::selectTab)
     }
 
     LaunchedEffect(uiState.snackbarMessage) {
@@ -95,8 +108,18 @@ fun FriendsScreen(
                 onTabSelected = viewModel::selectTab,
             )
 
-            when (uiState.selectedTab) {
-                FriendsTab.Friends -> FriendsListContent(
+            FriendZonePullToRefreshBox(
+                isRefreshing = isRefreshing,
+                onRefresh = {
+                    viewModel.refresh()
+                    onFriendsChanged()
+                },
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
+            ) {
+                when (uiState.selectedTab) {
+                    FriendsTab.Friends -> FriendsListContent(
                     isLoading = uiState.isLoading,
                     searchQuery = uiState.searchQuery,
                     lookupResult = uiState.lookupResult,
@@ -108,6 +131,7 @@ fun FriendsScreen(
                         viewModel.sendFriendRequest(user.username)
                         onFriendsChanged()
                     },
+                    onInviteClick = { showInviteSheet = true },
                 )
                 FriendsTab.Requests -> RequestsListContent(
                     isLoading = uiState.isLoading,
@@ -121,6 +145,7 @@ fun FriendsScreen(
                         onFriendsChanged()
                     },
                 )
+                }
             }
         }
         SnackbarHost(
@@ -136,6 +161,10 @@ fun FriendsScreen(
         ) {
             Icon(Icons.Default.Add, contentDescription = "Add friend", tint = androidx.compose.ui.graphics.Color.White)
         }
+    }
+
+    if (showInviteSheet) {
+        InviteFriendsBottomSheet(onDismiss = { showInviteSheet = false })
     }
 }
 
@@ -198,6 +227,7 @@ private fun FriendsListContent(
     onSearchChange: (String) -> Unit,
     onSearchSubmit: () -> Unit,
     onSendRequest: (User) -> Unit,
+    onInviteClick: () -> Unit,
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -213,6 +243,11 @@ private fun FriendsListContent(
                     modifier = Modifier.fillMaxWidth(),
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                     keyboardActions = KeyboardActions(onSearch = { onSearchSubmit() }),
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+                FriendZoneOutlineButton(
+                    text = "Invite friends",
+                    onClick = onInviteClick,
                 )
                 when (lookupResult) {
                     is LookupResult.Found -> {
@@ -330,36 +365,45 @@ private fun RequestsListContent(
     onAccept: (String) -> Unit,
     onReject: (String) -> Unit,
 ) {
-    if (isLoading) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(32.dp),
-            contentAlignment = Alignment.Center,
-        ) {
-            CircularProgressIndicator(color = FzInk)
-        }
-        return
-    }
-    if (requests.isEmpty()) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(32.dp),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text("No pending requests", color = FzInk3)
-        }
-        return
-    }
-    LazyColumn(modifier = Modifier.fillMaxSize()) {
-        items(requests, key = { it.id }) { request ->
-            RequestRow(
-                request = request,
-                onAccept = { onAccept(request.id) },
-                onReject = { onReject(request.id) },
-            )
-            HorizontalDivider(color = FzBorder, modifier = Modifier.padding(horizontal = 16.dp))
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 16.dp),
+    ) {
+        when {
+            isLoading -> {
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(32.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        CircularProgressIndicator(color = FzInk)
+                    }
+                }
+            }
+            requests.isEmpty() -> {
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(32.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text("No pending requests", color = FzInk3)
+                    }
+                }
+            }
+            else -> {
+                items(requests, key = { it.id }) { request ->
+                    RequestRow(
+                        request = request,
+                        onAccept = { onAccept(request.id) },
+                        onReject = { onReject(request.id) },
+                    )
+                    HorizontalDivider(color = FzBorder, modifier = Modifier.padding(horizontal = 16.dp))
+                }
+            }
         }
     }
 }

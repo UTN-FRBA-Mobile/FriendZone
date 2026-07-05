@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -16,6 +17,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -27,20 +30,22 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.example.friendzone.presentation.events.EventDetailStatusBadge
 import com.example.friendzone.presentation.events.EventListItemUi
 import com.example.friendzone.ui.theme.FzBorder
 import com.example.friendzone.ui.theme.FzGreen
 import com.example.friendzone.ui.theme.FzInk
 import com.example.friendzone.ui.theme.FzInk2
 import com.example.friendzone.ui.theme.FzInk3
+import com.example.friendzone.ui.theme.FzRequired
 import com.example.friendzone.ui.theme.FzSurface
 import com.example.friendzone.ui.theme.FzSurface2
 
 @Composable
 fun EventLiveCard(
     item: EventListItemUi,
+    onClick: () -> Unit,
     onViewMapClick: () -> Unit,
-    onCardClick: () -> Unit = {},
     onDeleteClick: (() -> Unit)? = null,
     onLeaveClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
@@ -52,7 +57,7 @@ fun EventLiveCard(
             .clip(RoundedCornerShape(16.dp))
             .background(FzSurface)
             .border(2.dp, FzInk, RoundedCornerShape(16.dp))
-            .clickable(onClick = onCardClick),
+            .clickable(onClick = onClick),
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(
@@ -119,8 +124,7 @@ fun EventLiveCard(
 @Composable
 fun EventUpcomingCard(
     item: EventListItemUi,
-    onArrowClick: () -> Unit,
-    onCardClick: () -> Unit = {},
+    onClick: () -> Unit,
     onDeleteClick: (() -> Unit)? = null,
     onLeaveClick: (() -> Unit)? = null,
 ) {
@@ -130,7 +134,7 @@ fun EventUpcomingCard(
             .padding(horizontal = 16.dp, vertical = 8.dp)
             .clip(RoundedCornerShape(16.dp))
             .background(FzSurface)
-            .clickable(onClick = onCardClick),
+            .clickable(onClick = onClick),
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(
@@ -140,9 +144,8 @@ fun EventUpcomingCard(
                 Text(item.title, style = MaterialTheme.typography.titleMedium, color = FzInk)
                 Icon(
                     Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                    contentDescription = "View event",
+                    contentDescription = null,
                     tint = FzInk3,
-                    modifier = Modifier.clickable(onClick = onArrowClick),
                 )
             }
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -150,7 +153,7 @@ fun EventUpcomingCard(
                 Text(item.timeLabel, style = MaterialTheme.typography.labelMedium, color = FzInk2)
             }
             Spacer(modifier = Modifier.height(4.dp))
-            Text(item.dateText, style = MaterialTheme.typography.bodySmall, color = FzInk3)
+            EventListDateRow(dateText = item.dateText, statusBadge = item.statusBadge)
             Spacer(modifier = Modifier.height(12.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 PillBadge(item.confirmedText, PillVariant.Green)
@@ -188,10 +191,53 @@ fun EventUpcomingCard(
 }
 
 @Composable
+private fun EventListDateRow(
+    dateText: String,
+    statusBadge: EventDetailStatusBadge?,
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Text(dateText, style = MaterialTheme.typography.bodySmall, color = FzInk3)
+        statusBadge?.let { EventListStatusBadge(it) }
+    }
+}
+
+@Composable
+private fun EventListStatusBadge(badge: EventDetailStatusBadge) {
+    val (dotColor, label) = when (badge) {
+        EventDetailStatusBadge.Completed -> FzInk3 to "Completed"
+        EventDetailStatusBadge.Cancelled -> FzRequired to "Cancelled"
+    }
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        Box(
+            modifier = Modifier
+                .size(7.dp)
+                .clip(RoundedCornerShape(50))
+                .background(dotColor),
+        )
+        Text(
+            label,
+            style = MaterialTheme.typography.labelSmall,
+            color = FzInk2,
+        )
+    }
+}
+
+@Composable
 fun CreateEventHeader(
     title: String,
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
+    showMenu: Boolean = false,
+    onMenuClick: () -> Unit = {},
+    menuExpanded: Boolean = false,
+    onMenuDismiss: () -> Unit = {},
+    menuContent: @Composable (ColumnScope.() -> Unit)? = null,
 ) {
     Row(
         modifier = modifier
@@ -215,7 +261,28 @@ fun CreateEventHeader(
             modifier = Modifier.weight(1f),
             textAlign = androidx.compose.ui.text.style.TextAlign.Center,
         )
-        Spacer(modifier = Modifier.size(38.dp))
+        if (showMenu) {
+            Box {
+                IconButton(
+                    onClick = onMenuClick,
+                    modifier = Modifier
+                        .size(38.dp)
+                        .background(FzSurface2, RoundedCornerShape(12.dp)),
+                ) {
+                    Icon(Icons.Filled.MoreVert, contentDescription = "Event options", tint = FzInk2)
+                }
+                if (menuContent != null) {
+                    DropdownMenu(
+                        expanded = menuExpanded,
+                        onDismissRequest = onMenuDismiss,
+                    ) {
+                        menuContent()
+                    }
+                }
+            }
+        } else {
+            Spacer(modifier = Modifier.size(38.dp))
+        }
     }
 }
 
@@ -255,20 +322,41 @@ fun StepProgressBar(
 }
 
 @Composable
-fun UploadZone(modifier: Modifier = Modifier) {
-    Column(
+fun UploadZone(
+    modifier: Modifier = Modifier,
+    previewModel: Any? = null,
+    onClick: () -> Unit = {},
+) {
+    Box(
         modifier = modifier
             .fillMaxWidth()
             .height(120.dp)
             .clip(RoundedCornerShape(10.dp))
             .background(FzSurface2)
-            .border(1.5.dp, FzBorder, RoundedCornerShape(10.dp)),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
+            .border(1.5.dp, FzBorder, RoundedCornerShape(10.dp))
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center,
     ) {
-        Text("🖼", style = MaterialTheme.typography.headlineMedium)
-        Text("Upload cover image", style = MaterialTheme.typography.labelMedium, color = FzInk2)
-        Text("JPG, PNG up to 5MB", style = MaterialTheme.typography.bodySmall, color = FzInk3)
+        if (previewModel != null) {
+            coil.compose.AsyncImage(
+                model = previewModel,
+                contentDescription = "Cover preview",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(120.dp)
+                    .clip(RoundedCornerShape(10.dp)),
+                contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+            )
+        } else {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+            ) {
+                Text("🖼", style = MaterialTheme.typography.headlineMedium)
+                Text("Upload cover image", style = MaterialTheme.typography.labelMedium, color = FzInk2)
+                Text("JPG, PNG up to 20MB", style = MaterialTheme.typography.bodySmall, color = FzInk3)
+            }
+        }
     }
 }
 

@@ -2,6 +2,8 @@ package com.example.friendzone.presentation.create
 
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.text.KeyboardActions
@@ -56,8 +58,9 @@ import com.example.friendzone.ui.theme.FzBackground
 import com.example.friendzone.ui.theme.FzGreen
 import com.example.friendzone.ui.theme.FzInk
 import java.time.Instant
+import java.time.LocalDate
 import java.time.LocalTime
-import java.time.ZoneId
+import java.time.ZoneOffset
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -83,10 +86,7 @@ fun CreateEventStep1Screen(
     }
 
     val initialDateMillis = remember(draft.selectedDate) {
-        draft.selectedDate
-            ?.atStartOfDay(ZoneId.systemDefault())
-            ?.toInstant()
-            ?.toEpochMilli()
+        draft.selectedDate?.toDatePickerUtcMillis()
     }
     val datePickerState = rememberDatePickerState(initialSelectedDateMillis = initialDateMillis)
     val timePickerState = rememberTimePickerState(
@@ -94,6 +94,12 @@ fun CreateEventStep1Screen(
         initialMinute = draft.selectedTime?.minute ?: 0,
         is24Hour = false,
     )
+
+    val pickCoverImage = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent(),
+    ) { uri ->
+        uri?.let { viewModel.setCoverImage(context, it) }
+    }
 
     Column(
         modifier = Modifier
@@ -109,7 +115,10 @@ fun CreateEventStep1Screen(
         )
 
         Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-            UploadZone()
+            UploadZone(
+                previewModel = draft.coverPreviewUri,
+                onClick = { pickCoverImage.launch("image/*") },
+            )
             Spacer(modifier = Modifier.height(12.dp))
             FriendZoneTextField(
                 label = "Event Name",
@@ -227,10 +236,7 @@ fun CreateEventStep1Screen(
                 TextButton(
                     onClick = {
                         datePickerState.selectedDateMillis?.let { millis ->
-                            val date = Instant.ofEpochMilli(millis)
-                                .atZone(ZoneId.systemDefault())
-                                .toLocalDate()
-                            viewModel.updateDate(date)
+                            viewModel.updateDate(millis.toDatePickerLocalDate())
                         }
                         showDatePicker = false
                     },
@@ -270,3 +276,9 @@ fun CreateEventStep1Screen(
         }
     }
 }
+
+private fun LocalDate.toDatePickerUtcMillis(): Long =
+    atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
+
+private fun Long.toDatePickerLocalDate(): LocalDate =
+    Instant.ofEpochMilli(this).atZone(ZoneOffset.UTC).toLocalDate()

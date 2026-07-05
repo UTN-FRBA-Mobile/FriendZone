@@ -15,7 +15,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -29,16 +31,20 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil.compose.AsyncImage
 import com.example.friendzone.presentation.components.CreateEventHeader
 import com.example.friendzone.presentation.components.EventMapDialog
 import com.example.friendzone.presentation.components.EventMapPerson
 import com.example.friendzone.presentation.components.EventMapThumbnail
 import com.example.friendzone.presentation.components.FriendRow
 import com.example.friendzone.presentation.components.FriendZoneOutlineButton
+import com.example.friendzone.presentation.components.FriendZonePullToRefreshBox
 import com.example.friendzone.presentation.components.PillBadge
 import com.example.friendzone.presentation.components.PillVariant
 import com.example.friendzone.ui.theme.FzBackground
@@ -46,6 +52,7 @@ import com.example.friendzone.ui.theme.FzBorder
 import com.example.friendzone.ui.theme.FzGreen
 import com.example.friendzone.ui.theme.FzInk
 import com.example.friendzone.ui.theme.FzInk3
+import com.example.friendzone.ui.theme.FzRequired
 import com.example.friendzone.ui.theme.FzSurface
 
 @Composable
@@ -60,7 +67,11 @@ fun EventDetailScreen(
     val sharingMessage by viewModel.sharingMessage.collectAsStateWithLifecycle()
     val deleteEventState by viewModel.deleteEventState.collectAsStateWithLifecycle()
     val leaveEventState by viewModel.leaveEventState.collectAsStateWithLifecycle()
+    val actionMessage by viewModel.actionMessage.collectAsStateWithLifecycle()
+    val showCompletePrompt by viewModel.showCompletePrompt.collectAsStateWithLifecycle()
+    val isRefreshing by viewModel.isRefreshing.collectAsStateWithLifecycle()
     var mapOpen by remember { mutableStateOf(viewModel.shouldOpenMapOnLoad()) }
+    var menuOpen by remember { mutableStateOf(false) }
     var showDeleteConfirmation by remember { mutableStateOf(false) }
     var showLeaveConfirmation by remember { mutableStateOf(false) }
 
@@ -71,15 +82,22 @@ fun EventDetailScreen(
             viewModel.consumeSharingMessage()
         }
     }
+    LaunchedEffect(actionMessage) {
+        actionMessage?.let { message ->
+            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+            viewModel.consumeActionMessage()
+        }
+    }
 
     LaunchedEffect(deleteEventState) {
-        if (deleteEventState is EventActionState.Success) {
+        val state = deleteEventState
+        if (state is EventActionState.Success) {
             Toast.makeText(context, "Event deleted", Toast.LENGTH_SHORT).show()
             onBack()
-        } else if (deleteEventState is EventActionState.Error) {
+        } else if (state is EventActionState.Error) {
             Toast.makeText(
                 context,
-                (deleteEventState as EventActionState.Error).message,
+                state.message,
                 Toast.LENGTH_LONG
             ).show()
             viewModel.resetDeleteEventState()
@@ -87,13 +105,14 @@ fun EventDetailScreen(
     }
 
     LaunchedEffect(leaveEventState) {
-        if (leaveEventState is EventActionState.Success) {
+        val state = leaveEventState
+        if (state is EventActionState.Success) {
             Toast.makeText(context, "Left event", Toast.LENGTH_SHORT).show()
             onBack()
-        } else if (leaveEventState is EventActionState.Error) {
+        } else if (state is EventActionState.Error) {
             Toast.makeText(
                 context,
-                (leaveEventState as EventActionState.Error).message,
+                state.message,
                 Toast.LENGTH_LONG
             ).show()
             viewModel.resetLeaveEventState()
@@ -129,130 +148,228 @@ fun EventDetailScreen(
         )
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(FzBackground)
-            .verticalScroll(rememberScrollState()),
-    ) {
-        CreateEventHeader(title = "Event", onBackClick = onBack)
+    if (showCompletePrompt) {
+        AlertDialog(
+            onDismissRequest = { viewModel.dismissCompletePrompt() },
+            title = { Text("Mark event as completed?") },
+            text = {
+                Text(
+                    "This event has started and you have accepted guests. " +
+                        "Do you want to mark it as completed?",
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = { viewModel.confirmCompleteFromPrompt() }) {
+                    Text("Mark completed", color = FzInk)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { viewModel.dismissCompletePrompt() }) {
+                    Text("Not now", color = FzInk3)
+                }
+            },
+        )
+    }
 
-        when (val state = uiState) {
-            is EventDetailUiState.Loading -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(48.dp),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    CircularProgressIndicator(color = FzInk)
-                }
-            }
-            is EventDetailUiState.Error -> {
-                Column(
-                    modifier = Modifier.padding(32.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Text(state.message, color = FzInk3)
-                    TextButton(onClick = { viewModel.loadDetail() }) {
-                        Text("Retry", color = FzInk)
-                    }
-                }
-            }
-            is EventDetailUiState.Data -> {
-                Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-                    Text(
-                        state.title,
-                        style = MaterialTheme.typography.headlineSmall,
-                        color = FzInk,
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        state.dateText,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = FzInk3,
-                    )
-                    if (state.isLive) {
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(6.dp),
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(9.dp)
-                                    .clip(RoundedCornerShape(50))
-                                    .background(FzGreen),
+    val organizerState = uiState as? EventDetailUiState.Data
+
+    FriendZonePullToRefreshBox(
+        isRefreshing = isRefreshing,
+        onRefresh = viewModel::refresh,
+        modifier = Modifier.fillMaxSize(),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(FzBackground)
+                .verticalScroll(rememberScrollState()),
+        ) {
+            CreateEventHeader(
+                title = "Event",
+                onBackClick = onBack,
+                showMenu = organizerState?.showOrganizerMenu == true,
+                onMenuClick = { menuOpen = true },
+                menuExpanded = menuOpen,
+                onMenuDismiss = { menuOpen = false },
+                menuContent = if (organizerState?.showOrganizerMenu == true) {
+                    {
+                        if (organizerState.canInviteGuests) {
+                            DropdownMenuItem(
+                                text = { Text("Add guests") },
+                                onClick = {
+                                    menuOpen = false
+                                    viewModel.openInviteSheet()
+                                },
                             )
-                            Text(
-                                "Live",
-                                style = MaterialTheme.typography.labelMedium,
-                                color = FzInk,
+                        }
+                        if (organizerState.canMarkComplete) {
+                            DropdownMenuItem(
+                                text = { Text("Mark completed") },
+                                onClick = {
+                                    menuOpen = false
+                                    viewModel.markEventCompleted()
+                                },
+                            )
+                        }
+                        if (organizerState.canCancelEvent) {
+                            DropdownMenuItem(
+                                text = { Text("Cancel event", color = FzRequired) },
+                                onClick = {
+                                    menuOpen = false
+                                    viewModel.cancelEvent()
+                                },
                             )
                         }
                     }
-                     if (state.canInviteGuests) {
-                         Spacer(modifier = Modifier.height(16.dp))
-                         FriendZoneOutlineButton(
-                             text = "Add guests",
-                             onClick = { viewModel.openInviteSheet() },
-                         )
-                         if (state.pendingInviteCount > 0) {
-                             Spacer(modifier = Modifier.height(6.dp))
-                             Text(
-                                 "${state.pendingInviteCount} pending",
-                                 style = MaterialTheme.typography.bodySmall,
-                                 color = FzInk3,
-                             )
-                         }
-                     }
-                     if (state.isOrganizer) {
-                         Spacer(modifier = Modifier.height(16.dp))
-                         FriendZoneOutlineButton(
-                             text = "Delete Event",
-                             onClick = { showDeleteConfirmation = true },
-                         )
-                     } else {
-                         Spacer(modifier = Modifier.height(16.dp))
-                         FriendZoneOutlineButton(
-                             text = "Leave Event",
-                             onClick = { showLeaveConfirmation = true },
-                         )
-                     }
-                    Spacer(modifier = Modifier.height(16.dp))
-                    EventMapThumbnail(
-                        eventLatitude = state.eventLatitude,
-                        eventLongitude = state.eventLongitude,
-                        onClick = { mapOpen = true },
-                    )
-                    if (mapOpen) {
-                        EventMapDialog(
+                } else {
+                    null
+                },
+            )
+
+            when (val state = uiState) {
+                is EventDetailUiState.Loading -> {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(48.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        CircularProgressIndicator(color = FzInk)
+                    }
+                }
+                is EventDetailUiState.Error -> {
+                    Column(
+                        modifier = Modifier.padding(32.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        Text(state.message, color = FzInk3)
+                        TextButton(onClick = { viewModel.loadDetail() }) {
+                            Text("Retry", color = FzInk)
+                        }
+                    }
+                }
+                is EventDetailUiState.Data -> {
+                    Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                        state.coverImageUrl?.let { coverUrl ->
+                            AsyncImage(
+                                model = coverUrl,
+                                contentDescription = "Event cover",
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(160.dp)
+                                    .clip(RoundedCornerShape(12.dp)),
+                                contentScale = ContentScale.Crop,
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+                        }
+                        Text(
+                            state.title,
+                            style = MaterialTheme.typography.headlineSmall,
+                            color = FzInk,
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            state.dateText,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = FzInk3,
+                        )
+                        when {
+                            state.isLive -> EventStatusIndicatorRow(
+                                dotColor = FzGreen,
+                                label = "Live",
+                            )
+                            state.statusBadge == EventDetailStatusBadge.Completed -> EventStatusIndicatorRow(
+                                dotColor = FzInk3,
+                                label = "Completed",
+                            )
+                            state.statusBadge == EventDetailStatusBadge.Cancelled -> EventStatusIndicatorRow(
+                                dotColor = FzRequired,
+                                label = "Cancelled",
+                            )
+                        }
+                        if (state.organizerSelfArrived) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            PillBadge("You are already there", PillVariant.Green)
+                        }
+                        
+                        // Add Delete/Leave buttons if not already handled by menu
+                        if (state.isOrganizer) {
+                            Spacer(modifier = Modifier.height(16.dp))
+                            FriendZoneOutlineButton(
+                                text = "Delete Event",
+                                onClick = { showDeleteConfirmation = true },
+                            )
+                        } else {
+                            Spacer(modifier = Modifier.height(16.dp))
+                            FriendZoneOutlineButton(
+                                text = "Leave Event",
+                                onClick = { showLeaveConfirmation = true },
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(16.dp))
+                        EventMapThumbnail(
                             eventLatitude = state.eventLatitude,
                             eventLongitude = state.eventLongitude,
-                            eventLabel = state.eventLocationLabel ?: state.title,
-                            people = state.participantLocations.map { person ->
-                                EventMapPerson(
-                                    label = person.displayName,
-                                    latitude = person.latitude,
-                                    longitude = person.longitude,
-                                    arrived = person.arrived,
-                                )
-                            },
-                            isSharingLocation = isSharingLocation,
-                            onSharingChange = viewModel::setLocationSharing,
-                            onDismiss = { mapOpen = false },
+                            onClick = { mapOpen = true },
                         )
+                        if (mapOpen) {
+                            EventMapDialog(
+                                eventLatitude = state.eventLatitude,
+                                eventLongitude = state.eventLongitude,
+                                eventLabel = state.eventLocationLabel ?: state.title,
+                                people = state.participantLocations.map { person ->
+                                    EventMapPerson(
+                                        label = person.displayName,
+                                        latitude = person.latitude,
+                                        longitude = person.longitude,
+                                        arrived = person.arrived,
+                                    )
+                                },
+                                isSharingLocation = isSharingLocation,
+                                onSharingChange = viewModel::setLocationSharing,
+                                onDismiss = { mapOpen = false },
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(20.dp))
+                        if (state.invitedPending.rows.isNotEmpty()) {
+                            ParticipantSection(state.invitedPending)
+                            Spacer(modifier = Modifier.height(12.dp))
+                        }
+                        ParticipantSection(state.arrived)
+                        Spacer(modifier = Modifier.height(12.dp))
+                        ParticipantSection(state.inTransit)
+                        Spacer(modifier = Modifier.height(12.dp))
+                        ParticipantSection(state.delayed)
+                        Spacer(modifier = Modifier.height(24.dp))
                     }
-                    Spacer(modifier = Modifier.height(20.dp))
-                    ParticipantSection(state.arrived)
-                    Spacer(modifier = Modifier.height(12.dp))
-                    ParticipantSection(state.inTransit)
-                    Spacer(modifier = Modifier.height(12.dp))
-                    ParticipantSection(state.delayed)
-                    Spacer(modifier = Modifier.height(24.dp))
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun EventStatusIndicatorRow(
+    dotColor: Color,
+    label: String,
+) {
+    Spacer(modifier = Modifier.height(8.dp))
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(6.dp),
+    ) {
+        Box(
+            modifier = Modifier
+                .size(9.dp)
+                .clip(RoundedCornerShape(50))
+                .background(dotColor),
+        )
+        Text(
+            label,
+            style = MaterialTheme.typography.labelMedium,
+            color = FzInk,
+        )
     }
 }
 

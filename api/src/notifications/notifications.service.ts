@@ -106,9 +106,65 @@ export class NotificationsService {
     await this.notifyUser(
       organizerId,
       'Participant Arrived',
-      `${participantName} has arrived at the event location`,
+      `${participantName} arrived to "${eventTitle}"`,
       NotificationType.PARTICIPANT_ARRIVED,
       { eventId, eventTitle, participantName },
+    );
+  }
+
+  async notifyOrganizerSelfArrived(
+    organizerId: string,
+    eventId: string,
+    eventTitle: string,
+  ): Promise<void> {
+    await this.notifyUser(
+      organizerId,
+      'You are already there',
+      `You have arrived at "${eventTitle}"`,
+      NotificationType.ORGANIZER_SELF_ARRIVED,
+      { eventId, eventTitle },
+    );
+  }
+
+  async notifyFriendRequestAccepted(
+    requesterId: string,
+    accepterDisplayName: string,
+    requestId: string,
+  ): Promise<void> {
+    await this.notifyUser(
+      requesterId,
+      'Friend Request Accepted',
+      `${accepterDisplayName} accepted your friend request`,
+      NotificationType.FRIEND_REQUEST_ACCEPTED,
+      { requestId, accepterDisplayName },
+    );
+  }
+
+  async notifyEventCancelled(
+    userIds: string[],
+    eventTitle: string,
+    eventId: string,
+  ): Promise<void> {
+    await this.notifyUsers(
+      userIds,
+      'Event Cancelled',
+      `"${eventTitle}" has been cancelled`,
+      NotificationType.EVENT_CANCELLED,
+      { eventId, eventTitle },
+    );
+  }
+
+  async notifyEventManuallyCompleted(
+    userIds: string[],
+    eventTitle: string,
+    eventId: string,
+  ): Promise<void> {
+    await this.notifyUsers(
+      userIds,
+      'Event Completed',
+      `"${eventTitle}" has been marked as completed`,
+      NotificationType.EVENT_COMPLETED,
+      { eventId, eventTitle },
     );
   }
 

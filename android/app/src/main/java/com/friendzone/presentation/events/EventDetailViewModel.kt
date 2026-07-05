@@ -20,9 +20,11 @@ import com.example.friendzone.domain.repository.LocationRepository
 import com.example.friendzone.domain.result.ApiResult
 import com.example.friendzone.domain.result.displayMessage
 import com.example.friendzone.domain.util.ParticipantStatus
+import com.example.friendzone.domain.util.canPromptOrganizerToComplete
 import com.example.friendzone.domain.util.classifyParticipantWithUser
 import com.example.friendzone.domain.util.formatEventDate
 import com.example.friendzone.domain.util.isLive
+import com.example.friendzone.domain.util.resolveApiAssetUrl
 import com.example.friendzone.presentation.components.FriendRowUi
 import com.example.friendzone.presentation.components.PillVariant
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -52,6 +54,11 @@ data class InvitedGuestUi(
     val pillVariant: PillVariant,
 )
 
+enum class EventDetailStatusBadge {
+    Completed,
+    Cancelled,
+}
+
 sealed class EventDetailUiState {
     data object Loading : EventDetailUiState()
     data class Error(val message: String) : EventDetailUiState()
@@ -59,13 +66,20 @@ sealed class EventDetailUiState {
         val title: String,
         val dateText: String,
         val isLive: Boolean,
+        val statusBadge: EventDetailStatusBadge?,
         val canInviteGuests: Boolean,
         val isOrganizer: Boolean,
+        val canMarkComplete: Boolean,
+        val canCancelEvent: Boolean,
+        val showOrganizerMenu: Boolean,
+        val organizerSelfArrived: Boolean,
         val pendingInviteCount: Int,
+        val coverImageUrl: String?,
         val eventLatitude: Double,
         val eventLongitude: Double,
         val eventLocationLabel: String?,
         val participantLocations: List<ParticipantLocationUi>,
+        val invitedPending: ParticipantSectionUi,
         val arrived: ParticipantSectionUi,
         val inTransit: ParticipantSectionUi,
         val delayed: ParticipantSectionUi,
@@ -99,6 +113,9 @@ class EventDetailViewModel @Inject constructor(
     private val _uiState = MutableStateFlow<EventDetailUiState>(EventDetailUiState.Loading)
     val uiState: StateFlow<EventDetailUiState> = _uiState.asStateFlow()
 
+    private val _isRefreshing = MutableStateFlow(false)
+    val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
+
     private val _inviteSheetOpen = MutableStateFlow(false)
     val inviteSheetOpen: StateFlow<Boolean> = _inviteSheetOpen.asStateFlow()
 
@@ -125,6 +142,55 @@ class EventDetailViewModel @Inject constructor(
 
     private val _sharingMessage = MutableStateFlow<String?>(null)
     val sharingMessage: StateFlow<String?> = _sharingMessage.asStateFlow()
+
+    private val _actionMessage = MutableStateFlow<String?>(null)
+    val actionMessage: StateFlow<String?> = _actionMessage.asStateFlow()
+
+    private val _showCompletePrompt = MutableStateFlow(false)
+    val showCompletePrompt: StateFlow<Boolean> = _showCompletePrompt.asStateFlow()
+
+    private val dismissedCompletePrompts = mutableSetOf<String>()
+
+    fun consumeActionMessage() {
+        _actionMessage.value = null
+    }
+
+    fun markEventCompleted() {
+        viewModelScope.launch {
+            when (val result = eventRepository.updateStatus(eventId, EventStatus.COMPLETED)) {
+                is ApiResult.Success -> {
+                    dismissedCompletePrompts.add(eventId)
+                    _showCompletePrompt.value = false
+                    _actionMessage.value = "Event marked as completed"
+                    loadDetail()
+                }
+                is ApiResult.Error -> _actionMessage.value = result.error.displayMessage()
+                ApiResult.Loading -> Unit
+            }
+        }
+    }
+
+    fun dismissCompletePrompt() {
+        dismissedCompletePrompts.add(eventId)
+        _showCompletePrompt.value = false
+    }
+
+    fun confirmCompleteFromPrompt() {
+        markEventCompleted()
+    }
+
+    fun cancelEvent() {
+        viewModelScope.launch {
+            when (val result = eventRepository.updateStatus(eventId, EventStatus.CANCELLED)) {
+                is ApiResult.Success -> {
+                    _actionMessage.value = "Event cancelled"
+                    loadDetail()
+                }
+                is ApiResult.Error -> _actionMessage.value = result.error.displayMessage()
+                ApiResult.Loading -> Unit
+            }
+        }
+    }
 
     init {
         viewModelScope.launch {
@@ -161,49 +227,65 @@ class EventDetailViewModel @Inject constructor(
 
     fun loadDetail() {
         viewModelScope.launch {
-            // Refresco silencioso: si ya mostramos datos (p. ej. por una
-            // actualizacion de ubicacion via socket) no volvemos a "Loading"
-            // para no cerrar el mapa ni hacer parpadear la pantalla.
-            val hadData = _uiState.value is EventDetailUiState.Data
-            if (!hadData) _uiState.value = EventDetailUiState.Loading
-            when (val eventResult = eventRepository.getById(eventId)) {
-                is ApiResult.Error -> {
-                    if (!hadData) {
-                        _uiState.value = EventDetailUiState.Error(eventResult.error.displayMessage())
-                    }
-                }
-                is ApiResult.Success -> {
-                    val event = eventResult.data
-                    val invitations = loadInvitationsIfOrganizer(event)
-                    when (val participantsResult = locationRepository.getParticipants(eventId)) {
-                        is ApiResult.Error -> {
-                            if (!hadData) {
-                                _uiState.value = EventDetailUiState.Error(
-                                    participantsResult.error.displayMessage(),
-                                )
-                            }
-                        }
-                        is ApiResult.Success -> {
-                            syncMySharingState(participantsResult.data)
-                            _uiState.value = buildUiState(
-                                event = event,
-                                participants = participantsResult.data,
-                                invitations = invitations,
-                            )
-                        }
-                        ApiResult.Loading -> Unit
-                    }
-                }
-                ApiResult.Loading -> Unit
+            loadDetailInternal()
+        }
+    }
+
+    fun refresh() {
+        viewModelScope.launch {
+            if (_isRefreshing.value) return@launch
+            _isRefreshing.value = true
+            try {
+                loadDetailInternal()
+            } finally {
+                _isRefreshing.value = false
             }
         }
     }
 
-    /**
-     * Activa o desactiva el compartir mi ubicacion para este evento. Al
-     * activarlo, ademas de avisar al backend, empieza a enviar mi posicion
-     * periodicamente para que el resto me vea en el mapa.
-     */
+    private suspend fun loadDetailInternal() {
+        val hadData = _uiState.value is EventDetailUiState.Data
+        if (!hadData) _uiState.value = EventDetailUiState.Loading
+        when (val eventResult = eventRepository.getById(eventId)) {
+            is ApiResult.Error -> {
+                if (!hadData) {
+                    _uiState.value = EventDetailUiState.Error(eventResult.error.displayMessage())
+                }
+            }
+            is ApiResult.Success -> {
+                val event = eventResult.data
+                val invitations = loadInvitationsIfOrganizer(event)
+                when (val participantsResult = locationRepository.getParticipants(eventId)) {
+                    is ApiResult.Error -> {
+                        if (!hadData) {
+                            _uiState.value = EventDetailUiState.Error(
+                                participantsResult.error.displayMessage(),
+                            )
+                        }
+                    }
+                    is ApiResult.Success -> {
+                        syncMySharingState(participantsResult.data)
+                        if (isOrganizer(event)) {
+                            val friends = when (val friendsResult = friendRepository.getFriends()) {
+                                is ApiResult.Success -> friendsResult.data
+                                else -> emptyList()
+                            }
+                            applyInviteLists(friends, invitations)
+                        }
+                        _uiState.value = buildUiState(
+                            event = event,
+                            participants = participantsResult.data,
+                            invitations = invitations,
+                        )
+                        maybeShowCompletePrompt(event, invitations)
+                    }
+                    ApiResult.Loading -> Unit
+                }
+            }
+            ApiResult.Loading -> Unit
+        }
+    }
+
     fun setLocationSharing(enabled: Boolean) {
         viewModelScope.launch {
             if (enabled) {
@@ -356,7 +438,6 @@ class EventDetailViewModel @Inject constructor(
             _deleteEventState.value = EventActionState.Loading
             when (val result = eventRepository.delete(eventId)) {
                 is ApiResult.Success -> {
-                    // No es necesario navegar, el socket nos dirá que fue eliminado
                     _deleteEventState.value = EventActionState.Success("Event deleted successfully")
                 }
                 is ApiResult.Error -> {
@@ -390,6 +471,19 @@ class EventDetailViewModel @Inject constructor(
         _leaveEventState.value = EventActionState.Idle
     }
 
+    private fun canManageEvent(event: Event): Boolean =
+        isOrganizer(event) &&
+            event.status != EventStatus.COMPLETED &&
+            event.status != EventStatus.CANCELLED
+
+    private fun maybeShowCompletePrompt(event: Event, invitations: List<Invitation>) {
+        if (eventId in dismissedCompletePrompts) return
+        if (!isOrganizer(event)) return
+        val acceptedGuestCount = invitations.count { it.status == InvitationStatus.ACCEPTED }
+        if (!event.canPromptOrganizerToComplete(acceptedGuestCount)) return
+        _showCompletePrompt.value = true
+    }
+
     private fun applyInviteLists(friends: List<User>, invitations: List<Invitation>) {
         val invitedIds = invitations.map { it.inviteeId }.toSet()
         _inviteFriends.value = friends.filter { it.id !in invitedIds }
@@ -407,43 +501,49 @@ class EventDetailViewModel @Inject constructor(
         participants: List<ParticipantWithUser>,
         invitations: List<Invitation>,
     ): EventDetailUiState.Data {
+        val trackingParticipants = participants
+
         val arrived = mutableListOf<FriendRowUi>()
         val inTransit = mutableListOf<FriendRowUi>()
         val delayed = mutableListOf<FriendRowUi>()
 
-        participants.forEach { item ->
-            val row = when (val status = classifyParticipantWithUser(item, event)) {
-                is ParticipantStatus.Arrived -> participantToFriendRow(
-                    displayName = item.user.displayName,
-                    subtitle = "Arrived",
-                    pillText = "✓ Arrived",
-                    pillVariant = PillVariant.Dark,
-                )
-                is ParticipantStatus.InTransit -> participantToFriendRow(
-                    displayName = item.user.displayName,
-                    subtitle = status.etaMinutes?.let { "$it min away" } ?: "On the way",
-                    pillText = status.etaMinutes?.let { "✈ $it min" } ?: "In route",
-                    pillVariant = PillVariant.Light,
-                )
-                is ParticipantStatus.Delayed -> participantToFriendRow(
-                    displayName = item.user.displayName,
-                    subtitle = status.etaMinutes?.let { "$it min away" } ?: "Running late",
-                    pillText = status.etaMinutes?.let { "🕐 $it min" } ?: "Delayed",
-                    pillVariant = PillVariant.Amber,
-                )
-            }
-            when (classifyParticipantWithUser(item, event)) {
+        trackingParticipants.forEach { item ->
+            val status = classifyParticipantWithUser(item, event)
+            val row = friendRowForParticipantStatus(
+                displayName = item.user.displayName,
+                status = status,
+                arrivedSubtitle = if (
+                    isOrganizer(event) &&
+                    item.participant.userId == currentUserId
+                ) {
+                    "You are already there"
+                } else {
+                    "Arrived"
+                },
+            )
+            when (status) {
                 is ParticipantStatus.Arrived -> arrived.add(row)
                 is ParticipantStatus.InTransit -> inTransit.add(row)
                 is ParticipantStatus.Delayed -> delayed.add(row)
             }
         }
 
-        val pendingCount = invitations.count { it.status == InvitationStatus.PENDING }
+        val invitedPendingRows = _pendingInvites.value
+            .filter { it.statusLabel == "Pending" }
+            .map { guest ->
+                participantToFriendRow(
+                    displayName = guest.displayName,
+                    subtitle = "Not accepted",
+                    pillText = guest.statusLabel,
+                    pillVariant = guest.pillVariant,
+                )
+            }
 
-        // Participantes (excepto yo) que comparten su ubicacion y tienen una
-        // posicion conocida. Mi propia posicion se muestra con el GPS del dispositivo.
-        val participantLocations = participants.mapNotNull { item ->
+        val pendingCount = invitations.count { it.status == InvitationStatus.PENDING }
+        val organizerSelfArrived = isOrganizer(event) &&
+            participants.any { it.participant.userId == currentUserId && it.participant.arrived }
+
+        val participantLocations = trackingParticipants.mapNotNull { item ->
             val p = item.participant
             val lat = p.lastLatitude
             val lng = p.lastLongitude
@@ -459,17 +559,31 @@ class EventDetailViewModel @Inject constructor(
             }
         }
 
+        val statusBadge = when (event.status) {
+            EventStatus.COMPLETED -> EventDetailStatusBadge.Completed
+            EventStatus.CANCELLED -> EventDetailStatusBadge.Cancelled
+            else -> null
+        }
+        val canManage = canManageEvent(event)
+
         return EventDetailUiState.Data(
             title = event.title,
             dateText = formatEventDate(event.startsAt),
             isLive = event.isLive(),
+            statusBadge = statusBadge,
             canInviteGuests = canInviteGuests(event),
             isOrganizer = isOrganizer(event),
+            canMarkComplete = canManage,
+            canCancelEvent = canManage,
+            showOrganizerMenu = isOrganizer(event) && statusBadge == null,
+            organizerSelfArrived = organizerSelfArrived,
             pendingInviteCount = pendingCount,
+            coverImageUrl = resolveApiAssetUrl(event.coverImageUrl),
             eventLatitude = event.latitude,
             eventLongitude = event.longitude,
             eventLocationLabel = event.address,
             participantLocations = participantLocations,
+            invitedPending = ParticipantSectionUi("Invited (pending)", invitedPendingRows.size, invitedPendingRows),
             arrived = ParticipantSectionUi("Arrived", arrived.size, arrived),
             inTransit = ParticipantSectionUi("In transit", inTransit.size, inTransit),
             delayed = ParticipantSectionUi("Delayed", delayed.size, delayed),

@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
+    alias(libs.plugins.google.services)
 }
 
 fun normalizeApiBaseUrl(value: String): String =
@@ -17,13 +18,17 @@ fun buildConfigString(value: String): String =
 val configuredApiBaseUrl = providers.environmentVariable("FRIENDZONE_API_BASE_URL")
     .orElse(providers.gradleProperty("friendzoneApiBaseUrl"))
 
-val debugApiBaseUrl = normalizeApiBaseUrl(
-    configuredApiBaseUrl.orNull ?: "http://10.0.2.2:3000/",
-)
+val configuredPastThresholdHours = providers.environmentVariable("FRIENDZONE_EVENT_PAST_THRESHOLD_HOURS")
+    .orElse(providers.gradleProperty("friendzoneEventPastThresholdHours"))
 
-val releaseApiBaseUrl = normalizeApiBaseUrl(
+val defaultApiBaseUrl = normalizeApiBaseUrl(
     configuredApiBaseUrl.orNull ?: "https://friendzone-api-zrvr.onrender.com/",
 )
+
+val defaultPastThresholdHours = configuredPastThresholdHours.orNull
+    ?.toIntOrNull()
+    ?.coerceAtLeast(0)
+    ?: 48
 
 val localProperties = Properties().apply {
     val localPropertiesFile = rootProject.file("local.properties")
@@ -73,11 +78,13 @@ android {
 
     buildTypes {
         debug {
-            buildConfigField("String", "API_BASE_URL", buildConfigString(debugApiBaseUrl))
+            buildConfigField("String", "API_BASE_URL", buildConfigString(defaultApiBaseUrl))
+            buildConfigField("int", "EVENT_PAST_THRESHOLD_HOURS", defaultPastThresholdHours.toString())
         }
         release {
             isMinifyEnabled = false
-            buildConfigField("String", "API_BASE_URL", buildConfigString(releaseApiBaseUrl))
+            buildConfigField("String", "API_BASE_URL", buildConfigString(defaultApiBaseUrl))
+            buildConfigField("int", "EVENT_PAST_THRESHOLD_HOURS", defaultPastThresholdHours.toString())
             if (hasReleaseSigningConfig) {
                 signingConfig = signingConfigs.getByName("release")
             }
@@ -124,6 +131,9 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.socket.io.client)
     implementation(libs.osmdroid.android)
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.messaging)
+    implementation(libs.coil.compose)
 
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))

@@ -24,6 +24,12 @@ import { InvitationsService } from './invitations.service';
 export class InvitationsController {
   constructor(private readonly invitationsService: InvitationsService) {}
 
+  @Get('invitations/mine')
+  @ApiOperation({ summary: 'List pending invitations for current user' })
+  findMine(@CurrentUser() user: SafeUser) {
+    return this.invitationsService.findMinePending(user.id);
+  }
+
   @Post('events/:eventId/invitations')
   @ApiOperation({ summary: 'Invite a user to an event (organizer only)' })
   create(
