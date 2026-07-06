@@ -36,6 +36,13 @@
       "when": 1780876203322,
       "tag": "0005_cover_image_threshold",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1780876203323,
+      "tag": "0006_profile_picture",
+      "breakpoints": true
     }
   ]
 }
