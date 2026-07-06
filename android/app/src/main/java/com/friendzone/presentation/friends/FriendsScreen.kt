@@ -26,7 +26,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -182,15 +181,6 @@ fun FriendsScreen(
             hostState = snackbarHostState,
             modifier = Modifier.align(Alignment.BottomCenter),
         )
-        FloatingActionButton(
-            onClick = { viewModel.selectTab(FriendsTab.Friends) },
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(16.dp),
-            containerColor = FzPrimary,
-        ) {
-            Icon(Icons.Default.Add, contentDescription = "Add friend", tint = Color.White)
-        }
     }
 
     if (showInviteSheet) {

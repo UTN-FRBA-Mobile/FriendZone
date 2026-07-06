@@ -2,7 +2,6 @@ package com.example.friendzone.presentation.auth
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,9 +10,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -66,15 +63,7 @@ fun RegisterScreen(
                 .padding(top = 48.dp, bottom = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Box(
-                modifier = Modifier
-                    .size(72.dp)
-                    .clip(RoundedCornerShape(22.dp))
-                    .background(Color.White),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text("👥", style = MaterialTheme.typography.displayLarge)
-            }
+            AuthLogo(size = 72.dp, cornerRadius = 22.dp)
             Spacer(modifier = Modifier.height(12.dp))
             Text(stringResource(R.string.app_name), style = MaterialTheme.typography.displayLarge, color = Color.White)
         }
