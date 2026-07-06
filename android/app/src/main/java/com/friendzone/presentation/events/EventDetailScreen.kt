@@ -43,9 +43,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import coil.compose.AsyncImage
+import coil.compose.SubcomposeAsyncImage
 import com.example.friendzone.R
 import com.example.friendzone.presentation.components.CreateEventHeader
+import com.example.friendzone.presentation.components.SkeletonBox
 import com.example.friendzone.presentation.components.EventMapDialog
 import com.example.friendzone.presentation.components.EventMapPerson
 import com.example.friendzone.presentation.components.EventMapThumbnail
@@ -258,7 +259,7 @@ fun EventDetailScreen(
                 is EventDetailUiState.Data -> {
                     Column(modifier = Modifier.padding(horizontal = 16.dp)) {
                         state.coverImageUrl?.let { coverUrl ->
-                            AsyncImage(
+                            SubcomposeAsyncImage(
                                 model = coverUrl,
                                 contentDescription = null,
                                 modifier = Modifier
@@ -266,6 +267,12 @@ fun EventDetailScreen(
                                     .height(180.dp)
                                     .clip(RoundedCornerShape(12.dp)),
                                 contentScale = ContentScale.Crop,
+                                loading = {
+                                    SkeletonBox(
+                                        modifier = Modifier.fillMaxSize(),
+                                        shape = RoundedCornerShape(12.dp),
+                                    )
+                                },
                             )
                             Spacer(modifier = Modifier.height(16.dp))
                         }

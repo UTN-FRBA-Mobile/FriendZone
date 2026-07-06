@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -66,32 +67,39 @@ fun EventLiveCard(
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Top,
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = item.title,
-                        style = MaterialTheme.typography.titleLarge,
-                        color = FzTextMain,
-                    )
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(8.dp)
-                                .clip(RoundedCornerShape(50))
-                                .background(FzSuccess),
-                        )
+                Row(
+                    modifier = Modifier.weight(1f),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    EventCoverAvatar(coverImageUrl = item.coverImageUrl)
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column {
                         Text(
-                            "Live",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = FzSuccess,
+                            text = item.title,
+                            style = MaterialTheme.typography.titleLarge,
+                            color = FzTextMain,
                         )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(8.dp)
+                                    .clip(RoundedCornerShape(50))
+                                    .background(FzSuccess),
+                            )
+                            Text(
+                                "Live",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = FzSuccess,
+                            )
+                        }
                     }
                 }
-                
+
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     if (item.isOrganizer && onDeleteClick != null) {
                         IconButton(onClick = onDeleteClick) {
@@ -150,16 +158,23 @@ fun EventUpcomingCard(
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Top,
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(item.title, style = MaterialTheme.typography.titleMedium, color = FzTextMain)
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Text(item.timeIcon)
-                        Text(item.timeLabel, style = MaterialTheme.typography.labelMedium, color = FzTextSecondary)
+                Row(
+                    modifier = Modifier.weight(1f),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    EventCoverAvatar(coverImageUrl = item.coverImageUrl)
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column {
+                        Text(item.title, style = MaterialTheme.typography.titleMedium, color = FzTextMain)
+                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Text(item.timeIcon)
+                            Text(item.timeLabel, style = MaterialTheme.typography.labelMedium, color = FzTextSecondary)
+                        }
                     }
                 }
-                
+
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     if (item.isOrganizer && onDeleteClick != null) {
                         IconButton(onClick = onDeleteClick) {
