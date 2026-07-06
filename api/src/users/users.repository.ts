@@ -86,7 +86,10 @@ export class UsersRepository {
   async update(
     id: string,
     data: Partial<
-      Pick<User, 'displayName' | 'fcmToken' | 'locationSharingEnabled'>
+      Pick<
+        User,
+        'displayName' | 'fcmToken' | 'locationSharingEnabled' | 'profilePictureUrl'
+      >
     >,
   ): Promise<User | undefined> {
     const [user] = await this.db

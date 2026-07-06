@@ -69,5 +69,6 @@ export class AuthResponseDto extends AuthTokensDto {
     username: string;
     displayName: string;
     locationSharingEnabled: boolean;
+    profilePictureUrl: string | null;
   };
 }

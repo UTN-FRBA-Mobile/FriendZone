@@ -3,6 +3,11 @@ package com.example.friendzone.presentation.events
 import com.example.friendzone.presentation.components.FriendRowUi
 import com.example.friendzone.presentation.components.PillVariant
 
+data class UserAvatarUi(
+    val displayName: String,
+    val profilePictureUrl: String? = null,
+)
+
 data class EventListItemUi(
     val eventId: String,
     val title: String,
@@ -14,7 +19,7 @@ data class EventListItemUi(
     val pendingText: String,
     val onTheWayText: String? = null,
     val isLive: Boolean,
-    val avatars: List<String> = emptyList(),
+    val avatars: List<UserAvatarUi> = emptyList(),
     val extraCount: Int = 0,
     val friendPreviews: List<FriendRowUi> = emptyList(),
     val isOrganizer: Boolean = false,
@@ -30,10 +35,12 @@ fun participantToFriendRow(
     subtitle: String,
     pillText: String,
     pillVariant: PillVariant,
+    profilePictureUrl: String? = null,
 ): FriendRowUi = FriendRowUi(
     initial = displayName.firstOrNull()?.uppercaseChar()?.toString() ?: "?",
     name = displayName,
     subtitle = subtitle,
     pillText = pillText,
     pillVariant = pillVariant,
+    profilePictureUrl = profilePictureUrl,
 )

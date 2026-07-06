@@ -44,6 +44,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.friendzone.R
+import com.example.friendzone.presentation.events.UserAvatarUi
 import com.example.friendzone.ui.theme.FzBackground
 import com.example.friendzone.ui.theme.FzBorderGray
 import com.example.friendzone.ui.theme.FzPrimary
@@ -336,12 +337,12 @@ fun PillBadge(
 
 @Composable
 fun AvatarStack(
-    emojis: List<String>,
+    avatars: List<UserAvatarUi>,
     extraCount: Int,
     modifier: Modifier = Modifier,
 ) {
     Row(modifier = modifier) {
-        emojis.forEachIndexed { index, emoji ->
+        avatars.forEachIndexed { index, avatar ->
             Box(
                 modifier = Modifier
                     .offset(x = if (index == 0) 0.dp else (-8).dp)
@@ -351,7 +352,11 @@ fun AvatarStack(
                     .border(2.dp, Color.White, CircleShape),
                 contentAlignment = Alignment.Center,
             ) {
-                Text(emoji, style = MaterialTheme.typography.bodyMedium)
+                ProfileIconItem(
+                    displayName = avatar.displayName,
+                    profilePictureUrl = avatar.profilePictureUrl,
+                    size = 34.dp,
+                )
             }
         }
         if (extraCount > 0) {
@@ -378,15 +383,11 @@ fun FriendRow(friend: FriendRowUi) {
             .padding(horizontal = 16.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(
-            modifier = Modifier
-                .size(40.dp)
-                .clip(CircleShape)
-                .background(FzSurface2),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text(friend.initial, style = MaterialTheme.typography.titleMedium, color = FzTextSecondary)
-        }
+        ProfileIconItem(
+            displayName = friend.name,
+            profilePictureUrl = friend.profilePictureUrl,
+            size = 40.dp,
+        )
         Spacer(modifier = Modifier.width(10.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(friend.name, style = MaterialTheme.typography.bodyMedium, color = FzTextMain)

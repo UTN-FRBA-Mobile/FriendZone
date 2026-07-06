@@ -6,6 +6,7 @@ data class FriendRowUi(
     val subtitle: String,
     val pillText: String,
     val pillVariant: PillVariant,
+    val profilePictureUrl: String? = null,
 )
 
 data class MockFriend(

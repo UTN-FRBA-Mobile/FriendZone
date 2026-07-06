@@ -49,6 +49,7 @@ export const users = pgTable(
     locationSharingEnabled: boolean('location_sharing_enabled')
       .notNull()
       .default(false),
+    profilePictureUrl: text('profile_picture_url'),
     createdAt: timestamp('created_at', { withTimezone: true })
       .notNull()
       .defaultNow(),

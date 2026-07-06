@@ -118,4 +118,10 @@
     <string name="title_leave_event">Leave Event</string>
     <string name="msg_leave_event_confirm">Are you sure you want to leave this event?</string>
     <string name="title_invitation">Event Invitation</string>
+
+    <!-- Profile picture -->
+    <string name="profile_picture_choose">Choose photo</string>
+    <string name="profile_picture_remove">Remove photo</string>
+    <string name="profile_picture_invalid_type">Only JPEG and PNG images are allowed</string>
+    <string name="profile_picture_too_large">Profile picture must be 20 MB or smaller</string>
 </resources>

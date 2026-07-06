@@ -25,6 +25,8 @@ data class ProfileUiState(
     val isLoading: Boolean = false,
     val isLoggingOut: Boolean = false,
     val isUpdatingLocationSharing: Boolean = false,
+    val isUploadingPicture: Boolean = false,
+    val isRemovingPicture: Boolean = false,
     val errorMessage: String? = null,
 )
 
@@ -137,6 +139,56 @@ class ProfileViewModel @Inject constructor(
     fun showLocationPermissionRequired() {
         _uiState.update {
             it.copy(errorMessage = "Location permission is required to share your location")
+        }
+    }
+
+    fun showPictureError(message: String) {
+        _uiState.update { it.copy(errorMessage = message) }
+    }
+
+    fun uploadProfilePicture(bytes: ByteArray, mimeType: String) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isUploadingPicture = true, errorMessage = null) }
+            when (val result = userRepository.uploadProfilePicture(bytes, mimeType)) {
+                is ApiResult.Success -> {
+                    tokenManager.saveUserProfile(result.data)
+                    _uiState.update {
+                        it.copy(user = result.data, isUploadingPicture = false)
+                    }
+                }
+                is ApiResult.Error -> {
+                    _uiState.update {
+                        it.copy(
+                            isUploadingPicture = false,
+                            errorMessage = result.error.displayMessage(),
+                        )
+                    }
+                }
+                ApiResult.Loading -> Unit
+            }
+        }
+    }
+
+    fun removeProfilePicture() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isRemovingPicture = true, errorMessage = null) }
+            when (val result = userRepository.removeProfilePicture()) {
+                is ApiResult.Success -> {
+                    tokenManager.saveUserProfile(result.data)
+                    _uiState.update {
+                        it.copy(user = result.data, isRemovingPicture = false)
+                    }
+                }
+                is ApiResult.Error -> {
+                    _uiState.update {
+                        it.copy(
+                            isRemovingPicture = false,
+                            errorMessage = result.error.displayMessage(),
+                        )
+                    }
+                }
+                ApiResult.Loading -> Unit
+            }
         }
     }
 

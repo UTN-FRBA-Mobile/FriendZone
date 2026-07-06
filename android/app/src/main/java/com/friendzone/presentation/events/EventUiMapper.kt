@@ -20,7 +20,7 @@ fun Event.toListItemUi(
     pendingCount: Int,
     onTheWayCount: Int = 0,
     friendPreviews: List<com.example.friendzone.presentation.components.FriendRowUi> = emptyList(),
-    participantAvatars: List<String> = emptyList(),
+    participantAvatars: List<UserAvatarUi> = emptyList(),
     extraAvatarCount: Int = 0,
     isPastItem: Boolean = false,
     startsAtEpoch: Long = 0L,
@@ -67,6 +67,7 @@ fun buildFriendPreviews(
         .map { item ->
             friendRowForParticipantStatus(
                 displayName = item.user.displayName,
+                profilePictureUrl = resolveApiAssetUrl(item.user.profilePictureUrl),
                 status = classifyParticipantWithUser(item, event),
                 arrivedSubtitle = "Already there",
             )
@@ -75,6 +76,7 @@ fun buildFriendPreviews(
 fun friendRowForParticipantStatus(
     displayName: String,
     status: ParticipantStatus,
+    profilePictureUrl: String? = null,
     arrivedSubtitle: String = "Arrived",
 ): FriendRowUi = when (status) {
     is ParticipantStatus.Arrived -> participantToFriendRow(
@@ -82,18 +84,21 @@ fun friendRowForParticipantStatus(
         subtitle = arrivedSubtitle,
         pillText = status.statusPillText(),
         pillVariant = PillVariant.Dark,
+        profilePictureUrl = profilePictureUrl,
     )
     is ParticipantStatus.InTransit -> participantToFriendRow(
         displayName = displayName,
         subtitle = status.travelEtaSubtitle(),
         pillText = status.statusPillText(),
         pillVariant = PillVariant.Light,
+        profilePictureUrl = profilePictureUrl,
     )
     is ParticipantStatus.Delayed -> participantToFriendRow(
         displayName = displayName,
         subtitle = status.travelEtaSubtitle(),
         pillText = status.statusPillText(),
         pillVariant = PillVariant.Amber,
+        profilePictureUrl = profilePictureUrl,
     )
 }
 
@@ -105,11 +110,14 @@ fun countInvitations(
     return confirmed to pending
 }
 
-fun buildAvatarPreview(participants: List<ParticipantWithUser>): Pair<List<String>, Int> {
-    val initials = participants.map {
-        it.user.displayName.firstOrNull()?.uppercaseChar()?.toString() ?: "?"
+fun buildAvatarPreview(participants: List<ParticipantWithUser>): Pair<List<UserAvatarUi>, Int> {
+    val avatars = participants.map { item ->
+        UserAvatarUi(
+            displayName = item.user.displayName,
+            profilePictureUrl = resolveApiAssetUrl(item.user.profilePictureUrl),
+        )
     }
-    val shown = initials.take(4)
-    val extra = (initials.size - shown.size).coerceAtLeast(0)
+    val shown = avatars.take(4)
+    val extra = (avatars.size - shown.size).coerceAtLeast(0)
     return shown to extra
 }

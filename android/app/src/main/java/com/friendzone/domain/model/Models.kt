@@ -10,6 +10,7 @@ data class User(
     val displayName: String,
     val fcmToken: String?,
     val locationSharingEnabled: Boolean,
+    val profilePictureUrl: String? = null,
     val createdAt: String,
 )
 

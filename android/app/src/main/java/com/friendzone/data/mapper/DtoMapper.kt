@@ -32,6 +32,7 @@ object DtoMapper {
         displayName = dto.displayName,
         fcmToken = dto.fcmToken,
         locationSharingEnabled = dto.locationSharingEnabled,
+        profilePictureUrl = dto.profilePictureUrl,
         createdAt = dto.createdAt,
     )
 
@@ -42,6 +43,7 @@ object DtoMapper {
         displayName = dto.displayName,
         fcmToken = null,
         locationSharingEnabled = dto.locationSharingEnabled,
+        profilePictureUrl = dto.profilePictureUrl,
         createdAt = "",
     )
 

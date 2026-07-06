@@ -52,6 +52,7 @@ data class InvitedGuestUi(
     val displayName: String,
     val statusLabel: String,
     val pillVariant: PillVariant,
+    val profilePictureUrl: String? = null,
 )
 
 enum class EventDetailStatusBadge {
@@ -492,6 +493,7 @@ class EventDetailViewModel @Inject constructor(
             invitationToGuestUi(
                 displayName = friend?.displayName ?: "Guest",
                 status = invitation.status,
+                profilePictureUrl = resolveApiAssetUrl(friend?.profilePictureUrl),
             )
         }
     }
@@ -511,6 +513,7 @@ class EventDetailViewModel @Inject constructor(
             val status = classifyParticipantWithUser(item, event)
             val row = friendRowForParticipantStatus(
                 displayName = item.user.displayName,
+                profilePictureUrl = resolveApiAssetUrl(item.user.profilePictureUrl),
                 status = status,
                 arrivedSubtitle = if (
                     isOrganizer(event) &&
@@ -536,6 +539,7 @@ class EventDetailViewModel @Inject constructor(
                     subtitle = "Not accepted",
                     pillText = guest.statusLabel,
                     pillVariant = guest.pillVariant,
+                    profilePictureUrl = guest.profilePictureUrl,
                 )
             }
 
@@ -602,8 +606,9 @@ class EventDetailViewModel @Inject constructor(
 private fun invitationToGuestUi(
     displayName: String,
     status: InvitationStatus,
+    profilePictureUrl: String? = null,
 ): InvitedGuestUi = when (status) {
-    InvitationStatus.PENDING -> InvitedGuestUi(displayName, "Pending", PillVariant.Light)
-    InvitationStatus.ACCEPTED -> InvitedGuestUi(displayName, "Accepted", PillVariant.Green)
-    InvitationStatus.REJECTED -> InvitedGuestUi(displayName, "Rejected", PillVariant.Amber)
+    InvitationStatus.PENDING -> InvitedGuestUi(displayName, "Pending", PillVariant.Light, profilePictureUrl)
+    InvitationStatus.ACCEPTED -> InvitedGuestUi(displayName, "Accepted", PillVariant.Green, profilePictureUrl)
+    InvitationStatus.REJECTED -> InvitedGuestUi(displayName, "Rejected", PillVariant.Amber, profilePictureUrl)
 }

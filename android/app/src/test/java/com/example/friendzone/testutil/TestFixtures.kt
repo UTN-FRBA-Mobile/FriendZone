@@ -20,6 +20,7 @@ fun testUser(
     email: String = "user@example.com",
     username: String = "testuser",
     displayName: String = "Test User",
+    profilePictureUrl: String? = null,
 ): User = User(
     id = id,
     email = email,
@@ -27,6 +28,7 @@ fun testUser(
     displayName = displayName,
     fcmToken = null,
     locationSharingEnabled = true,
+    profilePictureUrl = profilePictureUrl,
     createdAt = fixtureNow.toString(),
 )
 

@@ -56,7 +56,8 @@ import com.example.friendzone.presentation.components.FriendZoneOutlineButton
 import com.example.friendzone.presentation.components.FriendZonePullToRefreshBox
 import com.example.friendzone.presentation.components.FriendZoneTextField
 import com.example.friendzone.presentation.components.FriendZoneTopBar
-import com.example.friendzone.presentation.components.UserInitialAvatar
+import com.example.friendzone.domain.util.resolveApiAssetUrl
+import com.example.friendzone.presentation.components.ProfileIconItem
 import com.example.friendzone.presentation.invite.InviteFriendsBottomSheet
 import com.example.friendzone.ui.theme.FzBackground
 import com.example.friendzone.ui.theme.FzBorderGray
@@ -339,7 +340,10 @@ private fun LookupUserRow(
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        UserInitialAvatar(displayName = user.displayName)
+        ProfileIconItem(
+            displayName = user.displayName,
+            profilePictureUrl = resolveApiAssetUrl(user.profilePictureUrl),
+        )
         Spacer(modifier = Modifier.width(10.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(user.displayName, style = MaterialTheme.typography.bodyMedium, color = FzTextMain)
@@ -373,7 +377,10 @@ private fun FriendListRow(user: User) {
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        UserInitialAvatar(displayName = user.displayName)
+        ProfileIconItem(
+            displayName = user.displayName,
+            profilePictureUrl = resolveApiAssetUrl(user.profilePictureUrl),
+        )
         Spacer(modifier = Modifier.width(10.dp))
         Column {
             Text(user.displayName, style = MaterialTheme.typography.bodyMedium, color = FzTextMain)
@@ -447,7 +454,10 @@ private fun RequestRow(
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        UserInitialAvatar(displayName = request.requester.displayName)
+        ProfileIconItem(
+            displayName = request.requester.displayName,
+            profilePictureUrl = resolveApiAssetUrl(request.requester.profilePictureUrl),
+        )
         Spacer(modifier = Modifier.width(10.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(request.requester.displayName, style = MaterialTheme.typography.bodyMedium, color = FzTextMain)

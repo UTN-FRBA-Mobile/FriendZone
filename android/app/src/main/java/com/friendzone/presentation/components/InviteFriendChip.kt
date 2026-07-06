@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.example.friendzone.domain.model.User
+import com.example.friendzone.domain.util.resolveApiAssetUrl
 import com.example.friendzone.ui.theme.FzBorder
 import com.example.friendzone.ui.theme.FzInk
 import com.example.friendzone.ui.theme.FzSurface
@@ -39,7 +40,11 @@ fun InviteFriendChip(
             .clickable(onClick = onClick)
             .padding(horizontal = 14.dp, vertical = 10.dp),
     ) {
-        UserInitialAvatar(displayName = friend.displayName, size = 36.dp)
+        ProfileIconItem(
+            displayName = friend.displayName,
+            profilePictureUrl = resolveApiAssetUrl(friend.profilePictureUrl),
+            size = 36.dp,
+        )
         Spacer(modifier = Modifier.height(6.dp))
         Text(friend.displayName, style = MaterialTheme.typography.labelMedium, color = FzInk)
     }

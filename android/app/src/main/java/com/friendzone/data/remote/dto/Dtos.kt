@@ -28,6 +28,7 @@ data class AuthUserDto(
     val username: String,
     val displayName: String,
     val locationSharingEnabled: Boolean,
+    val profilePictureUrl: String? = null,
 )
 
 @Serializable
@@ -50,6 +51,7 @@ data class UserDto(
     val displayName: String,
     val fcmToken: String? = null,
     val locationSharingEnabled: Boolean,
+    val profilePictureUrl: String? = null,
     val createdAt: String,
 )
 

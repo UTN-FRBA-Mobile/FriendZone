@@ -29,7 +29,7 @@ class EventUiMapperTest {
     fun buildAvatarPreview_noParticipants_returnsEmptyShownAndZeroExtra() {
         val (shown, extra) = buildAvatarPreview(emptyList())
 
-        assertEquals(emptyList<String>(), shown)
+        assertEquals(emptyList<UserAvatarUi>(), shown)
         assertEquals(0, extra)
     }
 
@@ -41,20 +41,42 @@ class EventUiMapperTest {
 
         val (shown, extra) = buildAvatarPreview(participants)
 
-        assertEquals(listOf("U", "U", "U"), shown)
+        assertEquals(3, shown.size)
+        assertEquals("User 1", shown[0].displayName)
         assertEquals(0, extra)
     }
 
     @Test
     fun buildAvatarPreview_sixParticipants_returnsFourShownAndTwoExtra() {
         val participants = (1..6).map { index ->
-            testParticipantWithUser(user = testUser(id = "u$index", displayName = "User $index"))
+            testParticipantWithUser(
+                user = testUser(
+                    id = "u$index",
+                    displayName = "User $index",
+                    profilePictureUrl = "/uploads/profile-pictures/u$index.jpg",
+                ),
+            )
         }
 
         val (shown, extra) = buildAvatarPreview(participants)
 
         assertEquals(4, shown.size)
         assertEquals(2, extra)
+    }
+
+    @Test
+    fun buildAvatarPreview_resolvesProfilePictureUrl() {
+        val participants = listOf(
+            testParticipantWithUser(
+                user = testUser(
+                    profilePictureUrl = "/uploads/profile-pictures/test.jpg",
+                ),
+            ),
+        )
+
+        val (shown, _) = buildAvatarPreview(participants)
+
+        assertEquals(true, shown.first().profilePictureUrl?.endsWith("/uploads/profile-pictures/test.jpg"))
     }
 
     @Test

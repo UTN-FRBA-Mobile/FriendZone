@@ -28,6 +28,7 @@ class TokenStore @Inject constructor(
     private val displayNameKey = stringPreferencesKey("display_name")
     private val emailKey = stringPreferencesKey("email")
     private val usernameKey = stringPreferencesKey("username")
+    private val profilePictureUrlKey = stringPreferencesKey("profile_picture_url")
     private val locationSharingKey = booleanPreferencesKey("location_sharing_enabled")
     private val loggedInKey = booleanPreferencesKey("logged_in")
 
@@ -47,6 +48,7 @@ class TokenStore @Inject constructor(
                 displayName = prefs[displayNameKey].orEmpty(),
                 fcmToken = null,
                 locationSharingEnabled = prefs[locationSharingKey] ?: false,
+                profilePictureUrl = prefs[profilePictureUrlKey],
                 createdAt = "",
             )
         }
@@ -86,6 +88,7 @@ class TokenStore @Inject constructor(
             prefs.remove(displayNameKey)
             prefs.remove(emailKey)
             prefs.remove(usernameKey)
+            prefs.remove(profilePictureUrlKey)
             prefs.remove(locationSharingKey)
             prefs[loggedInKey] = false
         }
@@ -97,5 +100,10 @@ class TokenStore @Inject constructor(
         prefs[emailKey] = user.email
         prefs[usernameKey] = user.username
         prefs[locationSharingKey] = user.locationSharingEnabled
+        if (user.profilePictureUrl.isNullOrBlank()) {
+            prefs.remove(profilePictureUrlKey)
+        } else {
+            prefs[profilePictureUrlKey] = user.profilePictureUrl
+        }
     }
 }

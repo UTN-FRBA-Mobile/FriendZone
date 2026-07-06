@@ -1,13 +1,18 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Patch,
+  Post,
   Put,
   Query,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { ApiBearerAuth, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import type { SafeUser } from '../common/utils/user.mapper';
@@ -57,6 +62,23 @@ export class UsersController {
     @Body() dto: UpdateFcmTokenDto,
   ): Promise<SafeUser> {
     return this.usersService.updateFcmToken(user.id, dto.token);
+  }
+
+  @Post('me/profile-picture')
+  @ApiOperation({ summary: 'Upload profile picture' })
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(FileInterceptor('picture'))
+  uploadProfilePicture(
+    @CurrentUser() user: SafeUser,
+    @UploadedFile() file: Express.Multer.File,
+  ): Promise<SafeUser> {
+    return this.usersService.uploadProfilePicture(user.id, file);
+  }
+
+  @Delete('me/profile-picture')
+  @ApiOperation({ summary: 'Remove profile picture' })
+  removeProfilePicture(@CurrentUser() user: SafeUser): Promise<SafeUser> {
+    return this.usersService.removeProfilePicture(user.id);
   }
 
   @Get('me/friends')

@@ -3,10 +3,12 @@ package com.example.friendzone.presentation.profile
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
+import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,11 +26,15 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -45,10 +51,13 @@ import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.friendzone.R
+import com.example.friendzone.domain.util.resolveApiAssetUrl
 import com.example.friendzone.presentation.components.FriendZoneOutlineButton
 import com.example.friendzone.presentation.components.FriendZonePullToRefreshBox
 import com.example.friendzone.presentation.components.FriendZoneSwitch
 import com.example.friendzone.presentation.components.FriendZoneTopBar
+import com.example.friendzone.presentation.components.ProfileIconItem
+import com.example.friendzone.presentation.components.ProfileIconStyle
 import com.example.friendzone.ui.theme.FzBackground
 import com.example.friendzone.ui.theme.FzBorderGray
 import com.example.friendzone.ui.theme.FzPrimary
@@ -56,7 +65,10 @@ import com.example.friendzone.ui.theme.FzTextMain
 import com.example.friendzone.ui.theme.FzTextSecondary
 import com.example.friendzone.ui.theme.FzError
 import com.example.friendzone.ui.theme.FzSurface
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
     onNotificationsClick: () -> Unit = {},
@@ -68,6 +80,10 @@ fun ProfileScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val isRefreshing by viewModel.isRefreshing.collectAsStateWithLifecycle()
     val user = uiState.user
+    var showPictureSheet by remember { mutableStateOf(false) }
+    val pictureSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val scope = rememberCoroutineScope()
+
     val locationPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions(),
     ) { result ->
@@ -75,6 +91,25 @@ fun ProfileScreen(
             viewModel.setLocationSharing(true)
         } else {
             viewModel.showLocationPermissionRequired()
+        }
+    }
+
+    val pickProfilePicture = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent(),
+    ) { uri ->
+        uri?.let {
+            handleProfilePictureSelection(
+                context = context,
+                uri = it,
+                onValid = { bytes, mimeType ->
+                    showPictureSheet = false
+                    viewModel.uploadProfilePicture(bytes, mimeType)
+                },
+                onError = { message ->
+                    showPictureSheet = false
+                    viewModel.showPictureError(message)
+                },
+            )
         }
     }
 
@@ -125,15 +160,54 @@ fun ProfileScreen(
                 if (uiState.isLoading && user == null) {
                     CircularProgressIndicator(modifier = Modifier.padding(24.dp), color = FzPrimary)
                 } else {
-                    val avatarLetter = user?.displayName?.firstOrNull()?.uppercaseChar()?.toString() ?: "?"
+                    val isPictureBusy = uiState.isUploadingPicture || uiState.isRemovingPicture
                     Box(
                         modifier = Modifier
                             .size(80.dp)
-                            .clip(CircleShape)
-                            .background(FzPrimary),
+                            .clickable(enabled = user != null && !isPictureBusy) {
+                                showPictureSheet = true
+                            },
                         contentAlignment = Alignment.Center,
                     ) {
-                        Text(avatarLetter, style = MaterialTheme.typography.displayLarge, color = Color.White)
+                        ProfileIconItem(
+                            displayName = user?.displayName ?: "?",
+                            profilePictureUrl = resolveApiAssetUrl(user?.profilePictureUrl),
+                            size = 80.dp,
+                            style = ProfileIconStyle.Hero,
+                        )
+                        if (user != null) {
+                            Box(
+                                modifier = Modifier
+                                    .align(Alignment.BottomEnd)
+                                    .size(24.dp)
+                                    .clip(CircleShape)
+                                    .background(FzPrimary)
+                                    .border(2.dp, Color.White, CircleShape),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Edit,
+                                    contentDescription = stringResource(R.string.btn_edit),
+                                    tint = Color.White,
+                                    modifier = Modifier.size(14.dp),
+                                )
+                            }
+                        }
+                        if (isPictureBusy) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .clip(CircleShape)
+                                    .background(Color.Black.copy(alpha = 0.35f)),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(28.dp),
+                                    color = Color.White,
+                                    strokeWidth = 2.dp,
+                                )
+                            }
+                        }
                     }
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
@@ -200,6 +274,78 @@ fun ProfileScreen(
             }
         }
     }
+
+    if (showPictureSheet) {
+        ModalBottomSheet(
+            onDismissRequest = { showPictureSheet = false },
+            sheetState = pictureSheetState,
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp)
+                    .padding(bottom = 28.dp),
+            ) {
+                Text(
+                    stringResource(R.string.profile_picture_choose),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .clickable {
+                            scope.launch {
+                                pictureSheetState.hide()
+                                showPictureSheet = false
+                            }
+                            pickProfilePicture.launch("image/*")
+                        }
+                        .padding(vertical = 14.dp),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = FzTextMain,
+                )
+                if (!user?.profilePictureUrl.isNullOrBlank()) {
+                    Text(
+                        stringResource(R.string.profile_picture_remove),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .clickable {
+                                scope.launch {
+                                    pictureSheetState.hide()
+                                    showPictureSheet = false
+                                }
+                                viewModel.removeProfilePicture()
+                            }
+                            .padding(vertical = 14.dp),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = FzError,
+                    )
+                }
+            }
+        }
+    }
+}
+
+private fun handleProfilePictureSelection(
+    context: Context,
+    uri: Uri,
+    onValid: (ByteArray, String) -> Unit,
+    onError: (String) -> Unit,
+) {
+    val resolver = context.contentResolver
+    val mimeType = resolver.getType(uri)
+    if (mimeType != "image/jpeg" && mimeType != "image/png") {
+        onError(context.getString(R.string.profile_picture_invalid_type))
+        return
+    }
+    val bytes = resolver.openInputStream(uri)?.use { it.readBytes() }
+    if (bytes == null) {
+        return
+    }
+    if (bytes.size > 20 * 1024 * 1024) {
+        onError(context.getString(R.string.profile_picture_too_large))
+        return
+    }
+    onValid(bytes, mimeType)
 }
 
 private fun hasLocationPermission(context: Context): Boolean =

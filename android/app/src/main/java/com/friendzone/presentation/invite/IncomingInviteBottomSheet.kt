@@ -23,7 +23,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.friendzone.presentation.components.FriendZoneOutlineButton
 import com.example.friendzone.presentation.components.FriendZonePrimaryButton
-import com.example.friendzone.presentation.components.UserInitialAvatarDark
+import com.example.friendzone.domain.util.resolveApiAssetUrl
+import com.example.friendzone.presentation.components.ProfileIconItem
+import com.example.friendzone.presentation.components.ProfileIconStyle
 import com.example.friendzone.ui.theme.FzGreen
 import com.example.friendzone.ui.theme.FzInk
 import com.example.friendzone.ui.theme.FzInk3
@@ -96,7 +98,12 @@ fun IncomingInviteBottomSheet(
 
                 else -> {
                     val inviter = uiState.inviter!!
-                    UserInitialAvatarDark(displayName = inviter.displayName, size = 72.dp)
+                    ProfileIconItem(
+                        displayName = inviter.displayName,
+                        profilePictureUrl = resolveApiAssetUrl(inviter.profilePictureUrl),
+                        size = 72.dp,
+                        style = ProfileIconStyle.Dark,
+                    )
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
                         inviter.displayName,

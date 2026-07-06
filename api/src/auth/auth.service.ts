@@ -62,6 +62,7 @@ export class AuthService {
       user.displayName,
       user.username,
       user.locationSharingEnabled,
+      user.profilePictureUrl,
     );
   }
 
@@ -92,6 +93,7 @@ export class AuthService {
       user.displayName,
       user.username,
       user.locationSharingEnabled,
+      user.profilePictureUrl,
     );
   }
 
@@ -130,6 +132,7 @@ export class AuthService {
       user.displayName,
       user.username,
       user.locationSharingEnabled,
+      user.profilePictureUrl,
     );
   }
 
@@ -145,6 +148,7 @@ export class AuthService {
     displayName: string,
     username: string,
     locationSharingEnabled: boolean,
+    profilePictureUrl: string | null = null,
   ): Promise<AuthResponseDto> {
     const payload: JwtPayload = { sub: userId, email };
 
@@ -182,6 +186,7 @@ export class AuthService {
         username,
         displayName,
         locationSharingEnabled,
+        profilePictureUrl,
       },
     };
   }

@@ -24,6 +24,8 @@ interface UserRepository {
     suspend fun updateProfile(displayName: String): ApiResult<User>
     suspend fun updateLocationSharing(enabled: Boolean): ApiResult<User>
     suspend fun updateFcmToken(token: String): ApiResult<User>
+    suspend fun uploadProfilePicture(bytes: ByteArray, mimeType: String): ApiResult<User>
+    suspend fun removeProfilePicture(): ApiResult<User>
     suspend fun search(query: String): ApiResult<List<User>>
     suspend fun lookup(query: String): ApiResult<User>
 }
