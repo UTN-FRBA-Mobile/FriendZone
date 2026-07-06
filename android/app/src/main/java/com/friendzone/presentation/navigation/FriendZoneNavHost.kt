@@ -1,6 +1,8 @@
 package com.example.friendzone.presentation.navigation
 
 import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -21,6 +23,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavBackStackEntry
+import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -63,6 +67,57 @@ private fun AnimatedContentTransitionScope<*>.slideInFromLeft() =
 
 private fun AnimatedContentTransitionScope<*>.slideOutToRight() =
     slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(TransitionDuration)) + fadeOut(tween(TransitionDuration / 2))
+
+private val bottomBarTabIndex = mapOf(
+    Screen.Events to 0,
+    Screen.Friends to 1,
+    Screen.Profile to 2,
+)
+
+private fun tabIndex(route: String?): Int? = route?.let { bottomBarTabIndex[it] }
+
+private fun AnimatedContentTransitionScope<NavBackStackEntry>.isBottomBarTabSwitch(): Boolean {
+    val initialIndex = tabIndex(initialState.destination.route)
+    val targetIndex = tabIndex(targetState.destination.route)
+    return initialIndex != null && targetIndex != null && initialIndex != targetIndex
+}
+
+private fun AnimatedContentTransitionScope<NavBackStackEntry>.isMovingForwardInTabs(): Boolean {
+    val initialIndex = tabIndex(initialState.destination.route) ?: return true
+    val targetIndex = tabIndex(targetState.destination.route) ?: return true
+    return targetIndex > initialIndex
+}
+
+private fun AnimatedContentTransitionScope<NavBackStackEntry>.bottomBarEnterTransition(): EnterTransition {
+    if (!isBottomBarTabSwitch()) return slideInFromRight()
+    return if (isMovingForwardInTabs()) slideInFromRight() else slideInFromLeft()
+}
+
+private fun AnimatedContentTransitionScope<NavBackStackEntry>.bottomBarExitTransition(): ExitTransition {
+    if (!isBottomBarTabSwitch()) return slideOutToLeft()
+    return if (isMovingForwardInTabs()) slideOutToLeft() else slideOutToRight()
+}
+
+private fun AnimatedContentTransitionScope<NavBackStackEntry>.bottomBarPopEnterTransition(): EnterTransition {
+    if (!isBottomBarTabSwitch()) return slideInFromLeft()
+    return if (isMovingForwardInTabs()) slideInFromRight() else slideInFromLeft()
+}
+
+private fun AnimatedContentTransitionScope<NavBackStackEntry>.bottomBarPopExitTransition(): ExitTransition {
+    if (!isBottomBarTabSwitch()) return slideOutToRight()
+    return if (isMovingForwardInTabs()) slideOutToLeft() else slideOutToRight()
+}
+
+private fun NavHostController.navigateToBottomBarTab(route: String) {
+    navigate(route) {
+        popUpTo(Screen.Events) {
+            saveState = true
+            inclusive = true
+        }
+        launchSingleTop = true
+        restoreState = true
+    }
+}
 
 private fun isFriendRequestDeepLink(deepLink: DeepLink): Boolean =
     deepLink.type == "friend.request" ||
@@ -177,21 +232,17 @@ fun FriendZoneNavHost(
                     pendingFriendsCount = pendingFriendsCount,
                     onEventsClick = {
                         if (currentRoute != Screen.Events) {
-                            navController.navigate(Screen.Events) {
-                                launchSingleTop = true
-                            }
+                            navController.navigateToBottomBarTab(Screen.Events)
                         }
                     },
                     onFriendsClick = {
                         if (currentRoute != Screen.Friends) {
-                            navController.navigate(Screen.Friends) {
-                                launchSingleTop = true
-                            }
+                            navController.navigateToBottomBarTab(Screen.Friends)
                         }
                     },
                     onProfileClick = {
-                        navController.navigate(Screen.Profile) {
-                            launchSingleTop = true
+                        if (currentRoute != Screen.Profile) {
+                            navController.navigateToBottomBarTab(Screen.Profile)
                         }
                     },
                 )
@@ -235,10 +286,10 @@ fun FriendZoneNavHost(
             }
             composable(
                 route = Screen.Events,
-                enterTransition = { slideInFromRight() },
-                exitTransition = { slideOutToLeft() },
-                popEnterTransition = { slideInFromLeft() },
-                popExitTransition = { slideOutToRight() },
+                enterTransition = { bottomBarEnterTransition() },
+                exitTransition = { bottomBarExitTransition() },
+                popEnterTransition = { bottomBarPopEnterTransition() },
+                popExitTransition = { bottomBarPopExitTransition() },
             ) {
                 EventsScreen(
                     notificationBadgeCount = notificationBadgeCount,
@@ -270,10 +321,10 @@ fun FriendZoneNavHost(
             }
             composable(
                 route = Screen.Friends,
-                enterTransition = { slideInFromRight() },
-                exitTransition = { slideOutToLeft() },
-                popEnterTransition = { slideInFromLeft() },
-                popExitTransition = { slideOutToRight() },
+                enterTransition = { bottomBarEnterTransition() },
+                exitTransition = { bottomBarExitTransition() },
+                popEnterTransition = { bottomBarPopEnterTransition() },
+                popExitTransition = { bottomBarPopExitTransition() },
             ) {
                 FriendsScreen(
                     notificationBadgeCount = notificationBadgeCount,
@@ -289,10 +340,10 @@ fun FriendZoneNavHost(
             }
             composable(
                 route = Screen.Profile,
-                enterTransition = { slideInFromRight() },
-                exitTransition = { slideOutToLeft() },
-                popEnterTransition = { slideInFromLeft() },
-                popExitTransition = { slideOutToRight() },
+                enterTransition = { bottomBarEnterTransition() },
+                exitTransition = { bottomBarExitTransition() },
+                popEnterTransition = { bottomBarPopEnterTransition() },
+                popExitTransition = { bottomBarPopExitTransition() },
             ) {
                 ProfileScreen(
                     notificationBadgeCount = notificationBadgeCount,

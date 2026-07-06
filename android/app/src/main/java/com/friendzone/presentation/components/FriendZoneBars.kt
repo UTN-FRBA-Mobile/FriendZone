@@ -1,5 +1,6 @@
 package com.example.friendzone.presentation.components
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -34,7 +35,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.res.stringResource
@@ -90,15 +93,17 @@ fun FriendZoneTopBar(
                 Icon(Icons.Default.Menu, contentDescription = "Menu", tint = FzTextSecondary)
             }
         } else {
-            Spacer(modifier = Modifier.size(38.dp))
+            TopBarLogo()
         }
+
+        Spacer(modifier = Modifier.width(12.dp))
 
         Text(
             text = title,
             style = MaterialTheme.typography.titleLarge,
             color = FzTextMain,
             modifier = Modifier.weight(1f),
-            textAlign = if (showSettings) TextAlign.Center else TextAlign.Start,
+            textAlign = TextAlign.Center,
         )
 
         Row(
@@ -123,6 +128,30 @@ fun FriendZoneTopBar(
                 Spacer(modifier = Modifier.size(38.dp))
             }
         }
+    }
+}
+
+@Composable
+private fun TopBarLogo() {
+    Box(
+        modifier = Modifier
+            .size(38.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .background(
+                Brush.linearGradient(
+                    colors = listOf(
+                        FzPrimaryDark,
+                        Color(0xFF004D45),
+                    ),
+                ),
+            ),
+        contentAlignment = Alignment.Center,
+    ) {
+        Image(
+            painter = painterResource(R.drawable.ic_launcher_foreground),
+            contentDescription = null,
+            modifier = Modifier.size(38.dp),
+        )
     }
 }
 
