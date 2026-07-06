@@ -25,6 +25,7 @@
     <string name="btn_creating">Creando...</string>
     <string name="btn_sending">Enviando...</string>
     <string name="btn_send_invites">Enviar invitaciones</string>
+    <string name="btn_delete_account">Eliminar cuenta</string>
 
     <!-- Tabs / Navigation -->
     <string name="nav_events">Eventos</string>
@@ -215,6 +216,8 @@
     <string name="msg_delete_event_confirm">¿Estás seguro de que quieres eliminar este evento? Se notificará a todos los participantes.</string>
     <string name="title_leave_event">Salir del evento</string>
     <string name="msg_leave_event_confirm">¿Estás seguro de que quieres salir de este evento?</string>
+    <string name="title_delete_account">Eliminar cuenta</string>
+    <string name="msg_delete_account_confirm">¿Estás seguro de que quieres eliminar tu cuenta? Esta acción no se puede deshacer.</string>
     <string name="title_invitation">Invitación al Evento</string>
 
     <!-- Profile picture -->

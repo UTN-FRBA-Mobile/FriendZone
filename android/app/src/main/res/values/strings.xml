@@ -25,6 +25,7 @@
     <string name="btn_creating">Creating...</string>
     <string name="btn_sending">Sending...</string>
     <string name="btn_send_invites">Send invites</string>
+    <string name="btn_delete_account">Delete account</string>
 
     <!-- Tabs / Navigation -->
     <string name="nav_events">Events</string>
@@ -215,6 +216,8 @@
     <string name="msg_delete_event_confirm">Are you sure you want to delete this event? All participants will be notified.</string>
     <string name="title_leave_event">Leave Event</string>
     <string name="msg_leave_event_confirm">Are you sure you want to leave this event?</string>
+    <string name="title_delete_account">Delete account</string>
+    <string name="msg_delete_account_confirm">Are you sure you want to delete your account? This action cannot be undone.</string>
     <string name="title_invitation">Event Invitation</string>
 
     <!-- Profile picture -->
