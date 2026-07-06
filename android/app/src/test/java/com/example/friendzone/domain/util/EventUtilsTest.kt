@@ -102,7 +102,155 @@ class EventUtilsTest {
         assertEquals("Delayed", ParticipantStatus.Delayed(10).statusPillText())
     }
 
-    private fun testEvent(startsAt: Instant): Event = Event(
+    @Test
+    fun isPastEvent_cancelledOrCompleted_isAlwaysPast() {
+        val cancelled = testEvent(startsAt = now, status = EventStatus.CANCELLED)
+        val completed = testEvent(startsAt = now, status = EventStatus.COMPLETED)
+
+        assertTrue(cancelled.isPastEvent(pastThresholdHours = 48, now = now))
+        assertTrue(completed.isPastEvent(pastThresholdHours = 48, now = now))
+    }
+
+    @Test
+    fun isPastEvent_beforeStart_isNotPast() {
+        val event = testEvent(startsAt = now.plus(2, ChronoUnit.HOURS))
+
+        assertEquals(false, event.isPastEvent(pastThresholdHours = 48, now = now))
+    }
+
+    @Test
+    fun isPastEvent_afterThreshold_isPast() {
+        val event = testEvent(
+            startsAt = now.minus(50, ChronoUnit.HOURS),
+            status = EventStatus.SCHEDULED,
+        )
+
+        assertTrue(event.isPastEvent(pastThresholdHours = 48, now = now))
+    }
+
+    @Test
+    fun isLive_activeStatus_isLiveRegardlessOfTime() {
+        val futureEvent = testEvent(
+            startsAt = now.plus(5, ChronoUnit.HOURS),
+            status = EventStatus.ACTIVE,
+        )
+
+        assertTrue(futureEvent.isLive(now = now))
+    }
+
+    @Test
+    fun isLive_terminalStatus_isNotLive() {
+        val completed = testEvent(startsAt = now, status = EventStatus.COMPLETED)
+        val cancelled = testEvent(startsAt = now, status = EventStatus.CANCELLED)
+
+        assertEquals(false, completed.isLive(now = now))
+        assertEquals(false, cancelled.isLive(now = now))
+    }
+
+    @Test
+    fun isTrackingOpen_beforeLeadWindow_isClosed() {
+        val event = testEvent(
+            startsAt = now.plus(60, ChronoUnit.MINUTES),
+            trackingLeadMinutes = 30,
+        )
+
+        assertEquals(false, event.isTrackingOpen(now = now))
+    }
+
+    @Test
+    fun isTrackingOpen_insideLeadWindow_isOpen() {
+        val event = testEvent(
+            startsAt = now.plus(15, ChronoUnit.MINUTES),
+            trackingLeadMinutes = 30,
+        )
+
+        assertTrue(event.isTrackingOpen(now = now))
+    }
+
+    @Test
+    fun canPromptOrganizerToComplete_startedWithGuests_canPrompt() {
+        val event = testEvent(
+            startsAt = now.minus(10, ChronoUnit.MINUTES),
+            status = EventStatus.ACTIVE,
+        )
+
+        assertTrue(event.canPromptOrganizerToComplete(acceptedGuestCount = 2))
+    }
+
+    @Test
+    fun canPromptOrganizerToComplete_noGuests_cannotPrompt() {
+        val event = testEvent(
+            startsAt = now.minus(10, ChronoUnit.MINUTES),
+            status = EventStatus.ACTIVE,
+        )
+
+        assertEquals(false, event.canPromptOrganizerToComplete(acceptedGuestCount = 0))
+    }
+
+    @Test
+    fun haversineMeters_samePoint_isZero() {
+        assertEquals(0.0, haversineMeters(40.0, -74.0, 40.0, -74.0), 0.001)
+    }
+
+    @Test
+    fun formatRelativeTimeLabel_today_returnsTodayLabel() {
+        val startsAt = now.toString()
+        val (icon, label) = formatRelativeTimeLabel(startsAt, now = now)
+
+        assertEquals("🟢", icon)
+        assertEquals("Today", label)
+    }
+
+    @Test
+    fun formatRelativeTimeLabel_tomorrow_returnsTomorrowLabel() {
+        val startsAt = now.plus(1, ChronoUnit.DAYS).toString()
+        val (icon, label) = formatRelativeTimeLabel(startsAt, now = now)
+
+        assertEquals("🕐", icon)
+        assertEquals("Tomorrow", label)
+    }
+
+    @Test
+    fun formatRelativeTimeLabel_inRangeDays_returnsInDaysLabel() {
+        val startsAt = now.plus(3, ChronoUnit.DAYS).toString()
+        val (icon, label) = formatRelativeTimeLabel(startsAt, now = now)
+
+        assertEquals("🕐", icon)
+        assertEquals("In 3 days", label)
+    }
+
+    @Test
+    fun formatRelativeTimeLabel_yesterday_returnsYesterdayLabel() {
+        val startsAt = now.minus(1, ChronoUnit.DAYS).toString()
+        val (icon, label) = formatRelativeTimeLabel(startsAt, now = now)
+
+        assertEquals("📅", icon)
+        assertEquals("Yesterday", label)
+    }
+
+    @Test
+    fun formatRelativeTimeLabel_pastDays_returnsDaysAgoLabel() {
+        val startsAt = now.minus(4, ChronoUnit.DAYS).toString()
+        val (icon, label) = formatRelativeTimeLabel(startsAt, now = now)
+
+        assertEquals("📅", icon)
+        assertEquals("4 days ago", label)
+    }
+
+    @Test
+    fun formatRelativeTimeLabel_nextWeek_returnsNextWeekLabel() {
+        val startsAt = now.plus(10, ChronoUnit.DAYS).toString()
+        val (icon, label) = formatRelativeTimeLabel(startsAt, now = now)
+
+        assertEquals("📅", icon)
+        assertEquals("Next week", label)
+    }
+
+    private fun testEvent(
+        startsAt: Instant,
+        status: EventStatus = EventStatus.SCHEDULED,
+        trackingLeadMinutes: Int = 30,
+    ): Event = Event(
         id = "event-1",
         organizerId = "org-1",
         title = "Test Event",
@@ -110,9 +258,9 @@ class EventUtilsTest {
         latitude = 0.0,
         longitude = 0.0,
         address = null,
-        status = EventStatus.SCHEDULED,
+        status = status,
         arrivalThresholdM = 100,
-        trackingLeadMinutes = 30,
+        trackingLeadMinutes = trackingLeadMinutes,
         startsAt = startsAt.toString(),
         completedAt = null,
         createdAt = now.toString(),
