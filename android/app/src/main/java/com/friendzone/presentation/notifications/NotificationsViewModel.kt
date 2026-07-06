@@ -1,7 +1,9 @@
 package com.example.friendzone.presentation.notifications
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.friendzone.R
 import com.example.friendzone.data.notifications.InboxSyncCoordinator
 import com.example.friendzone.domain.model.AppNotificationType
 import com.example.friendzone.domain.model.FriendRequestStatus
@@ -14,6 +16,7 @@ import com.example.friendzone.domain.result.ApiResult
 import com.example.friendzone.domain.result.displayMessage
 import com.example.friendzone.domain.util.formatEventDate
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -39,6 +42,7 @@ class NotificationsViewModel @Inject constructor(
     private val friendRepository: FriendRepository,
     private val invitationRepository: InvitationRepository,
     inboxSyncCoordinator: InboxSyncCoordinator,
+    @ApplicationContext private val context: Context,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(NotificationsUiState())
     val uiState: StateFlow<NotificationsUiState> = _uiState.asStateFlow()
@@ -99,7 +103,7 @@ class NotificationsViewModel @Inject constructor(
                     _uiState.update {
                         it.copy(
                             isLoading = false,
-                            errorMessage = result.error.displayMessage(),
+                            errorMessage = result.error.displayMessage(context),
                         )
                     }
                 } else {
@@ -136,7 +140,7 @@ class NotificationsViewModel @Inject constructor(
                     _uiState.update {
                         it.copy(
                             items = previousItems,
-                            snackbarMessage = result.error.displayMessage(),
+                            snackbarMessage = result.error.displayMessage(context),
                         )
                     }
                 }
@@ -197,9 +201,9 @@ class NotificationsViewModel @Inject constructor(
                             items = state.items.filter { it.id != notification.id },
                             snackbarMessage = when {
                                 accept && notification.type == AppNotificationType.INVITATION_CREATED ->
-                                    "Joined event"
-                                accept -> "Accepted"
-                                else -> "Declined"
+                                    context.getString(R.string.msg_joined_event)
+                                accept -> context.getString(R.string.btn_accept)
+                                else -> context.getString(R.string.msg_declined)
                             },
                         )
                     }
@@ -211,7 +215,7 @@ class NotificationsViewModel @Inject constructor(
                     _uiState.update {
                         it.copy(
                             isActionLoading = false,
-                            snackbarMessage = result.error.displayMessage(),
+                            snackbarMessage = result.error.displayMessage(context),
                         )
                     }
                 }
@@ -224,11 +228,11 @@ class NotificationsViewModel @Inject constructor(
         AppNotificationType.INVITATION_CREATED -> {
             val organizer = notification.data["organizerDisplayName"]
             val startsAt = notification.data["eventStartsAt"]?.let(::formatEventDate)
-            listOfNotNull(organizer?.let { "From $it" }, startsAt).joinToString(" · ")
-                .ifBlank { null }
+            val fromLabel = context.getString(R.string.msg_invitation_from, organizer ?: "", startsAt ?: "")
+            fromLabel.ifBlank { null }
         }
         AppNotificationType.FRIEND_REQUEST -> {
-            notification.data["requesterDisplayName"]?.let { "From $it" }
+            notification.data["requesterDisplayName"]?.let { context.getString(R.string.msg_invitation_from, it, "") } // Simplified
         }
         else -> notification.data["eventTitle"]
     }

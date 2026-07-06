@@ -20,10 +20,11 @@
     <string name="btn_share">Compartí</string>
     <string name="btn_copy_link">Copiá el enlace</string>
     <string name="btn_ok">OK</string>
-    <string name="btn_view_live_map">🗺  Ver mapa en vivo</string>
+    <string name="btn_view_live_map"> Ver mapa en vivo</string>
     <string name="btn_leave_event">Salí del evento</string>
     <string name="btn_creating">Creando...</string>
     <string name="btn_sending">Enviando...</string>
+    <string name="btn_send_invites">Enviá las invitaciones</string>
 
     <!-- Tabs / Navigation -->
     <string name="nav_events">Eventos</string>
@@ -78,19 +79,21 @@
     <string name="label_description">Escribí una descripción</string>
     <string name="label_guest_limit">Límite de invitados</string>
     <string name="label_language">Elegí tu idioma</string>
+    <string name="label_system_default">Predeterminado del sistema</string>
     <string name="label_optional">(Opcional)</string>
     <string name="label_unlimited">Ilimitado</string>
     <string name="label_add_friend">Agregá un amigo</string>
     <string name="label_your_friends">Tus amigos</string>
     <string name="label_me">Yo</string>
     <string name="label_people">Personas</string>
+    <string name="label_unknown_location">Ubicación sin nombre</string>
     <string name="label_pending">Pendiente</string>
     <string name="label_accepted">Aceptado</string>
     <string name="label_rejected">Rechazado</string>
     <string name="label_remember_me">Recordarme</string>
     <string name="label_email">Email</string>
     <string name="label_username">Nombre de usuario</string>
-    <string name="label_display_name">Alias para mostrar</string>
+    <string name="label_display_name">Nombre para mostrar</string>
     <string name="label_confirm_password">Confirmá la contraseña</string>
     <string name="label_action">Acción</string>
     <string name="placeholder_email">vos@ejemplo.com</string>
@@ -99,9 +102,9 @@
 
     <!-- Auth -->
     <string name="login_tagline">Conectate con amigos cerca</string>
-    <string name="title_welcome_back">Que bueno verte</string>
+    <string name="title_welcome_back">Qué bueno verte</string>
     <string name="title_create_account">Creá tu cuenta</string>
-    <string name="action_forgot_password">¿Olvidaste tu contraseña?</string>
+    <string name="action_forgot_password">¿Te olvidaste?</string>
     <string name="prompt_no_account">¿No tenés cuenta?</string>
     <string name="prompt_have_account">¿Ya tenés cuenta?</string>
     <string name="link_privacy">Privacidad</string>
@@ -134,6 +137,7 @@
     <string name="msg_live_now">En vivo ahora</string>
     <string name="msg_completed">Completado</string>
     <string name="msg_cancelled">Cancelado</string>
+    <string name="msg_live_map_coming_soon">Mapa en vivo próximamente</string>
     <string name="msg_already_there">Ya estás ahí</string>
     <string name="msg_no_participants">Todavía no hay participantes</string>
     <string name="msg_not_accepted">No aceptado</string>
@@ -144,7 +148,20 @@
     <string name="msg_link_copied">Enlace copiado</string>
     <string name="msg_share_invite_text">¡Sumate conmigo a FriendZone! Agregame como amigo con este enlace: %1$s</string>
     <string name="label_your_link">TU ENLACE</string>
+    <string name="msg_all_friends_invited">Todos tus amigos ya fueron invitados.</string>
+    <string name="msg_already_invited">Ya invitados</string>
     <string name="msg_and_more">y %1$d más</string>
+    <string name="msg_joined_event">Te uniste al evento</string>
+    <string name="msg_declined">Rechazado</string>
+    <string name="msg_already_friends_with_name">Ya sos amigo de %1$s</string>
+    <string name="msg_invited_to_be_friend">%1$s ya te mandó una solicitud de amistad</string>
+    <string name="msg_friend_request_sent">Solicitud de amistad enviada</string>
+    <string name="msg_friend_added">Amigo agregado</string>
+    <string name="msg_request_rejected">Solicitud rechazada</string>
+    <string name="msg_invite_sent">Invitación enviada</string>
+    <string name="msg_invites_sent">%1$d invitaciones enviadas</string>
+    <string name="msg_invite_error_names">No se pudieron mandar las invitaciones: %1$s</string>
+    <string name="msg_invite_partial_success">Se mandaron %1$d invitaciones. Fallaron: %2$s</string>
 
     <!-- Dynamic Status and Time -->
     <string name="msg_confirmed_count">✓ %1$d Confirmados</string>
@@ -162,6 +179,29 @@
     <string name="msg_days_ago">Hace %1$d días</string>
     <string name="msg_next_week">Próxima semana</string>
 
+    <!-- Errors -->
+    <string name="error_session_expired">Tu sesión expiró. Volvé a ingresar.</string>
+    <string name="error_network">No se pudo conectar. Revisá tu internet e intentá de nuevo.</string>
+    <string name="error_unknown">Algo salió mal. Intentá de nuevo.</string>
+    <string name="error_email_registered">Este email ya está registrado. Probá ingresando.</string>
+    <string name="error_username_taken">Ese usuario ya existe. Elegí otro.</string>
+    <string name="error_invalid_credentials">El correo/usuario o la contraseña son incorrectos.</string>
+    <string name="error_invalid_email">Por favor, ingresá un email válido.</string>
+    <string name="error_password_length">La contraseña tiene que tener al menos 8 caracteres.</string>
+    <string name="error_username_format">El usuario solo puede tener letras, números y guiones bajos.</string>
+    <string name="error_username_length">El usuario tiene que tener al menos 3 caracteres.</string>
+    <string name="error_display_name_required">Por favor, ingresá tu nombre.</string>
+    <string name="error_invalid_info">Parte de la información que pusiste no es válida. Revisá el formulario.</string>
+    <string name="error_account_exists">Ya existe una cuenta con este email o usuario.</string>
+    <string name="error_server">Algo salió mal de nuestro lado. Aguantanos un cachito e intentá de nuevo.</string>
+    <string name="error_location_permission">Necesitás activar el permiso de ubicación para compartir tu posición</string>
+    <string name="error_no_location">No encontramos la dirección</string>
+    <string name="error_location_found">Ubicación encontrada</string>
+    <string name="error_image_type">Solo se permiten imágenes JPEG y PNG</string>
+    <string name="error_image_size">La imagen tiene que pesar 20 MB o menos</string>
+    <string name="error_all_fields_required">Todos los campos son obligatorios.</string>
+    <string name="error_passwords_dont_match">Las contraseñas no coinciden.</string>
+
     <!-- Content descriptions -->
     <string name="content_desc_add_friend">Agregá un amigo</string>
     <string name="content_desc_send_request">Enviá solicitud</string>
@@ -178,8 +218,9 @@
     <string name="title_invitation">Invitación al Evento</string>
 
     <!-- Profile picture -->
-    <string name="profile_picture_choose">Elegir una foto</string>
+    <string name="profile_picture_choose">Elegí una foto</string>
     <string name="profile_picture_remove">Borrar la foto</string>
     <string name="profile_picture_invalid_type">Solo se permiten imágenes JPEG y PNG</string>
     <string name="profile_picture_too_large">La foto de perfil debe ser de 20 MB o menos</string>
+    <string name="msg_footer_info">Desarrollado con ❤️ por el Equipo FriendZone\nUTN-FRBA 2025</string>
 </resources>

@@ -1,7 +1,9 @@
 package com.example.friendzone.presentation.profile
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.friendzone.R
 import com.example.friendzone.data.local.TokenManager
 import com.example.friendzone.domain.model.User
 import com.example.friendzone.domain.repository.AuthRepository
@@ -11,6 +13,7 @@ import com.example.friendzone.domain.repository.UserRepository
 import com.example.friendzone.domain.result.ApiResult
 import com.example.friendzone.domain.result.displayMessage
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -37,6 +40,7 @@ class ProfileViewModel @Inject constructor(
     private val friendRepository: FriendRepository,
     private val eventRepository: EventRepository,
     private val tokenManager: TokenManager,
+    @ApplicationContext private val context: Context,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(ProfileUiState())
     val uiState: StateFlow<ProfileUiState> = _uiState.asStateFlow()
@@ -83,7 +87,7 @@ class ProfileViewModel @Inject constructor(
             }
             is ApiResult.Error -> {
                 _uiState.update {
-                    it.copy(errorMessage = meResult.error.displayMessage())
+                    it.copy(errorMessage = meResult.error.displayMessage(context))
                 }
             }
             ApiResult.Loading -> Unit
@@ -127,7 +131,7 @@ class ProfileViewModel @Inject constructor(
                     _uiState.update {
                         it.copy(
                             isUpdatingLocationSharing = false,
-                            errorMessage = result.error.displayMessage(),
+                            errorMessage = result.error.displayMessage(context),
                         )
                     }
                 }
@@ -138,7 +142,7 @@ class ProfileViewModel @Inject constructor(
 
     fun showLocationPermissionRequired() {
         _uiState.update {
-            it.copy(errorMessage = "Location permission is required to share your location")
+            it.copy(errorMessage = context.getString(R.string.error_location_permission))
         }
     }
 
@@ -160,7 +164,7 @@ class ProfileViewModel @Inject constructor(
                     _uiState.update {
                         it.copy(
                             isUploadingPicture = false,
-                            errorMessage = result.error.displayMessage(),
+                            errorMessage = result.error.displayMessage(context),
                         )
                     }
                 }
@@ -183,7 +187,7 @@ class ProfileViewModel @Inject constructor(
                     _uiState.update {
                         it.copy(
                             isRemovingPicture = false,
-                            errorMessage = result.error.displayMessage(),
+                            errorMessage = result.error.displayMessage(context),
                         )
                     }
                 }
@@ -203,7 +207,7 @@ class ProfileViewModel @Inject constructor(
                     _uiState.update {
                         it.copy(
                             isLoggingOut = false,
-                            errorMessage = result.error.displayMessage(),
+                            errorMessage = result.error.displayMessage(context),
                         )
                     }
                 }

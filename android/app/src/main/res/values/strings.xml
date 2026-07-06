@@ -24,6 +24,7 @@
     <string name="btn_leave_event">Leave Event</string>
     <string name="btn_creating">Creating...</string>
     <string name="btn_sending">Sending...</string>
+    <string name="btn_send_invites">Send invites</string>
 
     <!-- Tabs / Navigation -->
     <string name="nav_events">Events</string>
@@ -78,12 +79,14 @@
     <string name="label_description">Description</string>
     <string name="label_guest_limit">Guest Limit</string>
     <string name="label_language">Language</string>
+    <string name="label_system_default">System Default</string>
     <string name="label_optional">(Optional)</string>
     <string name="label_unlimited">Unlimited</string>
     <string name="label_add_friend">Add friend</string>
     <string name="label_your_friends">Your friends</string>
     <string name="label_me">Me</string>
     <string name="label_people">People</string>
+    <string name="label_unknown_location">Unknown location</string>
     <string name="label_pending">Pending</string>
     <string name="label_accepted">Accepted</string>
     <string name="label_rejected">Rejected</string>
@@ -134,6 +137,7 @@
     <string name="msg_live_now">Live now</string>
     <string name="msg_completed">Completed</string>
     <string name="msg_cancelled">Cancelled</string>
+    <string name="msg_live_map_coming_soon">Live map coming soon</string>
     <string name="msg_already_there">You are already there</string>
     <string name="msg_no_participants">No participants yet</string>
     <string name="msg_not_accepted">Not accepted</string>
@@ -144,7 +148,20 @@
     <string name="msg_link_copied">Link copied</string>
     <string name="msg_share_invite_text">Join me on FriendZone! Add me as a friend with this link: %1$s</string>
     <string name="label_your_link">YOUR LINK</string>
+    <string name="msg_all_friends_invited">All friends have already been invited.</string>
+    <string name="msg_already_invited">Already invited</string>
     <string name="msg_and_more">and %1$d more</string>
+    <string name="msg_joined_event">Joined event</string>
+    <string name="msg_declined">Declined</string>
+    <string name="msg_already_friends_with_name">You are already friends with %1$s</string>
+    <string name="msg_invited_to_be_friend">%1$s already sent you a friend request</string>
+    <string name="msg_friend_request_sent">Friend request sent</string>
+    <string name="msg_friend_added">Friend added</string>
+    <string name="msg_request_rejected">Request rejected</string>
+    <string name="msg_invite_sent">Invite sent</string>
+    <string name="msg_invites_sent">%1$d invites sent</string>
+    <string name="msg_invite_error_names">Could not send invites: %1$s</string>
+    <string name="msg_invite_partial_success">Sent %1$d invite(s). Failed: %2$s</string>
 
     <!-- Dynamic Status and Time -->
     <string name="msg_confirmed_count">✓ %1$d Confirmed</string>
@@ -161,6 +178,29 @@
     <string name="msg_in_days">In %1$d days</string>
     <string name="msg_days_ago">%1$d days ago</string>
     <string name="msg_next_week">Next week</string>
+
+    <!-- Errors -->
+    <string name="error_session_expired">Your session has expired. Please sign in again.</string>
+    <string name="error_network">Unable to connect. Check your internet connection and try again.</string>
+    <string name="error_unknown">Something went wrong. Please try again.</string>
+    <string name="error_email_registered">This email is already registered. Try signing in instead.</string>
+    <string name="error_username_taken">That username is already taken. Please choose another one.</string>
+    <string name="error_invalid_credentials">Email/username or password is incorrect.</string>
+    <string name="error_invalid_email">Please enter a valid email address.</string>
+    <string name="error_password_length">Password must be at least 8 characters.</string>
+    <string name="error_username_format">Username can only contain letters, numbers, and underscores.</string>
+    <string name="error_username_length">Username must be at least 3 characters.</string>
+    <string name="error_display_name_required">Please enter your display name.</string>
+    <string name="error_invalid_info">Some of the information you entered is invalid. Please review the form and try again.</string>
+    <string name="error_account_exists">An account with this email or username already exists.</string>
+    <string name="error_server">Something went wrong on our end. Please try again in a moment.</string>
+    <string name="error_location_permission">Location permission is required to share your location</string>
+    <string name="error_no_location">No se encontro la direccion</string>
+    <string name="error_location_found">Ubicacion encontrada</string>
+    <string name="error_image_type">Only JPEG and PNG images are allowed</string>
+    <string name="error_image_size">Image must be 20 MB or smaller</string>
+    <string name="error_all_fields_required">All fields are required.</string>
+    <string name="error_passwords_dont_match">Passwords do not match.</string>
 
     <!-- Content descriptions -->
     <string name="content_desc_add_friend">Add friend</string>
@@ -182,4 +222,5 @@
     <string name="profile_picture_remove">Remove photo</string>
     <string name="profile_picture_invalid_type">Only JPEG and PNG images are allowed</string>
     <string name="profile_picture_too_large">Profile picture must be 20 MB or smaller</string>
+    <string name="msg_footer_info">Developed with ❤️ by the FriendZone Team\nUTN-FRBA 2025</string>
 </resources>

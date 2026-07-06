@@ -405,7 +405,7 @@ fun LiveMapPlaceholder(modifier: Modifier = Modifier) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text("🗺", style = MaterialTheme.typography.headlineLarge)
             Text(
-                "Live map coming soon",
+                stringResource(R.string.msg_live_map_coming_soon),
                 style = MaterialTheme.typography.bodyMedium,
                 color = TextSecondary,
             )

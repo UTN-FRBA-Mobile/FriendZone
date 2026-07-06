@@ -66,7 +66,7 @@ fun SettingsScreen(
             )
 
             LanguageOption(
-                label = "System Default",
+                label = stringResource(R.string.label_system_default),
                 flag = "⚙️",
                 selected = isSystemDefault,
                 onClick = {
@@ -174,7 +174,7 @@ private fun AppInfoFooter() {
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
-            "Developed with ❤️ by the FriendZone Team\nUTN-FRBA 2025",
+            stringResource(R.string.msg_footer_info),
             style = MaterialTheme.typography.bodySmall,
             color = TextSecondary.copy(alpha = 0.5f),
             textAlign = TextAlign.Center,

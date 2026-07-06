@@ -24,6 +24,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDefaults
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -31,6 +32,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
+import androidx.compose.material3.TimePickerDefaults
 import androidx.compose.material3.TimePickerDialog
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberTimePickerState
@@ -58,7 +60,10 @@ import com.example.friendzone.presentation.components.LocationPickerDialog
 import com.example.friendzone.presentation.components.StepProgressBar
 import com.example.friendzone.presentation.components.UploadZone
 import com.example.friendzone.ui.theme.Background
+import com.example.friendzone.ui.theme.BorderGray
 import com.example.friendzone.ui.theme.Primary
+import com.example.friendzone.ui.theme.Surface
+import com.example.friendzone.ui.theme.Surface2
 import com.example.friendzone.ui.theme.Success
 import com.example.friendzone.ui.theme.TextMain
 import com.example.friendzone.ui.theme.TextSecondary
@@ -255,13 +260,31 @@ fun CreateEventStep1Screen(
                 }
             },
         ) {
-            DatePicker(state = datePickerState)
+            DatePicker(
+                state = datePickerState,
+                colors = DatePickerDefaults.colors(
+                    titleContentColor = TextSecondary,
+                    headlineContentColor = TextMain,
+                    weekdayContentColor = TextSecondary,
+                    subheadContentColor = TextSecondary,
+                    yearContentColor = TextSecondary,
+                    currentYearContentColor = TextMain,
+                    selectedYearContentColor = Color.White,
+                    selectedYearContainerColor = TextMain,
+                    dayContentColor = TextMain,
+                    selectedDayContentColor = Color.White,
+                    selectedDayContainerColor = TextMain,
+                    todayContentColor = TextMain,
+                    todayDateBorderColor = TextMain
+                )
+            )
         }
     }
 
     if (showTimePicker) {
         TimePickerDialog(
             onDismissRequest = { showTimePicker = false },
+            containerColor = Color.White,
             title = { Text(stringResource(R.string.label_time), color = TextMain, style = MaterialTheme.typography.titleMedium) },
             confirmButton = {
                 TextButton(
@@ -281,7 +304,24 @@ fun CreateEventStep1Screen(
                 }
             },
         ) {
-            TimePicker(state = timePickerState)
+            TimePicker(
+                state = timePickerState,
+                colors = TimePickerDefaults.colors(
+                    clockDialColor = Surface2,
+                    clockDialSelectedContentColor = Color.White,
+                    clockDialUnselectedContentColor = TextMain,
+                    selectorColor = TextMain,
+                    periodSelectorBorderColor = BorderGray,
+                    periodSelectorSelectedContainerColor = Surface2,
+                    periodSelectorUnselectedContainerColor = Surface,
+                    periodSelectorSelectedContentColor = TextMain,
+                    periodSelectorUnselectedContentColor = TextSecondary,
+                    timeSelectorSelectedContainerColor = Surface2,
+                    timeSelectorUnselectedContainerColor = Surface2,
+                    timeSelectorSelectedContentColor = TextMain,
+                    timeSelectorUnselectedContentColor = TextMain
+                )
+            )
         }
     }
 }

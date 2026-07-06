@@ -23,14 +23,16 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.friendzone.R
 import com.example.friendzone.presentation.components.FriendZonePrimaryButton
 import com.example.friendzone.presentation.components.InviteFriendChip
 import com.example.friendzone.presentation.components.PillBadge
-import com.example.friendzone.ui.theme.FzBorder
-import com.example.friendzone.ui.theme.FzInk
-import com.example.friendzone.ui.theme.FzInk3
+import com.example.friendzone.ui.theme.BorderGray
+import com.example.friendzone.ui.theme.TextMain
+import com.example.friendzone.ui.theme.TextSecondary
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -72,31 +74,31 @@ fun InviteGuestsBottomSheet(
                 .padding(bottom = 24.dp),
         ) {
             Text(
-                "Invite friends",
+                stringResource(R.string.header_invite_friends),
                 style = MaterialTheme.typography.titleMedium,
-                color = FzInk,
+                color = TextMain,
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                "Tap friends to invite them to this event",
+                stringResource(R.string.create_invite_hint),
                 style = MaterialTheme.typography.bodySmall,
-                color = FzInk3,
+                color = TextSecondary,
             )
             Spacer(modifier = Modifier.height(16.dp))
 
             when {
                 inviteFriends.isEmpty() && pendingInvites.isEmpty() -> {
                     Text(
-                        "No friends yet. Add friends from the Friends tab.",
+                        stringResource(R.string.create_no_friends_hint),
                         style = MaterialTheme.typography.bodyMedium,
-                        color = FzInk3,
+                        color = TextSecondary,
                     )
                 }
                 inviteFriends.isEmpty() -> {
                     Text(
-                        "All friends have already been invited.",
+                        stringResource(R.string.msg_all_friends_invited),
                         style = MaterialTheme.typography.bodyMedium,
-                        color = FzInk3,
+                        color = TextSecondary,
                     )
                 }
                 else -> {
@@ -115,13 +117,13 @@ fun InviteGuestsBottomSheet(
             if (pendingInvites.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(20.dp))
                 Text(
-                    "Already invited",
+                    stringResource(R.string.msg_already_invited),
                     style = MaterialTheme.typography.labelLarge,
-                    color = FzInk,
+                    color = TextMain,
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 pendingInvites.forEach { guest ->
-                    HorizontalDivider(color = FzBorder)
+                    HorizontalDivider(color = BorderGray)
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -131,7 +133,7 @@ fun InviteGuestsBottomSheet(
                         Text(
                             guest.displayName,
                             style = MaterialTheme.typography.bodyMedium,
-                            color = FzInk,
+                            color = TextMain,
                             modifier = Modifier.weight(1f),
                         )
                         PillBadge(guest.statusLabel, guest.pillVariant)
@@ -141,7 +143,7 @@ fun InviteGuestsBottomSheet(
 
             Spacer(modifier = Modifier.height(24.dp))
             FriendZonePrimaryButton(
-                text = if (isLoading) "Sending..." else "Send invites",
+                text = if (isLoading) stringResource(R.string.btn_sending) else stringResource(R.string.btn_send_invites),
                 onClick = { viewModel.sendInvites() },
                 enabled = selectedIds.isNotEmpty(),
                 isLoading = isLoading,

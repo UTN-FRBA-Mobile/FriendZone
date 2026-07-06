@@ -3,6 +3,7 @@ package com.example.friendzone.data.location
 import android.content.Context
 import android.location.Address
 import android.location.Geocoder
+import com.example.friendzone.R
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withTimeoutOrNull
@@ -76,7 +77,7 @@ class GeocoderHelper @Inject constructor(
             address.subThoroughfare,
             address.locality,
             address.adminArea,
-        ).joinToString(", ").ifBlank { "Ubicacion sin nombre" }
+        ).joinToString(", ").ifBlank { context.getString(R.string.label_unknown_location) }
     }
 
     private companion object {

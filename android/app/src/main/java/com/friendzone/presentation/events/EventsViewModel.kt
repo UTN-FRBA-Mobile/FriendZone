@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.friendzone.BuildConfig
+import com.example.friendzone.R
 import com.example.friendzone.data.remote.websocket.EventSocketManager
 import com.example.friendzone.data.remote.websocket.SocketEventType
 import com.example.friendzone.domain.model.Event
@@ -144,12 +145,12 @@ class EventsViewModel @Inject constructor(
                 is ApiResult.Success -> {
                     _isInvitationActionLoading.value = false
                     _selectedInvitation.value = null
-                    _snackbarMessage.value = if (accept) "Joined event" else "Declined"
+                    _snackbarMessage.value = if (accept) context.getString(R.string.msg_joined_event) else context.getString(R.string.msg_declined)
                     loadEvents()
                 }
                 is ApiResult.Error -> {
                     _isInvitationActionLoading.value = false
-                    _snackbarMessage.value = result.error.displayMessage()
+                    _snackbarMessage.value = result.error.displayMessage(context)
                 }
                 ApiResult.Loading -> Unit
             }
@@ -204,7 +205,7 @@ class EventsViewModel @Inject constructor(
 
         if (eventsResult is ApiResult.Error) {
             if (_uiState.value !is EventsUiState.Data) {
-                _uiState.value = EventsUiState.Error(eventsResult.error.displayMessage())
+                _uiState.value = EventsUiState.Error(eventsResult.error.displayMessage(context))
             }
             return
         }
@@ -320,11 +321,11 @@ class EventsViewModel @Inject constructor(
             _actionState.value = EventActionState.Loading
             when (val result = eventRepository.delete(eventId)) {
                 is ApiResult.Success -> {
-                    _actionState.value = EventActionState.Success("Event deleted")
+                    _actionState.value = EventActionState.Success(context.getString(R.string.msg_event_deleted))
                     loadEvents()
                 }
                 is ApiResult.Error -> {
-                    _actionState.value = EventActionState.Error(result.error.displayMessage())
+                    _actionState.value = EventActionState.Error(result.error.displayMessage(context))
                 }
                 ApiResult.Loading -> Unit
             }
@@ -336,11 +337,11 @@ class EventsViewModel @Inject constructor(
             _actionState.value = EventActionState.Loading
             when (val result = eventRepository.leave(eventId)) {
                 is ApiResult.Success -> {
-                    _actionState.value = EventActionState.Success("Left event")
+                    _actionState.value = EventActionState.Success(context.getString(R.string.msg_left_event))
                     loadEvents()
                 }
                 is ApiResult.Error -> {
-                    _actionState.value = EventActionState.Error(result.error.displayMessage())
+                    _actionState.value = EventActionState.Error(result.error.displayMessage(context))
                 }
                 ApiResult.Loading -> Unit
             }

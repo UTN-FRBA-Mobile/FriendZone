@@ -169,7 +169,7 @@ class EventDetailViewModel @Inject constructor(
                     _actionMessage.value = context.getString(R.string.msg_completed)
                     loadDetail()
                 }
-                is ApiResult.Error -> _actionMessage.value = result.error.displayMessage()
+                is ApiResult.Error -> _actionMessage.value = result.error.displayMessage(context)
                 ApiResult.Loading -> Unit
             }
         }
@@ -191,7 +191,7 @@ class EventDetailViewModel @Inject constructor(
                     _actionMessage.value = context.getString(R.string.msg_cancelled)
                     loadDetail()
                 }
-                is ApiResult.Error -> _actionMessage.value = result.error.displayMessage()
+                is ApiResult.Error -> _actionMessage.value = result.error.displayMessage(context)
                 ApiResult.Loading -> Unit
             }
         }
@@ -252,7 +252,7 @@ class EventDetailViewModel @Inject constructor(
         when (val eventResult = eventRepository.getById(eventId)) {
             is ApiResult.Error -> {
                 if (!hadData) {
-                    _uiState.value = EventDetailUiState.Error(eventResult.error.displayMessage())
+                    _uiState.value = EventDetailUiState.Error(eventResult.error.displayMessage(context))
                 }
             }
             is ApiResult.Success -> {
@@ -262,7 +262,7 @@ class EventDetailViewModel @Inject constructor(
                     is ApiResult.Error -> {
                         if (!hadData) {
                             _uiState.value = EventDetailUiState.Error(
-                                participantsResult.error.displayMessage(),
+                                participantsResult.error.displayMessage(context),
                             )
                         }
                     }
@@ -299,7 +299,7 @@ class EventDetailViewModel @Inject constructor(
                     }
                     is ApiResult.Error -> {
                         _isSharingLocation.value = false
-                        _sharingMessage.value = result.error.displayMessage()
+                        _sharingMessage.value = result.error.displayMessage(context)
                     }
                     ApiResult.Loading -> Unit
                 }
@@ -329,7 +329,7 @@ class EventDetailViewModel @Inject constructor(
         if (locationJob?.isActive == true) return
         if (!locationTracker.hasPermission()) {
             if (notifyIfNoPermission) {
-                _sharingMessage.value = context.getString(R.string.msg_share_location)
+                _sharingMessage.value = context.getString(R.string.error_location_permission)
             }
             return
         }
@@ -407,14 +407,14 @@ class EventDetailViewModel @Inject constructor(
                 failedNames.isEmpty() -> {
                     _selectedInviteFriendIds.value = emptySet()
                     InviteSubmitState.Success(
-                        if (successCount == 1) "Invite sent" else "$successCount invites sent",
+                        if (successCount == 1) context.getString(R.string.msg_invite_sent) else context.getString(R.string.msg_invites_sent, successCount),
                     )
                 }
                 successCount == 0 -> InviteSubmitState.Error(
-                    "Could not send invites: ${failedNames.joinToString()}",
+                    context.getString(R.string.msg_invite_error_names, failedNames.joinToString()),
                 )
                 else -> InviteSubmitState.Success(
-                    "Sent $successCount invite(s). Failed: ${failedNames.joinToString()}",
+                    context.getString(R.string.msg_invite_partial_success, successCount, failedNames.joinToString()),
                 )
             }
         }
@@ -443,7 +443,7 @@ class EventDetailViewModel @Inject constructor(
                     _deleteEventState.value = EventActionState.Success(context.getString(R.string.msg_event_deleted))
                 }
                 is ApiResult.Error -> {
-                    _deleteEventState.value = EventActionState.Error(result.error.displayMessage())
+                    _deleteEventState.value = EventActionState.Error(result.error.displayMessage(context))
                 }
                 ApiResult.Loading -> Unit
             }
@@ -458,7 +458,7 @@ class EventDetailViewModel @Inject constructor(
                     _leaveEventState.value = EventActionState.Success(context.getString(R.string.msg_left_event))
                 }
                 is ApiResult.Error -> {
-                    _leaveEventState.value = EventActionState.Error(result.error.displayMessage())
+                    _leaveEventState.value = EventActionState.Error(result.error.displayMessage(context))
                 }
                 ApiResult.Loading -> Unit
             }

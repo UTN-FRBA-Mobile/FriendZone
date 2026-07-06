@@ -1,11 +1,14 @@
 package com.example.friendzone.presentation.auth
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.friendzone.R
 import com.example.friendzone.domain.repository.AuthRepository
 import com.example.friendzone.domain.result.ApiResult
 import com.example.friendzone.domain.result.displayMessage
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -25,6 +28,7 @@ data class RegisterUiState(
 @HiltViewModel
 class RegisterViewModel @Inject constructor(
     private val authRepository: AuthRepository,
+    @ApplicationContext private val context: Context,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(RegisterUiState())
     val uiState: StateFlow<RegisterUiState> = _uiState.asStateFlow()
@@ -73,7 +77,7 @@ class RegisterViewModel @Inject constructor(
                 is ApiResult.Error -> {
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
-                        errorMessage = result.error.displayMessage(),
+                        errorMessage = result.error.displayMessage(context),
                     )
                 }
                 ApiResult.Loading -> Unit
@@ -85,22 +89,22 @@ class RegisterViewModel @Inject constructor(
         if (state.email.isBlank() || state.username.isBlank() ||
             state.displayName.isBlank() || state.password.isBlank()
         ) {
-            return "All fields are required."
+            return context.getString(R.string.error_all_fields_required)
         }
         if (!state.email.contains("@")) {
-            return "Enter a valid email address."
+            return context.getString(R.string.error_invalid_email)
         }
         if (!USERNAME_REGEX.matches(state.username)) {
-            return "Username may only contain letters, numbers, and underscores."
+            return context.getString(R.string.error_username_format)
         }
         if (state.username.length < 3) {
-            return "Username must be at least 3 characters."
+            return context.getString(R.string.error_username_length)
         }
         if (state.password.length < 8) {
-            return "Password must be at least 8 characters."
+            return context.getString(R.string.error_password_length)
         }
         if (state.password != state.confirmPassword) {
-            return "Passwords do not match."
+            return context.getString(R.string.error_passwords_dont_match)
         }
         return null
     }

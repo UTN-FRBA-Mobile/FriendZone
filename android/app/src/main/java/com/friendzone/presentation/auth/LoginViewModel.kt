@@ -1,11 +1,14 @@
 package com.example.friendzone.presentation.auth
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.friendzone.R
 import com.example.friendzone.domain.repository.AuthRepository
 import com.example.friendzone.domain.result.ApiResult
 import com.example.friendzone.domain.result.displayMessage
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -22,6 +25,7 @@ data class LoginUiState(
 @HiltViewModel
 class LoginViewModel @Inject constructor(
     private val authRepository: AuthRepository,
+    @ApplicationContext private val context: Context,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(LoginUiState())
     val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
@@ -37,7 +41,7 @@ class LoginViewModel @Inject constructor(
     fun login() {
         val state = _uiState.value
         if (state.emailOrUsername.isBlank() || state.password.isBlank()) {
-            _uiState.value = state.copy(errorMessage = "Email/username and password are required.")
+            _uiState.value = state.copy(errorMessage = context.getString(R.string.error_all_fields_required))
             return
         }
 
@@ -52,7 +56,7 @@ class LoginViewModel @Inject constructor(
                 is ApiResult.Error -> {
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
-                        errorMessage = result.error.displayMessage(),
+                        errorMessage = result.error.displayMessage(context),
                     )
                 }
                 ApiResult.Loading -> Unit

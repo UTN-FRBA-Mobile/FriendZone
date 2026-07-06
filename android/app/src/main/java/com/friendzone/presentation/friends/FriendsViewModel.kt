@@ -1,7 +1,9 @@
 package com.example.friendzone.presentation.friends
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.friendzone.R
 import com.example.friendzone.domain.model.FriendRequestStatus
 import com.example.friendzone.domain.model.User
 import com.example.friendzone.domain.repository.FriendRepository
@@ -9,6 +11,7 @@ import com.example.friendzone.domain.repository.UserRepository
 import com.example.friendzone.domain.result.ApiResult
 import com.example.friendzone.domain.result.displayMessage
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -41,6 +44,7 @@ data class FriendsUiState(
 class FriendsViewModel @Inject constructor(
     private val friendRepository: FriendRepository,
     private val userRepository: UserRepository,
+    @ApplicationContext private val context: Context,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(FriendsUiState())
     val uiState: StateFlow<FriendsUiState> = _uiState.asStateFlow()
@@ -90,7 +94,7 @@ class FriendsViewModel @Inject constructor(
             is ApiResult.Success -> result.data
             is ApiResult.Error -> {
                 if (cachedFriends == null) {
-                    showMessage(result.error.displayMessage())
+                    showMessage(result.error.displayMessage(context))
                 }
                 cachedFriends.orEmpty()
             }
@@ -100,7 +104,7 @@ class FriendsViewModel @Inject constructor(
             is ApiResult.Success -> result.data
             is ApiResult.Error -> {
                 if (cachedRequests == null && cachedFriends == null) {
-                    showMessage(result.error.displayMessage())
+                    showMessage(result.error.displayMessage(context))
                 }
                 cachedRequests.orEmpty()
             }
@@ -137,12 +141,12 @@ class FriendsViewModel @Inject constructor(
                     when {
                         alreadyFriend -> {
                             _uiState.value = _uiState.value.copy(
-                                lookupResult = LookupResult.Error("Already friends"),
+                                lookupResult = LookupResult.Error(context.getString(R.string.msg_already_friends_with_name, user.displayName)),
                             )
                         }
                         pendingFromUser -> {
                             _uiState.value = _uiState.value.copy(
-                                lookupResult = LookupResult.Error("This user already sent you a request"),
+                                lookupResult = LookupResult.Error(context.getString(R.string.msg_invited_to_be_friend, user.displayName)),
                             )
                         }
                         else -> {
@@ -171,13 +175,13 @@ class FriendsViewModel @Inject constructor(
                         isSendingRequest = false,
                         lookupResult = null,
                         searchQuery = "",
-                        snackbarMessage = "Friend request sent",
+                        snackbarMessage = context.getString(R.string.msg_friend_request_sent),
                     )
                 }
                 is ApiResult.Error -> {
                     _uiState.value = _uiState.value.copy(
                         isSendingRequest = false,
-                        snackbarMessage = result.error.displayMessage(),
+                        snackbarMessage = result.error.displayMessage(context),
                     )
                 }
                 ApiResult.Loading -> Unit
@@ -190,10 +194,10 @@ class FriendsViewModel @Inject constructor(
             val status = if (accept) FriendRequestStatus.ACCEPTED else FriendRequestStatus.REJECTED
             when (val result = friendRepository.respondToRequest(requestId, status)) {
                 is ApiResult.Success -> {
-                    showMessage(if (accept) "Friend added" else "Request rejected")
+                    showMessage(if (accept) context.getString(R.string.msg_friend_added) else context.getString(R.string.msg_request_rejected))
                     loadAllInternal(showFullLoading = false)
                 }
-                is ApiResult.Error -> showMessage(result.error.displayMessage())
+                is ApiResult.Error -> showMessage(result.error.displayMessage(context))
                 ApiResult.Loading -> Unit
             }
         }
