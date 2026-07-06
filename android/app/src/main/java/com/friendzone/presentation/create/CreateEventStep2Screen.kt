@@ -33,10 +33,10 @@ import com.example.friendzone.presentation.components.FriendZonePrimaryButton
 import com.example.friendzone.presentation.components.FriendZonePullToRefreshBox
 import com.example.friendzone.presentation.components.InviteFriendChip
 import com.example.friendzone.presentation.components.StepProgressBar
-import com.example.friendzone.ui.theme.FzBackground
-import com.example.friendzone.ui.theme.FzPrimary
-import com.example.friendzone.ui.theme.FzTextMain
-import com.example.friendzone.ui.theme.FzTextSecondary
+import com.example.friendzone.ui.theme.Background
+import com.example.friendzone.ui.theme.Primary
+import com.example.friendzone.ui.theme.TextMain
+import com.example.friendzone.ui.theme.TextSecondary
 
 @Composable
 fun CreateEventStep2Screen(
@@ -81,7 +81,7 @@ fun CreateEventStep2Screen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(FzBackground)
+                    .background(Background)
                     .verticalScroll(rememberScrollState()),
             ) {
                     CreateEventHeader(title = stringResource(R.string.header_create_event), onBackClick = onBack)
@@ -95,20 +95,20 @@ fun CreateEventStep2Screen(
                     Text(
                         stringResource(R.string.header_invite_friends),
                         style = MaterialTheme.typography.labelLarge,
-                        color = FzTextMain,
+                        color = TextMain,
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         stringResource(R.string.create_invite_hint),
                         style = MaterialTheme.typography.bodySmall,
-                        color = FzTextSecondary,
+                        color = TextSecondary,
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     if (friends.isEmpty()) {
                         Text(
                             stringResource(R.string.create_no_friends_hint),
                             style = MaterialTheme.typography.bodyMedium,
-                            color = FzTextSecondary,
+                            color = TextSecondary,
                         )
                     } else {
                         LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -123,7 +123,7 @@ fun CreateEventStep2Screen(
                     }
                     Spacer(modifier = Modifier.height(32.dp))
                     FriendZonePrimaryButton(
-                        text = if (isLoading) "Creating..." else "Create Event",
+                        text = if (isLoading) stringResource(R.string.btn_creating) else stringResource(R.string.btn_create_event),
                         onClick = { viewModel.createEvent() },
                         enabled = !isLoading,
                     )
@@ -136,7 +136,7 @@ fun CreateEventStep2Screen(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center,
             ) {
-                CircularProgressIndicator(color = FzPrimary)
+                CircularProgressIndicator(color = Primary)
             }
         }
         SnackbarHost(

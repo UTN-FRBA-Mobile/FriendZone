@@ -57,11 +57,11 @@ import com.example.friendzone.presentation.components.FriendZoneTextField
 import com.example.friendzone.presentation.components.LocationPickerDialog
 import com.example.friendzone.presentation.components.StepProgressBar
 import com.example.friendzone.presentation.components.UploadZone
-import com.example.friendzone.ui.theme.FzBackground
-import com.example.friendzone.ui.theme.FzPrimary
-import com.example.friendzone.ui.theme.FzSuccess
-import com.example.friendzone.ui.theme.FzTextMain
-import com.example.friendzone.ui.theme.FzTextSecondary
+import com.example.friendzone.ui.theme.Background
+import com.example.friendzone.ui.theme.Primary
+import com.example.friendzone.ui.theme.Success
+import com.example.friendzone.ui.theme.TextMain
+import com.example.friendzone.ui.theme.TextSecondary
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
@@ -109,7 +109,7 @@ fun CreateEventStep1Screen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(FzBackground)
+            .background(Background)
             .verticalScroll(rememberScrollState()),
     ) {
         CreateEventHeader(title = stringResource(R.string.header_create_event), onBackClick = onBack)
@@ -154,7 +154,7 @@ fun CreateEventStep1Screen(
                     modifier = Modifier
                         .size(48.dp)
                         .clip(RoundedCornerShape(10.dp))
-                        .background(if (draft.latitude != null) FzSuccess else FzPrimary)
+                        .background(if (draft.latitude != null) Success else Primary)
                         .clickable { showLocationPicker = true },
                     contentAlignment = Alignment.Center,
                 ) {
@@ -246,12 +246,12 @@ fun CreateEventStep1Screen(
                         showDatePicker = false
                     },
                 ) {
-                    Text("OK", color = FzPrimary)
+                    Text(stringResource(R.string.btn_ok), color = TextMain)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDatePicker = false }) {
-                    Text(stringResource(R.string.btn_cancel), color = FzTextSecondary)
+                    Text(stringResource(R.string.btn_cancel), color = TextSecondary)
                 }
             },
         ) {
@@ -262,7 +262,7 @@ fun CreateEventStep1Screen(
     if (showTimePicker) {
         TimePickerDialog(
             onDismissRequest = { showTimePicker = false },
-            title = { Text(stringResource(R.string.label_time)) },
+            title = { Text(stringResource(R.string.label_time), color = TextMain, style = MaterialTheme.typography.titleMedium) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -272,12 +272,12 @@ fun CreateEventStep1Screen(
                         showTimePicker = false
                     },
                 ) {
-                    Text("OK", color = FzPrimary)
+                    Text(stringResource(R.string.btn_ok), color = TextMain)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showTimePicker = false }) {
-                    Text(stringResource(R.string.btn_cancel), color = FzTextSecondary)
+                    Text(stringResource(R.string.btn_cancel), color = TextSecondary)
                 }
             },
         ) {

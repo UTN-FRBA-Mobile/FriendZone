@@ -44,6 +44,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -60,12 +61,12 @@ import com.example.friendzone.presentation.components.FriendZonePullToRefreshBox
 import com.example.friendzone.presentation.components.FriendZoneTopBar
 import com.example.friendzone.presentation.components.PillBadge
 import com.example.friendzone.presentation.components.PillVariant
-import com.example.friendzone.ui.theme.FzBackground
-import com.example.friendzone.ui.theme.FzBorderGray
-import com.example.friendzone.ui.theme.FzPrimary
-import com.example.friendzone.ui.theme.FzTextMain
-import com.example.friendzone.ui.theme.FzTextSecondary
-import com.example.friendzone.ui.theme.FzSurface
+import com.example.friendzone.ui.theme.Background
+import com.example.friendzone.ui.theme.BorderGray
+import com.example.friendzone.ui.theme.Primary
+import com.example.friendzone.ui.theme.TextMain
+import com.example.friendzone.ui.theme.TextSecondary
+import com.example.friendzone.ui.theme.Surface
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -181,7 +182,7 @@ fun EventsScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(FzBackground),
+                .background(Background),
         ) {
             FriendZoneTopBar(
                 title = stringResource(R.string.header_events),
@@ -210,7 +211,7 @@ fun EventsScreen(
                                 .padding(48.dp),
                             contentAlignment = Alignment.Center,
                         ) {
-                            CircularProgressIndicator(color = FzPrimary)
+                            CircularProgressIndicator(color = Primary)
                         }
                     }
                     is EventsUiState.Error -> {
@@ -254,9 +255,9 @@ fun EventsScreen(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(16.dp),
-            containerColor = FzPrimary,
+            containerColor = Primary,
         ) {
-            Icon(Icons.Default.Add, contentDescription = stringResource(R.string.header_create_event), tint = androidx.compose.ui.graphics.Color.White)
+            Icon(Icons.Default.Add, contentDescription = stringResource(R.string.header_create_event), tint = Color.White)
         }
 
         SnackbarHost(
@@ -384,8 +385,8 @@ private fun EventsTabChip(
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(12.dp))
-            .background(if (selected) FzPrimary else FzSurface)
-            .border(1.dp, if (selected) FzPrimary else FzBorderGray, RoundedCornerShape(12.dp))
+            .background(if (selected) Primary else Surface)
+            .border(1.dp, if (selected) Primary else BorderGray, RoundedCornerShape(12.dp))
             .clickable(onClick = onClick)
             .padding(vertical = 10.dp),
         contentAlignment = Alignment.Center,
@@ -393,7 +394,7 @@ private fun EventsTabChip(
         Text(
             label,
             style = MaterialTheme.typography.labelMedium,
-            color = if (selected) androidx.compose.ui.graphics.Color.White else FzTextSecondary,
+            color = if (selected) Color.White else TextSecondary,
         )
     }
 }
@@ -408,17 +409,17 @@ private fun InvitationRow(
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 6.dp)
             .clip(RoundedCornerShape(16.dp))
-            .background(FzSurface)
-            .border(1.dp, FzBorderGray, RoundedCornerShape(16.dp))
+            .background(Surface)
+            .border(1.dp, BorderGray, RoundedCornerShape(16.dp))
             .clickable(onClick = onClick)
             .padding(16.dp),
     ) {
-        Text(invitation.eventTitle, style = MaterialTheme.typography.titleMedium, color = FzTextMain)
+        Text(invitation.eventTitle, style = MaterialTheme.typography.titleMedium, color = TextMain)
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            "From ${invitation.organizerDisplayName} · ${formatEventDate(invitation.eventStartsAt)}",
+            stringResource(R.string.msg_invitation_from, invitation.organizerDisplayName, formatEventDate(invitation.eventStartsAt)),
             style = MaterialTheme.typography.bodySmall,
-            color = FzTextSecondary,
+            color = TextSecondary,
         )
         Spacer(modifier = Modifier.height(8.dp))
         PillBadge(stringResource(R.string.tab_invites), PillVariant.Light)
@@ -438,18 +439,18 @@ fun InvitationActionSheet(
             .padding(horizontal = 16.dp)
             .padding(bottom = 24.dp),
     ) {
-        Text(stringResource(R.string.tab_invites), style = MaterialTheme.typography.titleMedium, color = FzTextMain)
+        Text(stringResource(R.string.tab_invites), style = MaterialTheme.typography.titleMedium, color = TextMain)
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            "You have been invited to \"${invitation.eventTitle}\"",
+            stringResource(R.string.msg_invitation_body, invitation.eventTitle),
             style = MaterialTheme.typography.bodyMedium,
-            color = FzTextSecondary,
+            color = TextSecondary,
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            "From ${invitation.organizerDisplayName} · ${formatEventDate(invitation.eventStartsAt)}",
+            stringResource(R.string.msg_invitation_from, invitation.organizerDisplayName, formatEventDate(invitation.eventStartsAt)),
             style = MaterialTheme.typography.bodySmall,
-            color = FzTextSecondary,
+            color = TextSecondary,
         )
         Spacer(modifier = Modifier.height(24.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -473,7 +474,7 @@ private fun EmptyTabMessage(message: String) {
     Text(
         message,
         style = MaterialTheme.typography.bodyMedium,
-        color = FzTextSecondary,
+        color = TextSecondary,
         modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
     )
 }
@@ -489,9 +490,9 @@ private fun ColumnError(
         contentAlignment = Alignment.Center,
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(message, style = MaterialTheme.typography.bodyMedium, color = FzTextSecondary)
+            Text(message, style = MaterialTheme.typography.bodyMedium, color = TextSecondary)
             TextButton(onClick = onRetry) {
-                Text(stringResource(R.string.btn_retry), color = FzPrimary)
+                Text(stringResource(R.string.btn_retry), color = Primary)
             }
         }
     }

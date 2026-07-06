@@ -1,8 +1,10 @@
 package com.example.friendzone.presentation.events
 
+import android.content.Context
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.friendzone.R
 import com.example.friendzone.data.location.LocationTracker
 import com.example.friendzone.data.remote.websocket.EventSocketManager
 import com.example.friendzone.data.remote.websocket.SocketEventType
@@ -28,6 +30,7 @@ import com.example.friendzone.domain.util.resolveApiAssetUrl
 import com.example.friendzone.presentation.components.FriendRowUi
 import com.example.friendzone.presentation.components.PillVariant
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -104,6 +107,7 @@ class EventDetailViewModel @Inject constructor(
     private val friendRepository: FriendRepository,
     private val invitationRepository: InvitationRepository,
     private val locationTracker: LocationTracker,
+    @ApplicationContext private val context: Context,
 ) : ViewModel() {
     private val eventId: String = checkNotNull(savedStateHandle["eventId"])
     private val openMapOnLoad: Boolean = savedStateHandle.get<Boolean>("openMap") ?: false
@@ -162,7 +166,7 @@ class EventDetailViewModel @Inject constructor(
                 is ApiResult.Success -> {
                     dismissedCompletePrompts.add(eventId)
                     _showCompletePrompt.value = false
-                    _actionMessage.value = "Event marked as completed"
+                    _actionMessage.value = context.getString(R.string.msg_completed)
                     loadDetail()
                 }
                 is ApiResult.Error -> _actionMessage.value = result.error.displayMessage()
@@ -184,7 +188,7 @@ class EventDetailViewModel @Inject constructor(
         viewModelScope.launch {
             when (val result = eventRepository.updateStatus(eventId, EventStatus.CANCELLED)) {
                 is ApiResult.Success -> {
-                    _actionMessage.value = "Event cancelled"
+                    _actionMessage.value = context.getString(R.string.msg_cancelled)
                     loadDetail()
                 }
                 is ApiResult.Error -> _actionMessage.value = result.error.displayMessage()
@@ -197,7 +201,6 @@ class EventDetailViewModel @Inject constructor(
         viewModelScope.launch {
             authRepository.currentUser.collect { user ->
                 currentUserId = user?.id
-                // Cargar detalles del evento DESPUÉS de obtener el usuario
                 if (currentUserId != null) {
                     loadDetail()
                 }
@@ -216,8 +219,7 @@ class EventDetailViewModel @Inject constructor(
                 ) {
                     loadDetail()
                 } else if (event.type == SocketEventType.EVENT_DELETED) {
-                    // El evento fue eliminado por el organizador, salimos de la pantalla
-                    _deleteEventState.value = EventActionState.Success("Event deleted")
+                    _deleteEventState.value = EventActionState.Success(context.getString(R.string.msg_event_deleted))
                 } else if (event.type == SocketEventType.PARTICIPANT_LEFT) {
                     // Un participante se fue, refrescamos
                     loadDetail()
@@ -327,8 +329,7 @@ class EventDetailViewModel @Inject constructor(
         if (locationJob?.isActive == true) return
         if (!locationTracker.hasPermission()) {
             if (notifyIfNoPermission) {
-                _sharingMessage.value =
-                    "Activa el permiso de ubicacion para compartir tu posicion"
+                _sharingMessage.value = context.getString(R.string.msg_share_location)
             }
             return
         }
@@ -439,7 +440,7 @@ class EventDetailViewModel @Inject constructor(
             _deleteEventState.value = EventActionState.Loading
             when (val result = eventRepository.delete(eventId)) {
                 is ApiResult.Success -> {
-                    _deleteEventState.value = EventActionState.Success("Event deleted successfully")
+                    _deleteEventState.value = EventActionState.Success(context.getString(R.string.msg_event_deleted))
                 }
                 is ApiResult.Error -> {
                     _deleteEventState.value = EventActionState.Error(result.error.displayMessage())
@@ -454,7 +455,7 @@ class EventDetailViewModel @Inject constructor(
             _leaveEventState.value = EventActionState.Loading
             when (val result = eventRepository.leave(eventId)) {
                 is ApiResult.Success -> {
-                    _leaveEventState.value = EventActionState.Success("Left event successfully")
+                    _leaveEventState.value = EventActionState.Success(context.getString(R.string.msg_left_event))
                 }
                 is ApiResult.Error -> {
                     _leaveEventState.value = EventActionState.Error(result.error.displayMessage())
@@ -491,6 +492,7 @@ class EventDetailViewModel @Inject constructor(
         _pendingInvites.value = invitations.map { invitation ->
             val friend = friends.find { it.id == invitation.inviteeId }
             invitationToGuestUi(
+                context = context,
                 displayName = friend?.displayName ?: "Guest",
                 status = invitation.status,
                 profilePictureUrl = resolveApiAssetUrl(friend?.profilePictureUrl),
@@ -512,31 +514,29 @@ class EventDetailViewModel @Inject constructor(
         trackingParticipants.forEach { item ->
             val status = classifyParticipantWithUser(item, event)
             val row = friendRowForParticipantStatus(
+                context = context,
                 displayName = item.user.displayName,
                 profilePictureUrl = resolveApiAssetUrl(item.user.profilePictureUrl),
                 status = status,
-                arrivedSubtitle = if (
-                    isOrganizer(event) &&
-                    item.participant.userId == currentUserId
-                ) {
-                    "You are already there"
-                } else {
-                    "Arrived"
-                },
             )
+            
+            val refinedRow = if (status is ParticipantStatus.Arrived && item.participant.userId == currentUserId) {
+                row.copy(subtitle = context.getString(R.string.msg_already_there))
+            } else row
+
             when (status) {
-                is ParticipantStatus.Arrived -> arrived.add(row)
-                is ParticipantStatus.InTransit -> inTransit.add(row)
-                is ParticipantStatus.Delayed -> delayed.add(row)
+                is ParticipantStatus.Arrived -> arrived.add(refinedRow)
+                is ParticipantStatus.InTransit -> inTransit.add(refinedRow)
+                is ParticipantStatus.Delayed -> delayed.add(refinedRow)
             }
         }
 
         val invitedPendingRows = _pendingInvites.value
-            .filter { it.statusLabel == "Pending" }
+            .filter { it.statusLabel == context.getString(R.string.label_pending) } 
             .map { guest ->
                 participantToFriendRow(
                     displayName = guest.displayName,
-                    subtitle = "Not accepted",
+                    subtitle = context.getString(R.string.msg_not_accepted),
                     pillText = guest.statusLabel,
                     pillVariant = guest.pillVariant,
                     profilePictureUrl = guest.profilePictureUrl,
@@ -587,10 +587,10 @@ class EventDetailViewModel @Inject constructor(
             eventLongitude = event.longitude,
             eventLocationLabel = event.address,
             participantLocations = participantLocations,
-            invitedPending = ParticipantSectionUi("Invited (pending)", invitedPendingRows.size, invitedPendingRows),
-            arrived = ParticipantSectionUi("Arrived", arrived.size, arrived),
-            inTransit = ParticipantSectionUi("In transit", inTransit.size, inTransit),
-            delayed = ParticipantSectionUi("Delayed", delayed.size, delayed),
+            invitedPending = ParticipantSectionUi(context.getString(R.string.tab_invited_pending), invitedPendingRows.size, invitedPendingRows),
+            arrived = ParticipantSectionUi(context.getString(R.string.tab_arrived), arrived.size, arrived),
+            inTransit = ParticipantSectionUi(context.getString(R.string.tab_in_transit), inTransit.size, inTransit),
+            delayed = ParticipantSectionUi(context.getString(R.string.tab_delayed), delayed.size, delayed),
         )
     }
 
@@ -604,11 +604,12 @@ class EventDetailViewModel @Inject constructor(
 }
 
 private fun invitationToGuestUi(
+    context: Context,
     displayName: String,
     status: InvitationStatus,
     profilePictureUrl: String? = null,
 ): InvitedGuestUi = when (status) {
-    InvitationStatus.PENDING -> InvitedGuestUi(displayName, "Pending", PillVariant.Light, profilePictureUrl)
-    InvitationStatus.ACCEPTED -> InvitedGuestUi(displayName, "Accepted", PillVariant.Green, profilePictureUrl)
-    InvitationStatus.REJECTED -> InvitedGuestUi(displayName, "Rejected", PillVariant.Amber, profilePictureUrl)
+    InvitationStatus.PENDING -> InvitedGuestUi(displayName, context.getString(R.string.label_pending), PillVariant.Light, profilePictureUrl)
+    InvitationStatus.ACCEPTED -> InvitedGuestUi(displayName, context.getString(R.string.label_accepted), PillVariant.Green, profilePictureUrl)
+    InvitationStatus.REJECTED -> InvitedGuestUi(displayName, context.getString(R.string.label_rejected), PillVariant.Amber, profilePictureUrl)
 }

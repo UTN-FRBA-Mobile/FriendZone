@@ -19,6 +19,11 @@
     <string name="btn_create_event">Crear Evento</string>
     <string name="btn_share">Compartir</string>
     <string name="btn_copy_link">Copiar enlace</string>
+    <string name="btn_ok">OK</string>
+    <string name="btn_view_live_map">🗺  Ver mapa en vivo</string>
+    <string name="btn_leave_event">Salir del evento</string>
+    <string name="btn_creating">Creando...</string>
+    <string name="btn_sending">Enviando...</string>
 
     <!-- Tabs / Navigation -->
     <string name="nav_events">Eventos</string>
@@ -60,6 +65,8 @@
     <string name="create_preset_minutes">%1$d minutos</string>
     <string name="create_preset_hour">1 hora</string>
     <string name="create_preset_hours">2 horas</string>
+    <string name="create_upload_cover">Subir imagen de portada</string>
+    <string name="create_upload_hint">JPG, PNG hasta 20MB</string>
 
     <!-- Placeholders / Labels -->
     <string name="label_email_username">Correo o usuario</string>
@@ -75,6 +82,31 @@
     <string name="label_unlimited">Ilimitado</string>
     <string name="label_add_friend">Agregar amigo</string>
     <string name="label_your_friends">Tus amigos</string>
+    <string name="label_me">Yo</string>
+    <string name="label_people">Personas</string>
+    <string name="label_pending">Pendiente</string>
+    <string name="label_accepted">Aceptado</string>
+    <string name="label_rejected">Rechazado</string>
+    <string name="label_remember_me">Recordarme</string>
+    <string name="label_email">Correo</string>
+    <string name="label_username">Nombre de usuario</string>
+    <string name="label_display_name">Alias para mostrar</string>
+    <string name="label_confirm_password">Confirmar contraseña</string>
+    <string name="label_action">Acción</string>
+    <string name="placeholder_email">tu@ejemplo.com</string>
+    <string name="placeholder_username">juanperez</string>
+    <string name="placeholder_display_name">Juan Pérez</string>
+
+    <!-- Auth -->
+    <string name="login_tagline">Conéctate con amigos cerca</string>
+    <string name="title_welcome_back">Bienvenido de nuevo</string>
+    <string name="title_create_account">Crear cuenta</string>
+    <string name="action_forgot_password">¿Olvidaste tu contraseña?</string>
+    <string name="prompt_no_account">¿No tienes cuenta?</string>
+    <string name="prompt_have_account">¿Ya tienes cuenta?</string>
+    <string name="link_privacy">Privacidad</string>
+    <string name="link_terms">Términos</string>
+    <string name="link_help">Ayuda</string>
 
     <!-- Empty States -->
     <string name="msg_no_upcoming_events">No hay eventos próximos</string>
@@ -104,6 +136,7 @@
     <string name="msg_cancelled">Cancelado</string>
     <string name="msg_already_there">Ya estás ahí</string>
     <string name="msg_no_participants">Aún no hay participantes</string>
+    <string name="msg_not_accepted">No aceptado</string>
     <string name="msg_invitation_body">Has sido invitado a \"%1$s\"</string>
     <string name="msg_invitation_from">De %1$s · %2$s</string>
     <string name="msg_invite_personal_link_desc">Comparte tu enlace personal. Cuando alguien lo abra, la app se abrirá para que puedan agregarte como amigo.</string>
@@ -111,6 +144,31 @@
     <string name="msg_link_copied">Enlace copiado</string>
     <string name="msg_share_invite_text">¡Únete a mí en FriendZone! Agregame como amigo con este enlace: %1$s</string>
     <string name="label_your_link">TU ENLACE</string>
+    <string name="msg_and_more">y %1$d más</string>
+
+    <!-- Dynamic Status and Time -->
+    <string name="msg_confirmed_count">✓ %1$d Confirmados</string>
+    <string name="msg_pending_count">\? %1$d Pendientes</string>
+    <string name="msg_on_the_way_count">🚗 %1$d En camino</string>
+    <string name="msg_min_away">%1$d min de distancia</string>
+    <string name="msg_arrival_unavailable">Llegada no disponible</string>
+    <string name="msg_status_arrived_badge">✓ Llegó</string>
+    <string name="msg_status_in_transit_badge">En camino</string>
+    <string name="msg_status_delayed_badge">Demorado</string>
+    <string name="msg_today">Hoy</string>
+    <string name="msg_tomorrow">Mañana</string>
+    <string name="msg_yesterday">Ayer</string>
+    <string name="msg_in_days">En %1$d días</string>
+    <string name="msg_days_ago">Hace %1$d días</string>
+    <string name="msg_next_week">Próxima semana</string>
+
+    <!-- Content descriptions -->
+    <string name="content_desc_add_friend">Agregar amigo</string>
+    <string name="content_desc_send_request">Enviar solicitud</string>
+    <string name="content_desc_close">Cerrar</string>
+    <string name="content_desc_center_my_location">Centrar en mi ubicación</string>
+    <string name="content_desc_show_password">Mostrar contraseña</string>
+    <string name="content_desc_hide_password">Ocultar contraseña</string>
 
     <!-- Dialogs -->
     <string name="title_delete_event">Eliminar evento</string>
@@ -118,4 +176,10 @@
     <string name="title_leave_event">Salir del evento</string>
     <string name="msg_leave_event_confirm">¿Estás seguro de que quieres salir de este evento?</string>
     <string name="title_invitation">Invitación al Evento</string>
+
+    <!-- Profile picture -->
+    <string name="profile_picture_choose">Elegir foto</string>
+    <string name="profile_picture_remove">Eliminar foto</string>
+    <string name="profile_picture_invalid_type">Solo se permiten imágenes JPEG y PNG</string>
+    <string name="profile_picture_too_large">La foto de perfil debe ser de 20 MB o menos</string>
 </resources>

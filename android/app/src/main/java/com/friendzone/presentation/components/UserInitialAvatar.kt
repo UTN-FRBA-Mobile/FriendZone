@@ -13,17 +13,17 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.example.friendzone.ui.theme.FzInk
-import com.example.friendzone.ui.theme.FzInk2
-import com.example.friendzone.ui.theme.FzSurface2
+import com.example.friendzone.ui.theme.TextMain
+import com.example.friendzone.ui.theme.TextSecondary
+import com.example.friendzone.ui.theme.Surface2
 
 @Composable
 fun UserInitialAvatar(
     displayName: String,
     modifier: Modifier = Modifier,
     size: Dp = 40.dp,
-    backgroundColor: Color = FzSurface2,
-    textColor: Color = FzInk2,
+    backgroundColor: Color = Surface2,
+    textColor: Color = TextSecondary,
 ) {
     val initial = displayName.firstOrNull()?.uppercaseChar()?.toString() ?: "?"
     Box(
@@ -51,7 +51,7 @@ fun UserInitialAvatarDark(
         displayName = displayName,
         modifier = modifier,
         size = size,
-        backgroundColor = FzInk,
+        backgroundColor = TextMain,
         textColor = Color.White,
     )
 }

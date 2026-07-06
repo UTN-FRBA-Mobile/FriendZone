@@ -31,19 +31,21 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.example.friendzone.R
 import com.example.friendzone.presentation.events.EventDetailStatusBadge
 import com.example.friendzone.presentation.events.EventListItemUi
-import com.example.friendzone.ui.theme.FzBorderGray
-import com.example.friendzone.ui.theme.FzSuccess
-import com.example.friendzone.ui.theme.FzPrimary
-import com.example.friendzone.ui.theme.FzPrimaryDark
-import com.example.friendzone.ui.theme.FzPrimaryLight
-import com.example.friendzone.ui.theme.FzTextMain
-import com.example.friendzone.ui.theme.FzTextSecondary
-import com.example.friendzone.ui.theme.FzError
-import com.example.friendzone.ui.theme.FzSurface
-import com.example.friendzone.ui.theme.FzSurface2
+import com.example.friendzone.ui.theme.BorderGray
+import com.example.friendzone.ui.theme.Success
+import com.example.friendzone.ui.theme.Primary
+import com.example.friendzone.ui.theme.PrimaryDark
+import com.example.friendzone.ui.theme.PrimaryLight
+import com.example.friendzone.ui.theme.TextMain
+import com.example.friendzone.ui.theme.TextSecondary
+import com.example.friendzone.ui.theme.ErrorColor
+import com.example.friendzone.ui.theme.Surface
+import com.example.friendzone.ui.theme.Surface2
 
 @Composable
 fun EventLiveCard(
@@ -59,8 +61,8 @@ fun EventLiveCard(
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp)
             .clip(RoundedCornerShape(16.dp))
-            .background(FzSurface)
-            .border(1.dp, FzBorderGray, RoundedCornerShape(16.dp))
+            .background(Surface)
+            .border(1.dp, BorderGray, RoundedCornerShape(16.dp))
             .clickable(onClick = onClick),
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -79,7 +81,7 @@ fun EventLiveCard(
                         Text(
                             text = item.title,
                             style = MaterialTheme.typography.titleLarge,
-                            color = FzTextMain,
+                            color = TextMain,
                         )
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
@@ -89,12 +91,12 @@ fun EventLiveCard(
                                 modifier = Modifier
                                     .size(8.dp)
                                     .clip(RoundedCornerShape(50))
-                                    .background(FzSuccess),
+                                    .background(Success),
                             )
                             Text(
-                                "Live",
+                                stringResource(R.string.msg_live_now),
                                 style = MaterialTheme.typography.labelMedium,
-                                color = FzSuccess,
+                                color = Success,
                             )
                         }
                     }
@@ -103,18 +105,18 @@ fun EventLiveCard(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     if (item.isOrganizer && onDeleteClick != null) {
                         IconButton(onClick = onDeleteClick) {
-                            Icon(Icons.Default.Delete, contentDescription = "Delete", tint = FzError)
+                            Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.btn_delete), tint = ErrorColor)
                         }
                     }
                     Icon(
                         Icons.AutoMirrored.Filled.KeyboardArrowRight,
                         contentDescription = null,
-                        tint = FzTextSecondary,
+                        tint = TextSecondary,
                     )
                 }
             }
             Spacer(modifier = Modifier.height(4.dp))
-            Text(item.dateText, style = MaterialTheme.typography.bodySmall, color = FzTextSecondary)
+            Text(item.dateText, style = MaterialTheme.typography.bodySmall, color = TextSecondary)
             Spacer(modifier = Modifier.height(12.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 PillBadge(item.confirmedText, PillVariant.Green)
@@ -122,16 +124,16 @@ fun EventLiveCard(
             }
         }
         if (item.friendPreviews.isNotEmpty()) {
-            HorizontalDivider(color = FzBorderGray)
+            HorizontalDivider(color = BorderGray)
             item.friendPreviews.forEach { friend ->
                 FriendRow(friend)
             }
         }
         Box(modifier = Modifier.padding(14.dp)) {
             Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                FriendZonePrimaryButton(text = "🗺  View Live Map", onClick = onViewMapClick)
+                FriendZonePrimaryButton(text = stringResource(R.string.btn_view_live_map), onClick = onViewMapClick)
                 if (!item.isOrganizer && onLeaveClick != null) {
-                    FriendZoneOutlineButton(text = "Leave Event", onClick = onLeaveClick)
+                    FriendZoneOutlineButton(text = stringResource(R.string.btn_leave_event), onClick = onLeaveClick)
                 }
             }
         }
@@ -150,8 +152,8 @@ fun EventUpcomingCard(
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp)
             .clip(RoundedCornerShape(16.dp))
-            .background(FzSurface)
-            .border(1.dp, FzBorderGray, RoundedCornerShape(16.dp))
+            .background(Surface)
+            .border(1.dp, BorderGray, RoundedCornerShape(16.dp))
             .clickable(onClick = onClick),
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -167,10 +169,10 @@ fun EventUpcomingCard(
                     EventCoverAvatar(coverImageUrl = item.coverImageUrl)
                     Spacer(modifier = Modifier.width(12.dp))
                     Column {
-                        Text(item.title, style = MaterialTheme.typography.titleMedium, color = FzTextMain)
+                        Text(item.title, style = MaterialTheme.typography.titleMedium, color = TextMain)
                         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                             Text(item.timeIcon)
-                            Text(item.timeLabel, style = MaterialTheme.typography.labelMedium, color = FzTextSecondary)
+                            Text(item.timeLabel, style = MaterialTheme.typography.labelMedium, color = TextSecondary)
                         }
                     }
                 }
@@ -178,13 +180,13 @@ fun EventUpcomingCard(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     if (item.isOrganizer && onDeleteClick != null) {
                         IconButton(onClick = onDeleteClick) {
-                            Icon(Icons.Default.Delete, contentDescription = "Delete", tint = FzError)
+                            Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.btn_delete), tint = ErrorColor)
                         }
                     }
                     Icon(
                         Icons.AutoMirrored.Filled.KeyboardArrowRight,
                         contentDescription = null,
-                        tint = FzTextSecondary,
+                        tint = TextSecondary,
                     )
                 }
             }
@@ -197,23 +199,23 @@ fun EventUpcomingCard(
             }
             if (item.avatars.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(12.dp))
-                HorizontalDivider(color = FzBorderGray)
+                HorizontalDivider(color = BorderGray)
                 Spacer(modifier = Modifier.height(12.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     AvatarStack(item.avatars, item.extraCount)
                     if (item.extraCount > 0) {
                         Spacer(modifier = Modifier.size(8.dp))
                         Text(
-                            "and ${item.extraCount} more",
+                            stringResource(R.string.msg_and_more, item.extraCount),
                             style = MaterialTheme.typography.bodySmall,
-                            color = FzTextSecondary,
+                            color = TextSecondary,
                         )
                     }
                 }
             }
             if (!item.isOrganizer && onLeaveClick != null) {
                 Spacer(modifier = Modifier.height(12.dp))
-                FriendZoneOutlineButton(text = "Leave Event", onClick = onLeaveClick)
+                FriendZoneOutlineButton(text = stringResource(R.string.btn_leave_event), onClick = onLeaveClick)
             }
         }
     }
@@ -228,7 +230,7 @@ private fun EventListDateRow(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Text(dateText, style = MaterialTheme.typography.bodySmall, color = FzTextSecondary)
+        Text(dateText, style = MaterialTheme.typography.bodySmall, color = TextSecondary)
         statusBadge?.let { EventListStatusBadge(it) }
     }
 }
@@ -236,8 +238,8 @@ private fun EventListDateRow(
 @Composable
 private fun EventListStatusBadge(badge: EventDetailStatusBadge) {
     val (dotColor, label) = when (badge) {
-        EventDetailStatusBadge.Completed -> FzTextSecondary to "Completed"
-        EventDetailStatusBadge.Cancelled -> FzError to "Cancelled"
+        EventDetailStatusBadge.Completed -> TextSecondary to stringResource(R.string.msg_completed)
+        EventDetailStatusBadge.Cancelled -> ErrorColor to stringResource(R.string.msg_cancelled)
     }
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -252,7 +254,7 @@ private fun EventListStatusBadge(badge: EventDetailStatusBadge) {
         Text(
             label,
             style = MaterialTheme.typography.labelSmall,
-            color = FzTextSecondary,
+            color = TextSecondary,
         )
     }
 }
@@ -271,7 +273,7 @@ fun CreateEventHeader(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .background(FzSurface.copy(alpha = 0.95f))
+            .background(Surface.copy(alpha = 0.95f))
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -279,14 +281,14 @@ fun CreateEventHeader(
             onClick = onBackClick,
             modifier = Modifier
                 .size(38.dp)
-                .background(FzSurface2, RoundedCornerShape(12.dp)),
+                .background(Surface2, RoundedCornerShape(12.dp)),
         ) {
-            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = FzTextSecondary)
+            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.content_desc_close), tint = TextSecondary)
         }
         Text(
             text = title,
             style = MaterialTheme.typography.titleLarge,
-            color = FzTextMain,
+            color = TextMain,
             modifier = Modifier.weight(1f),
             textAlign = androidx.compose.ui.text.style.TextAlign.Center,
         )
@@ -296,9 +298,9 @@ fun CreateEventHeader(
                     onClick = onMenuClick,
                     modifier = Modifier
                         .size(38.dp)
-                        .background(FzSurface2, RoundedCornerShape(12.dp)),
+                        .background(Surface2, RoundedCornerShape(12.dp)),
                 ) {
-                    Icon(Icons.Filled.MoreVert, contentDescription = "Event options", tint = FzTextSecondary)
+                    Icon(Icons.Filled.MoreVert, contentDescription = null, tint = TextSecondary)
                 }
                 if (menuContent != null) {
                     DropdownMenu(
@@ -327,8 +329,8 @@ fun StepProgressBar(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
-            Text(stepLabel, style = MaterialTheme.typography.labelMedium, color = FzTextMain)
-            Text(stepDescription, style = MaterialTheme.typography.labelMedium, color = FzTextSecondary)
+            Text(stepLabel, style = MaterialTheme.typography.labelMedium, color = TextMain)
+            Text(stepDescription, style = MaterialTheme.typography.labelMedium, color = TextSecondary)
         }
         Spacer(modifier = Modifier.height(10.dp))
         Box(
@@ -336,14 +338,14 @@ fun StepProgressBar(
                 .fillMaxWidth()
                 .height(4.dp)
                 .clip(RoundedCornerShape(2.dp))
-                .background(FzSurface2),
+                .background(Surface2),
         ) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth(progress.coerceIn(0f, 1f))
                     .height(4.dp)
                     .clip(RoundedCornerShape(2.dp))
-                    .background(FzPrimary),
+                    .background(Primary),
             )
         }
         Spacer(modifier = Modifier.height(14.dp))
@@ -361,15 +363,15 @@ fun UploadZone(
             .fillMaxWidth()
             .height(120.dp)
             .clip(RoundedCornerShape(10.dp))
-            .background(FzSurface2)
-            .border(1.5.dp, FzBorderGray, RoundedCornerShape(10.dp))
+            .background(Surface2)
+            .border(1.5.dp, BorderGray, RoundedCornerShape(10.dp))
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
         if (previewModel != null) {
             coil.compose.AsyncImage(
                 model = previewModel,
-                contentDescription = "Cover preview",
+                contentDescription = null,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(120.dp)
@@ -382,8 +384,8 @@ fun UploadZone(
                 verticalArrangement = Arrangement.Center,
             ) {
                 Text("🖼", style = MaterialTheme.typography.headlineMedium)
-                Text("Upload cover image", style = MaterialTheme.typography.labelMedium, color = FzTextSecondary)
-                Text("JPG, PNG up to 20MB", style = MaterialTheme.typography.bodySmall, color = FzTextSecondary)
+                Text(stringResource(R.string.create_upload_cover), style = MaterialTheme.typography.labelMedium, color = TextSecondary)
+                Text(stringResource(R.string.create_upload_hint), style = MaterialTheme.typography.bodySmall, color = TextSecondary)
             }
         }
     }
@@ -396,8 +398,8 @@ fun LiveMapPlaceholder(modifier: Modifier = Modifier) {
             .fillMaxWidth()
             .height(200.dp)
             .clip(RoundedCornerShape(12.dp))
-            .background(FzSurface2)
-            .border(1.5.dp, FzBorderGray, RoundedCornerShape(12.dp)),
+            .background(Surface2)
+            .border(1.5.dp, BorderGray, RoundedCornerShape(12.dp)),
         contentAlignment = Alignment.Center,
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -405,7 +407,7 @@ fun LiveMapPlaceholder(modifier: Modifier = Modifier) {
             Text(
                 "Live map coming soon",
                 style = MaterialTheme.typography.bodyMedium,
-                color = FzTextSecondary,
+                color = TextSecondary,
             )
         }
     }

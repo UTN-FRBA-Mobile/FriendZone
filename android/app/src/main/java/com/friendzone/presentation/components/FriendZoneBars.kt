@@ -45,18 +45,18 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.friendzone.R
 import com.example.friendzone.presentation.events.UserAvatarUi
-import com.example.friendzone.ui.theme.FzBackground
-import com.example.friendzone.ui.theme.FzBorderGray
-import com.example.friendzone.ui.theme.FzPrimary
-import com.example.friendzone.ui.theme.FzPrimaryDark
-import com.example.friendzone.ui.theme.FzPrimaryLight
-import com.example.friendzone.ui.theme.FzTextMain
-import com.example.friendzone.ui.theme.FzTextSecondary
-import com.example.friendzone.ui.theme.FzSuccess
-import com.example.friendzone.ui.theme.FzPending
-import com.example.friendzone.ui.theme.FzError
-import com.example.friendzone.ui.theme.FzSurface
-import com.example.friendzone.ui.theme.FzSurface2
+import com.example.friendzone.ui.theme.Background
+import com.example.friendzone.ui.theme.BorderGray
+import com.example.friendzone.ui.theme.Primary
+import com.example.friendzone.ui.theme.PrimaryDark
+import com.example.friendzone.ui.theme.PrimaryLight
+import com.example.friendzone.ui.theme.TextMain
+import com.example.friendzone.ui.theme.TextSecondary
+import com.example.friendzone.ui.theme.Success
+import com.example.friendzone.ui.theme.Pending
+import com.example.friendzone.ui.theme.ErrorColor
+import com.example.friendzone.ui.theme.Surface as FzSurface
+import com.example.friendzone.ui.theme.Surface2
 
 enum class BottomNavTab {
     Events,
@@ -89,9 +89,9 @@ fun FriendZoneTopBar(
                 onClick = onMenuClick,
                 modifier = Modifier
                     .size(38.dp)
-                    .background(FzSurface2, RoundedCornerShape(12.dp)),
+                    .background(Surface2, RoundedCornerShape(12.dp)),
             ) {
-                Icon(Icons.Default.Menu, contentDescription = "Menu", tint = FzTextSecondary)
+                Icon(Icons.Default.Menu, contentDescription = "Menu", tint = TextSecondary)
             }
         } else {
             TopBarLogo()
@@ -102,13 +102,13 @@ fun FriendZoneTopBar(
         Text(
             text = title,
             style = MaterialTheme.typography.titleLarge,
-            color = FzTextMain,
+            color = TextMain,
             modifier = Modifier.weight(1f),
             textAlign = TextAlign.Center,
         )
 
         Row(
-            horizontalArrangement = Arrangement.spacedBy(20.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             if (showNotifications) {
@@ -117,17 +117,18 @@ fun FriendZoneTopBar(
                     badgeCount = notificationBadgeCount,
                     contentDescription = "Notifications",
                 ) {
-                    Icon(Icons.Default.Notifications, contentDescription = null, tint = FzTextSecondary)
+                    Icon(Icons.Default.Notifications, contentDescription = null, tint = TextSecondary)
                 }
             }
             if (showSettings) {
                 TopBarIconButton(onClick = onSettingsClick, contentDescription = "Settings") {
-                    Icon(Icons.Default.Settings, contentDescription = null, tint = FzTextSecondary)
+                    Icon(Icons.Default.Settings, contentDescription = null, tint = TextSecondary)
                 }
             }
-            if (!showNotifications && !showSettings) {
-                Spacer(modifier = Modifier.size(38.dp))
-            }
+        }
+        
+        if (!showNotifications && !showSettings) {
+             Spacer(modifier = Modifier.size(38.dp))
         }
     }
 }
@@ -141,7 +142,7 @@ private fun TopBarLogo() {
             .background(
                 Brush.linearGradient(
                     colors = listOf(
-                        FzPrimaryDark,
+                        PrimaryDark,
                         Color(0xFF004D45),
                     ),
                 ),
@@ -166,7 +167,7 @@ private fun TopBarIconButton(
         onClick = onClick,
         modifier = Modifier
             .size(38.dp)
-            .background(FzSurface2, RoundedCornerShape(12.dp)),
+            .background(Surface2, RoundedCornerShape(12.dp)),
     ) {
         Box(modifier = Modifier.semantics { this.contentDescription = contentDescription }) {
             content()
@@ -190,7 +191,7 @@ private fun TopBarIconWithBadge(
                     .offset(x = 4.dp, y = (-4).dp)
                     .size(16.dp)
                     .clip(CircleShape)
-                    .background(FzError),
+                    .background(ErrorColor),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
@@ -256,7 +257,7 @@ private fun BottomNavItem(
     badgeCount: Int = 0,
     icon: @Composable () -> Unit,
 ) {
-    val color = if (selected) FzPrimary else FzTextSecondary
+    val color = if (selected) Primary else TextSecondary
     Column(
         modifier = Modifier
             .clip(RoundedCornerShape(12.dp))
@@ -277,7 +278,7 @@ private fun BottomNavItem(
                         .offset(x = 8.dp, y = (-6).dp)
                         .size(14.dp)
                         .clip(CircleShape)
-                        .background(FzError),
+                        .background(ErrorColor),
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
@@ -301,7 +302,7 @@ fun SectionLabel(text: String, modifier: Modifier = Modifier) {
     Text(
         text = text.uppercase(),
         style = MaterialTheme.typography.labelSmall,
-        color = FzTextSecondary,
+        color = TextSecondary,
         modifier = modifier.padding(horizontal = 20.dp, vertical = 8.dp),
     )
 }
@@ -313,10 +314,10 @@ fun PillBadge(
     modifier: Modifier = Modifier,
 ) {
     val (bg, fg, borderColor) = when (variant) {
-        PillVariant.Dark, PillVariant.Live -> Triple(FzTextMain, Color.White, Color.Transparent)
-        PillVariant.Light -> Triple(FzPrimaryLight, FzPrimaryDark, FzBorderGray)
-        PillVariant.Green -> Triple(FzPrimaryLight, FzSuccess, Color.Transparent)
-        PillVariant.Amber -> Triple(Color(0xFFFEF3C7), FzPending, Color.Transparent)
+        PillVariant.Dark, PillVariant.Live -> Triple(TextMain, Color.White, Color.Transparent)
+        PillVariant.Light -> Triple(PrimaryLight, PrimaryDark, BorderGray)
+        PillVariant.Green -> Triple(PrimaryLight, Success, Color.Transparent)
+        PillVariant.Amber -> Triple(Color(0xFFFEF3C7), Pending, Color.Transparent)
     }
     Text(
         text = text,
@@ -348,7 +349,7 @@ fun AvatarStack(
                     .offset(x = if (index == 0) 0.dp else (-8).dp)
                     .size(34.dp)
                     .clip(CircleShape)
-                    .background(FzSurface2)
+                    .background(Surface2)
                     .border(2.dp, Color.White, CircleShape),
                 contentAlignment = Alignment.Center,
             ) {
@@ -365,11 +366,11 @@ fun AvatarStack(
                     .offset(x = (-8).dp)
                     .size(34.dp)
                     .clip(CircleShape)
-                    .background(FzSurface2)
+                    .background(Surface2)
                     .border(2.dp, Color.White, CircleShape),
                 contentAlignment = Alignment.Center,
             ) {
-                Text("+$extraCount", style = MaterialTheme.typography.labelMedium, color = FzTextSecondary)
+                Text("+$extraCount", style = MaterialTheme.typography.labelMedium, color = TextSecondary)
             }
         }
     }
@@ -390,8 +391,8 @@ fun FriendRow(friend: FriendRowUi) {
         )
         Spacer(modifier = Modifier.width(10.dp))
         Column(modifier = Modifier.weight(1f)) {
-            Text(friend.name, style = MaterialTheme.typography.bodyMedium, color = FzTextMain)
-            Text(friend.subtitle, style = MaterialTheme.typography.bodySmall, color = FzTextSecondary)
+            Text(friend.name, style = MaterialTheme.typography.bodyMedium, color = TextMain)
+            Text(friend.subtitle, style = MaterialTheme.typography.bodySmall, color = TextSecondary)
         }
         PillBadge(text = friend.pillText, variant = friend.pillVariant)
     }

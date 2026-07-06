@@ -16,7 +16,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil.compose.SubcomposeAsyncImage
-import com.example.friendzone.ui.theme.FzPrimary
+import com.example.friendzone.ui.theme.Primary
 
 enum class ProfileIconStyle {
     Default,
@@ -114,7 +114,7 @@ private fun HeroInitialAvatar(
         modifier = modifier
             .size(size)
             .clip(CircleShape)
-            .background(FzPrimary),
+            .background(Primary),
         contentAlignment = Alignment.Center,
     ) {
         Text(

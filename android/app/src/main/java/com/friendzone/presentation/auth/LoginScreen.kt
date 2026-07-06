@@ -36,12 +36,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.friendzone.R
 import com.example.friendzone.presentation.components.FriendZonePrimaryButton
 import com.example.friendzone.presentation.components.FriendZoneTextField
-import com.example.friendzone.ui.theme.FzBackground
-import com.example.friendzone.ui.theme.FzPrimary
-import com.example.friendzone.ui.theme.FzPrimaryDark
-import com.example.friendzone.ui.theme.FzTextMain
-import com.example.friendzone.ui.theme.FzTextSecondary
-import com.example.friendzone.ui.theme.FzSurface
+import com.example.friendzone.ui.theme.Background
+import com.example.friendzone.ui.theme.Primary
+import com.example.friendzone.ui.theme.PrimaryDark
+import com.example.friendzone.ui.theme.TextMain
+import com.example.friendzone.ui.theme.TextSecondary
+import com.example.friendzone.ui.theme.Surface
 import com.example.friendzone.ui.theme.LoginCardTopShape
 
 @Composable
@@ -57,7 +57,7 @@ fun LoginScreen(
             .fillMaxSize()
             .background(
                 Brush.verticalGradient(
-                    colors = listOf(FzPrimaryDark, FzPrimary, FzBackground),
+                    colors = listOf(PrimaryDark, Primary, Background),
                     startY = 0f,
                     endY = 1200f,
                 ),
@@ -80,7 +80,7 @@ fun LoginScreen(
                 color = Color.White,
             )
             Text(
-                "Connect with friends nearby",
+                stringResource(R.string.login_tagline),
                 style = MaterialTheme.typography.bodyMedium,
                 color = Color.White.copy(alpha = 0.8f),
                 modifier = Modifier.padding(top = 6.dp),
@@ -91,17 +91,17 @@ fun LoginScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(LoginCardTopShape)
-                .background(FzSurface)
+                .background(Surface)
                 .padding(horizontal = 24.dp, vertical = 32.dp),
         ) {
-            Text("Welcome back", style = MaterialTheme.typography.headlineMedium, color = FzTextMain)
+            Text(stringResource(R.string.title_welcome_back), style = MaterialTheme.typography.headlineMedium, color = TextMain)
             Spacer(modifier = Modifier.height(24.dp))
 
             FriendZoneTextField(
                 label = stringResource(R.string.label_email_username),
                 value = uiState.emailOrUsername,
                 onValueChange = viewModel::onEmailOrUsernameChange,
-                placeholder = "you@example.com",
+                placeholder = stringResource(R.string.placeholder_email),
             )
             Spacer(modifier = Modifier.height(16.dp))
             FriendZoneTextField(
@@ -121,12 +121,12 @@ fun LoginScreen(
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Checkbox(checked = rememberMe, onCheckedChange = { rememberMe = it })
-                    Text("Remember me", style = MaterialTheme.typography.bodySmall, color = FzTextSecondary)
+                    Text(stringResource(R.string.label_remember_me), style = MaterialTheme.typography.bodySmall, color = TextSecondary)
                 }
                 Text(
-                    "Forgot?",
+                    stringResource(R.string.action_forgot_password),
                     style = MaterialTheme.typography.labelLarge,
-                    color = FzPrimary,
+                    color = Primary,
                     modifier = Modifier.clickable { },
                 )
             }
@@ -144,16 +144,16 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
             Text(
-                text = "Don't have an account?",
+                text = stringResource(R.string.prompt_no_account),
                 style = MaterialTheme.typography.bodySmall,
-                color = FzTextSecondary,
+                color = TextSecondary,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth(),
             )
             Text(
                 text = stringResource(R.string.btn_signup),
                 style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
-                color = FzPrimary,
+                color = Primary,
                 textAlign = TextAlign.Center,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -167,11 +167,15 @@ fun LoginScreen(
                     .padding(top = 24.dp),
                 horizontalArrangement = Arrangement.Center,
             ) {
-                listOf("Privacy", "Terms", "Help").forEachIndexed { index, label ->
+                listOf(
+                    stringResource(R.string.link_privacy),
+                    stringResource(R.string.link_terms),
+                    stringResource(R.string.link_help)
+                ).forEachIndexed { index, label ->
                     if (index > 0) {
-                        Text(" · ", color = FzTextSecondary, style = MaterialTheme.typography.labelSmall)
+                        Text(" · ", color = TextSecondary, style = MaterialTheme.typography.labelSmall)
                     }
-                    Text(label, color = FzTextSecondary, style = MaterialTheme.typography.labelSmall)
+                    Text(label, color = TextSecondary, style = MaterialTheme.typography.labelSmall)
                 }
             }
         }

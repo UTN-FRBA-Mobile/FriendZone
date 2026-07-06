@@ -19,6 +19,11 @@
     <string name="btn_create_event">Create Event</string>
     <string name="btn_share">Share</string>
     <string name="btn_copy_link">Copy link</string>
+    <string name="btn_ok">OK</string>
+    <string name="btn_view_live_map">🗺  View Live Map</string>
+    <string name="btn_leave_event">Leave Event</string>
+    <string name="btn_creating">Creating...</string>
+    <string name="btn_sending">Sending...</string>
 
     <!-- Tabs / Navigation -->
     <string name="nav_events">Events</string>
@@ -60,6 +65,8 @@
     <string name="create_preset_minutes">%1$d minutes</string>
     <string name="create_preset_hour">1 hour</string>
     <string name="create_preset_hours">2 hours</string>
+    <string name="create_upload_cover">Upload cover image</string>
+    <string name="create_upload_hint">JPG, PNG up to 20MB</string>
 
     <!-- Placeholders / Labels -->
     <string name="label_email_username">Email or username</string>
@@ -75,6 +82,31 @@
     <string name="label_unlimited">Unlimited</string>
     <string name="label_add_friend">Add friend</string>
     <string name="label_your_friends">Your friends</string>
+    <string name="label_me">Me</string>
+    <string name="label_people">People</string>
+    <string name="label_pending">Pending</string>
+    <string name="label_accepted">Accepted</string>
+    <string name="label_rejected">Rejected</string>
+    <string name="label_remember_me">Remember me</string>
+    <string name="label_email">Email</string>
+    <string name="label_username">Username</string>
+    <string name="label_display_name">Display name</string>
+    <string name="label_confirm_password">Confirm password</string>
+    <string name="label_action">Action</string>
+    <string name="placeholder_email">you@example.com</string>
+    <string name="placeholder_username">johndoe</string>
+    <string name="placeholder_display_name">John Doe</string>
+
+    <!-- Auth -->
+    <string name="login_tagline">Connect with friends nearby</string>
+    <string name="title_welcome_back">Welcome back</string>
+    <string name="title_create_account">Create account</string>
+    <string name="action_forgot_password">Forgot?</string>
+    <string name="prompt_no_account">Don\'t have an account?</string>
+    <string name="prompt_have_account">Already have an account?</string>
+    <string name="link_privacy">Privacy</string>
+    <string name="link_terms">Terms</string>
+    <string name="link_help">Help</string>
 
     <!-- Empty States -->
     <string name="msg_no_upcoming_events">No upcoming events</string>
@@ -104,6 +136,7 @@
     <string name="msg_cancelled">Cancelled</string>
     <string name="msg_already_there">You are already there</string>
     <string name="msg_no_participants">No participants yet</string>
+    <string name="msg_not_accepted">Not accepted</string>
     <string name="msg_invitation_body">You have been invited to \"%1$s\"</string>
     <string name="msg_invitation_from">From %1$s · %2$s</string>
     <string name="msg_invite_personal_link_desc">Share your personal link. When someone opens it, the app opens so they can add you as a friend.</string>
@@ -111,6 +144,31 @@
     <string name="msg_link_copied">Link copied</string>
     <string name="msg_share_invite_text">Join me on FriendZone! Add me as a friend with this link: %1$s</string>
     <string name="label_your_link">YOUR LINK</string>
+    <string name="msg_and_more">and %1$d more</string>
+
+    <!-- Dynamic Status and Time -->
+    <string name="msg_confirmed_count">✓ %1$d Confirmed</string>
+    <string name="msg_pending_count">\? %1$d Pending</string>
+    <string name="msg_on_the_way_count">🚗 %1$d On the way</string>
+    <string name="msg_min_away">%1$d min away</string>
+    <string name="msg_arrival_unavailable">Arrival time unavailable</string>
+    <string name="msg_status_arrived_badge">✓ Arrived</string>
+    <string name="msg_status_in_transit_badge">In Transit</string>
+    <string name="msg_status_delayed_badge">Delayed</string>
+    <string name="msg_today">Today</string>
+    <string name="msg_tomorrow">Tomorrow</string>
+    <string name="msg_yesterday">Yesterday</string>
+    <string name="msg_in_days">In %1$d days</string>
+    <string name="msg_days_ago">%1$d days ago</string>
+    <string name="msg_next_week">Next week</string>
+
+    <!-- Content descriptions -->
+    <string name="content_desc_add_friend">Add friend</string>
+    <string name="content_desc_send_request">Send request</string>
+    <string name="content_desc_close">Close</string>
+    <string name="content_desc_center_my_location">Center on my location</string>
+    <string name="content_desc_show_password">Show password</string>
+    <string name="content_desc_hide_password">Hide password</string>
 
     <!-- Dialogs -->
     <string name="title_delete_event">Delete Event</string>

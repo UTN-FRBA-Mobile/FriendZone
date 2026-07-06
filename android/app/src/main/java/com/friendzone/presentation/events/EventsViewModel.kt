@@ -1,5 +1,6 @@
 package com.example.friendzone.presentation.events
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.friendzone.BuildConfig
@@ -21,6 +22,7 @@ import com.example.friendzone.domain.util.isLive
 import com.example.friendzone.domain.util.isPastEvent
 import com.example.friendzone.domain.util.parseStartsAt
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -55,6 +57,7 @@ class EventsViewModel @Inject constructor(
     private val locationRepository: LocationRepository,
     private val eventSocketManager: EventSocketManager,
     private val authRepository: AuthRepository,
+    @ApplicationContext private val context: Context,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<EventsUiState>(EventsUiState.Loading)
     val uiState: StateFlow<EventsUiState> = _uiState.asStateFlow()
@@ -83,7 +86,6 @@ class EventsViewModel @Inject constructor(
         viewModelScope.launch {
             authRepository.currentUser.collect { user ->
                 currentUserId = user?.id
-                // Cargar eventos DESPUÉS de obtener el usuario
                 if (currentUserId != null) {
                     loadEvents()
                 }
@@ -273,10 +275,11 @@ class EventsViewModel @Inject constructor(
                             classifyParticipantWithUser(item, event) is ParticipantStatus.Delayed
                     }
                     event.toListItemUi(
+                        context = context,
                         confirmedCount = confirmed,
                         pendingCount = pending,
                         onTheWayCount = onTheWay,
-                        friendPreviews = buildFriendPreviews(event, participants),
+                        friendPreviews = buildFriendPreviews(context, event, participants),
                         isPastItem = event.isPastEvent(BuildConfig.EVENT_PAST_THRESHOLD_HOURS),
                         startsAtEpoch = event.parseStartsAt().epochSecond,
                         organizerId = event.organizerId,
@@ -285,6 +288,7 @@ class EventsViewModel @Inject constructor(
                 } else {
                     val (avatars, extra) = buildAvatarPreview(participants)
                     event.toListItemUi(
+                        context = context,
                         confirmedCount = confirmed,
                         pendingCount = pending,
                         participantAvatars = avatars,

@@ -22,7 +22,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -31,24 +30,26 @@ import androidx.compose.ui.unit.sp
 import androidx.core.os.LocaleListCompat
 import com.example.friendzone.R
 import com.example.friendzone.presentation.components.CreateEventHeader
-import com.example.friendzone.ui.theme.FzBackground
-import com.example.friendzone.ui.theme.FzBorderGray
-import com.example.friendzone.ui.theme.FzPrimary
-import com.example.friendzone.ui.theme.FzPrimaryLight
-import com.example.friendzone.ui.theme.FzSurface
-import com.example.friendzone.ui.theme.FzTextMain
-import com.example.friendzone.ui.theme.FzTextSecondary
+import com.example.friendzone.ui.theme.Background
+import com.example.friendzone.ui.theme.BorderGray
+import com.example.friendzone.ui.theme.Primary
+import com.example.friendzone.ui.theme.PrimaryLight
+import com.example.friendzone.ui.theme.Surface
+import com.example.friendzone.ui.theme.TextMain
+import com.example.friendzone.ui.theme.TextSecondary
 
 @Composable
 fun SettingsScreen(
     onBack: () -> Unit
 ) {
-    val currentLocale = AppCompatDelegate.getApplicationLocales().toLanguageTags()
+    val currentLocales = AppCompatDelegate.getApplicationLocales()
+    val isSystemDefault = currentLocales.isEmpty
+    val currentLanguage = if (isSystemDefault) "" else currentLocales.toLanguageTags()
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(FzBackground)
+            .background(Background)
             .verticalScroll(rememberScrollState())
     ) {
         CreateEventHeader(
@@ -60,14 +61,25 @@ fun SettingsScreen(
             Text(
                 stringResource(R.string.label_language),
                 style = MaterialTheme.typography.titleMedium,
-                color = FzTextMain,
+                color = TextMain,
                 modifier = Modifier.padding(bottom = 16.dp)
             )
 
             LanguageOption(
+                label = "System Default",
+                flag = "⚙️",
+                selected = isSystemDefault,
+                onClick = {
+                    AppCompatDelegate.setApplicationLocales(LocaleListCompat.getEmptyLocaleList())
+                }
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            LanguageOption(
                 label = "English",
                 flag = "🇺🇸",
-                selected = currentLocale.startsWith("en") || currentLocale.isEmpty(),
+                selected = !isSystemDefault && currentLanguage.startsWith("en"),
                 onClick = {
                     AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags("en"))
                 }
@@ -78,7 +90,7 @@ fun SettingsScreen(
             LanguageOption(
                 label = "Español",
                 flag = "🇪🇸",
-                selected = currentLocale.startsWith("es") && !currentLocale.contains("AR"),
+                selected = !isSystemDefault && currentLanguage.startsWith("es") && !currentLanguage.contains("AR"),
                 onClick = {
                     AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags("es"))
                 }
@@ -89,7 +101,7 @@ fun SettingsScreen(
             LanguageOption(
                 label = "Español (Argentina)",
                 flag = "🇦🇷",
-                selected = currentLocale.contains("AR"),
+                selected = !isSystemDefault && currentLanguage.contains("AR"),
                 onClick = {
                     AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags("es-AR"))
                 }
@@ -113,10 +125,10 @@ private fun LanguageOption(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(if (selected) FzPrimaryLight else FzSurface)
+            .background(if (selected) PrimaryLight else Surface)
             .border(
                 width = if (selected) 2.dp else 1.dp,
-                color = if (selected) FzPrimary else FzBorderGray,
+                color = if (selected) Primary else BorderGray,
                 shape = RoundedCornerShape(16.dp)
             )
             .clickable(onClick = onClick)
@@ -128,7 +140,7 @@ private fun LanguageOption(
         Text(
             text = label,
             style = MaterialTheme.typography.bodyLarge,
-            color = if (selected) FzPrimary else FzTextMain,
+            color = if (selected) Primary else TextMain,
             fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
             modifier = Modifier.weight(1f)
         )
@@ -137,7 +149,7 @@ private fun LanguageOption(
                 modifier = Modifier
                     .size(8.dp)
                     .clip(RoundedCornerShape(50))
-                    .background(FzPrimary)
+                    .background(Primary)
             )
         }
     }
@@ -152,19 +164,19 @@ private fun AppInfoFooter() {
         Text(
             "FriendZone",
             style = MaterialTheme.typography.titleMedium,
-            color = FzTextSecondary,
+            color = TextSecondary,
             fontWeight = FontWeight.Bold
         )
         Text(
             "v1.0.0 (Beta)",
             style = MaterialTheme.typography.bodySmall,
-            color = FzTextSecondary.copy(alpha = 0.7f)
+            color = TextSecondary.copy(alpha = 0.7f)
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
             "Developed with ❤️ by the FriendZone Team\nUTN-FRBA 2025",
             style = MaterialTheme.typography.bodySmall,
-            color = FzTextSecondary.copy(alpha = 0.5f),
+            color = TextSecondary.copy(alpha = 0.5f),
             textAlign = TextAlign.Center,
             lineHeight = 18.sp
         )

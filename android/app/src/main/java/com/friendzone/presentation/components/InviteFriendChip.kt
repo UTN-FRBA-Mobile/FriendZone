@@ -17,10 +17,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.example.friendzone.domain.model.User
 import com.example.friendzone.domain.util.resolveApiAssetUrl
-import com.example.friendzone.ui.theme.FzBorder
-import com.example.friendzone.ui.theme.FzInk
-import com.example.friendzone.ui.theme.FzSurface
-import com.example.friendzone.ui.theme.FzSurface2
+import com.example.friendzone.ui.theme.BorderGray
+import com.example.friendzone.ui.theme.TextMain
+import com.example.friendzone.ui.theme.Surface
+import com.example.friendzone.ui.theme.Surface2
 
 @Composable
 fun InviteFriendChip(
@@ -29,8 +29,8 @@ fun InviteFriendChip(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val borderColor = if (selected) FzInk else FzBorder
-    val bg = if (selected) FzSurface else FzSurface2
+    val borderColor = if (selected) TextMain else BorderGray
+    val bg = if (selected) Surface else Surface2
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier
@@ -46,6 +46,6 @@ fun InviteFriendChip(
             size = 36.dp,
         )
         Spacer(modifier = Modifier.height(6.dp))
-        Text(friend.displayName, style = MaterialTheme.typography.labelMedium, color = FzInk)
+        Text(friend.displayName, style = MaterialTheme.typography.labelMedium, color = TextMain)
     }
 }

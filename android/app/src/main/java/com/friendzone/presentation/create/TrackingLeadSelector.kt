@@ -24,13 +24,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.friendzone.R
-import com.example.friendzone.ui.theme.FzBorderGray
-import com.example.friendzone.ui.theme.FzPrimary
-import com.example.friendzone.ui.theme.FzPrimaryLight
-import com.example.friendzone.ui.theme.FzTextMain
-import com.example.friendzone.ui.theme.FzTextSecondary
-import com.example.friendzone.ui.theme.FzSurface
-import com.example.friendzone.ui.theme.FzSurface2
+import com.example.friendzone.ui.theme.BorderGray
+import com.example.friendzone.ui.theme.Primary
+import com.example.friendzone.ui.theme.TextMain
+import com.example.friendzone.ui.theme.TextSecondary
+import com.example.friendzone.ui.theme.Surface
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -47,12 +45,12 @@ fun TrackingLeadSelector(
         Text(
             stringResource(R.string.create_tracking_title),
             style = MaterialTheme.typography.labelLarge,
-            color = FzTextMain,
+            color = TextMain,
         )
         Text(
             stringResource(R.string.create_tracking_desc),
             style = MaterialTheme.typography.bodySmall,
-            color = FzTextSecondary,
+            color = TextSecondary,
             modifier = Modifier.padding(top = 4.dp, bottom = 10.dp),
         )
         FlowRow(
@@ -97,9 +95,9 @@ private fun TrackingChip(
     selected: Boolean,
     onClick: () -> Unit,
 ) {
-    val bg = if (selected) FzPrimary else FzSurface
-    val fg = if (selected) androidx.compose.ui.graphics.Color.White else FzTextSecondary
-    val border = if (selected) FzPrimary else com.example.friendzone.ui.theme.FzBorderGray
+    val bg = if (selected) Primary else Surface
+    val fg = if (selected) androidx.compose.ui.graphics.Color.White else TextSecondary
+    val border = if (selected) Primary else BorderGray
     Text(
         text = label,
         modifier = Modifier
@@ -127,14 +125,14 @@ private fun CustomDurationDialog(
         title = { Text(stringResource(R.string.create_custom_tracking_dialog_title)) },
         text = {
             Column {
-                Text(stringResource(R.string.create_hours_label, hours), color = FzTextMain)
+                Text(stringResource(R.string.create_hours_label, hours), color = TextMain)
                 androidx.compose.foundation.layout.Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     TextButton(onClick = { hours = (hours - 1).coerceAtLeast(0) }) { Text("-") }
                     TextButton(onClick = { hours = (hours + 1).coerceAtMost(23) }) { Text("+") }
                 }
-                Text(stringResource(R.string.create_minutes_label, minutes), color = FzTextMain)
+                Text(stringResource(R.string.create_minutes_label, minutes), color = TextMain)
                 androidx.compose.foundation.layout.Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
@@ -150,11 +148,11 @@ private fun CustomDurationDialog(
                     onConfirm(total)
                 },
             ) {
-                Text("OK", color = FzPrimary)
+                Text(stringResource(R.string.btn_ok), color = Primary)
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text(stringResource(R.string.btn_cancel), color = FzTextSecondary) }
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.btn_cancel), color = TextSecondary) }
         },
     )
 }
