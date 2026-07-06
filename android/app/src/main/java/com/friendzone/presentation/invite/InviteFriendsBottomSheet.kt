@@ -33,11 +33,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.friendzone.R
 import com.example.friendzone.presentation.components.FriendZoneOutlineButton
 import com.example.friendzone.presentation.components.FriendZonePrimaryButton
-import com.example.friendzone.ui.theme.FzBorderGray
-import com.example.friendzone.ui.theme.FzPrimary
-import com.example.friendzone.ui.theme.FzTextMain
-import com.example.friendzone.ui.theme.FzTextSecondary
-import com.example.friendzone.ui.theme.FzSurface2
+import com.example.friendzone.ui.theme.BorderGray
+import com.example.friendzone.ui.theme.Primary
+import com.example.friendzone.ui.theme.TextMain
+import com.example.friendzone.ui.theme.TextSecondary
+import com.example.friendzone.ui.theme.Surface2
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -63,13 +63,13 @@ fun InviteFriendsBottomSheet(
             Text(
                 stringResource(R.string.header_invite_your_friends),
                 style = MaterialTheme.typography.titleMedium,
-                color = FzTextMain,
+                color = TextMain,
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 stringResource(R.string.msg_invite_personal_link_desc),
                 style = MaterialTheme.typography.bodySmall,
-                color = FzTextSecondary,
+                color = TextSecondary,
             )
             Spacer(modifier = Modifier.height(20.dp))
 
@@ -81,7 +81,7 @@ fun InviteFriendsBottomSheet(
                             .padding(24.dp),
                         contentAlignment = Alignment.Center,
                     ) {
-                        CircularProgressIndicator(color = FzPrimary)
+                        CircularProgressIndicator(color = Primary)
                     }
                 }
 
@@ -89,22 +89,22 @@ fun InviteFriendsBottomSheet(
                     Text(
                         stringResource(R.string.msg_invite_error),
                         style = MaterialTheme.typography.bodyMedium,
-                        color = FzTextSecondary,
+                        color = TextSecondary,
                     )
                 }
 
                 else -> {
-                    Text(stringResource(R.string.label_your_link), style = MaterialTheme.typography.labelSmall, color = FzTextSecondary)
+                    Text(stringResource(R.string.label_your_link), style = MaterialTheme.typography.labelSmall, color = TextSecondary)
                     Spacer(modifier = Modifier.height(6.dp))
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(12.dp))
-                            .background(FzSurface2)
-                            .border(1.dp, FzBorderGray, RoundedCornerShape(12.dp))
+                            .background(Surface2)
+                            .border(1.dp, BorderGray, RoundedCornerShape(12.dp))
                             .padding(horizontal = 14.dp, vertical = 14.dp),
                     ) {
-                        Text(link, style = MaterialTheme.typography.bodyMedium, color = FzTextMain)
+                        Text(link, style = MaterialTheme.typography.bodyMedium, color = TextMain)
                     }
                     Spacer(modifier = Modifier.height(20.dp))
 

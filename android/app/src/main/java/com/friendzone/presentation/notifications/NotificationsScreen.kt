@@ -50,12 +50,12 @@ import com.example.friendzone.presentation.components.FriendZonePrimaryButton
 import com.example.friendzone.presentation.components.FriendZonePullToRefreshBox
 import com.example.friendzone.presentation.components.PillBadge
 import com.example.friendzone.presentation.components.PillVariant
-import com.example.friendzone.ui.theme.FzBackground
-import com.example.friendzone.ui.theme.FzBorderGray
-import com.example.friendzone.ui.theme.FzPrimary
-import com.example.friendzone.ui.theme.FzTextMain
-import com.example.friendzone.ui.theme.FzTextSecondary
-import com.example.friendzone.ui.theme.FzSurface
+import com.example.friendzone.ui.theme.Background
+import com.example.friendzone.ui.theme.BorderGray
+import com.example.friendzone.ui.theme.Primary
+import com.example.friendzone.ui.theme.TextMain
+import com.example.friendzone.ui.theme.TextSecondary
+import com.example.friendzone.ui.theme.Surface
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -121,7 +121,7 @@ fun NotificationsScreen(
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(FzBackground),
+                    .background(Background),
             ) {
                 item {
                     CreateEventHeader(title = stringResource(R.string.header_notifications), onBackClick = onBack)
@@ -136,7 +136,7 @@ fun NotificationsScreen(
                                     .padding(48.dp),
                                 contentAlignment = Alignment.Center,
                             ) {
-                                CircularProgressIndicator(color = FzPrimary)
+                                CircularProgressIndicator(color = Primary)
                             }
                         }
                     }
@@ -148,9 +148,9 @@ fun NotificationsScreen(
                                     .padding(32.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally,
                             ) {
-                                Text(uiState.errorMessage!!, color = FzTextSecondary)
+                                Text(uiState.errorMessage!!, color = TextSecondary)
                                 TextButton(onClick = { viewModel.loadInbox() }) {
-                                    Text("Retry", color = FzPrimary)
+                                    Text(stringResource(R.string.btn_retry), color = Primary)
                                 }
                             }
                         }
@@ -163,7 +163,7 @@ fun NotificationsScreen(
                                     .padding(48.dp),
                                 contentAlignment = Alignment.Center,
                             ) {
-                                Text(stringResource(R.string.msg_no_notifications), color = FzTextSecondary)
+                                Text(stringResource(R.string.msg_no_notifications), color = TextSecondary)
                             }
                         }
                     }
@@ -175,7 +175,7 @@ fun NotificationsScreen(
                                 onDismiss = { viewModel.dismissNotification(item) },
                             )
                             HorizontalDivider(
-                                color = FzBorderGray,
+                                color = BorderGray,
                                 modifier = Modifier.padding(horizontal = 16.dp),
                             )
                         }
@@ -246,13 +246,13 @@ private fun NotificationRowContent(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(modifier = Modifier.weight(1f)) {
-            Text(item.title, style = MaterialTheme.typography.labelLarge, color = FzTextMain)
+            Text(item.title, style = MaterialTheme.typography.labelLarge, color = TextMain)
             Spacer(modifier = Modifier.height(4.dp))
-            Text(item.body, style = MaterialTheme.typography.bodySmall, color = FzTextSecondary)
+            Text(item.body, style = MaterialTheme.typography.bodySmall, color = TextSecondary)
         }
         if (item.actionable) {
             Spacer(modifier = Modifier.padding(start = 8.dp))
-            PillBadge("Action", PillVariant.Light)
+            PillBadge(stringResource(R.string.label_action), PillVariant.Light)
         }
     }
 }
@@ -274,17 +274,17 @@ private fun NotificationActionSheet(
         Text(
             stringResource(R.string.title_invitation),
             style = MaterialTheme.typography.titleMedium,
-            color = FzTextMain,
+            color = TextMain,
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             stringResource(R.string.msg_invitation_body, notification.data["eventTitle"] ?: ""),
             style = MaterialTheme.typography.bodyMedium,
-            color = FzTextSecondary,
+            color = TextSecondary,
         )
         if (!subtitle.isNullOrBlank()) {
             Spacer(modifier = Modifier.height(8.dp))
-            Text(subtitle, style = MaterialTheme.typography.bodySmall, color = FzTextSecondary)
+            Text(subtitle, style = MaterialTheme.typography.bodySmall, color = TextSecondary)
         }
         if (notification.type == AppNotificationType.INVITATION_CREATED) {
             notification.data["eventTitle"]?.let { eventTitle ->
@@ -292,12 +292,12 @@ private fun NotificationActionSheet(
                 Text(
                     eventTitle,
                     style = MaterialTheme.typography.labelLarge,
-                    color = FzTextMain,
+                    color = TextMain,
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(12.dp))
-                        .background(FzSurface)
-                        .border(1.dp, FzBorderGray, RoundedCornerShape(12.dp))
+                        .background(Surface)
+                        .border(1.dp, BorderGray, RoundedCornerShape(12.dp))
                         .padding(12.dp),
                 )
             }

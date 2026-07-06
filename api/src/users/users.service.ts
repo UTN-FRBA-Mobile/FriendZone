@@ -145,6 +145,20 @@ export class UsersService {
     return toSafeUser(updated);
   }
 
+  async deleteAccount(userId: string): Promise<SafeUser> {
+    const user = await this.usersRepository.findById(userId);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    await this.deleteProfilePictureFile(user.profilePictureUrl);
+    const deleted = await this.usersRepository.delete(userId);
+    if (!deleted) {
+      throw new NotFoundException('User not found during deletion');
+    }
+    return toSafeUser(deleted);
+  }
+
   private async deleteProfilePictureFile(
     profilePictureUrl: string | null,
   ): Promise<void> {

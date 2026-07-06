@@ -1,25 +1,27 @@
 package com.example.friendzone.presentation.events
 
+import android.content.Context
+import com.example.friendzone.R
 import com.example.friendzone.domain.model.Event
 import com.example.friendzone.domain.model.EventStatus
 import com.example.friendzone.domain.model.InvitationStatus
 import com.example.friendzone.domain.model.ParticipantWithUser
 import com.example.friendzone.domain.util.ParticipantStatus
+import com.example.friendzone.domain.util.RelativeTimeLabel
 import com.example.friendzone.domain.util.classifyParticipantWithUser
 import com.example.friendzone.domain.util.formatEventDate
-import com.example.friendzone.domain.util.formatRelativeTimeLabel
+import com.example.friendzone.domain.util.getRelativeTimeLabel
 import com.example.friendzone.domain.util.isLive
 import com.example.friendzone.domain.util.resolveApiAssetUrl
-import com.example.friendzone.domain.util.statusPillText
-import com.example.friendzone.domain.util.travelEtaSubtitle
 import com.example.friendzone.presentation.components.FriendRowUi
 import com.example.friendzone.presentation.components.PillVariant
 
 fun Event.toListItemUi(
+    context: Context,
     confirmedCount: Int,
     pendingCount: Int,
     onTheWayCount: Int = 0,
-    friendPreviews: List<com.example.friendzone.presentation.components.FriendRowUi> = emptyList(),
+    friendPreviews: List<FriendRowUi> = emptyList(),
     participantAvatars: List<UserAvatarUi> = emptyList(),
     extraAvatarCount: Int = 0,
     isPastItem: Boolean = false,
@@ -27,7 +29,16 @@ fun Event.toListItemUi(
     organizerId: String? = null,
     currentUserId: String? = null,
 ): EventListItemUi {
-    val (icon, label) = formatRelativeTimeLabel(startsAt)
+    val (icon, relativeTime) = getRelativeTimeLabel(startsAt)
+    val timeLabel = when (relativeTime) {
+        RelativeTimeLabel.Today -> context.getString(R.string.msg_today)
+        RelativeTimeLabel.Tomorrow -> context.getString(R.string.msg_tomorrow)
+        RelativeTimeLabel.Yesterday -> context.getString(R.string.msg_yesterday)
+        is RelativeTimeLabel.InDays -> context.getString(R.string.msg_in_days, relativeTime.days.toInt())
+        is RelativeTimeLabel.DaysAgo -> context.getString(R.string.msg_days_ago, relativeTime.days.toInt())
+        RelativeTimeLabel.NextWeek -> context.getString(R.string.msg_next_week)
+    }
+
     val statusBadge = when (status) {
         EventStatus.COMPLETED -> EventDetailStatusBadge.Completed
         EventStatus.CANCELLED -> EventDetailStatusBadge.Cancelled
@@ -37,12 +48,12 @@ fun Event.toListItemUi(
         eventId = id,
         title = title,
         timeIcon = icon,
-        timeLabel = label,
+        timeLabel = timeLabel,
         dateText = formatEventDate(startsAt),
         statusBadge = statusBadge,
-        confirmedText = "✓ $confirmedCount Confirmed",
-        pendingText = "? $pendingCount Pending",
-        onTheWayText = if (onTheWayCount > 0) "🚗 $onTheWayCount On the way" else null,
+        confirmedText = context.getString(R.string.msg_confirmed_count, confirmedCount),
+        pendingText = context.getString(R.string.msg_pending_count, pendingCount),
+        onTheWayText = if (onTheWayCount > 0) context.getString(R.string.msg_on_the_way_count, onTheWayCount) else null,
         isLive = isLive(),
         avatars = participantAvatars,
         extraCount = extraAvatarCount,
@@ -57,6 +68,7 @@ fun Event.toListItemUi(
 }
 
 fun buildFriendPreviews(
+    context: Context,
     event: Event,
     participants: List<ParticipantWithUser>,
     limit: Int = 3,
@@ -66,37 +78,37 @@ fun buildFriendPreviews(
         .take(limit)
         .map { item ->
             friendRowForParticipantStatus(
+                context = context,
                 displayName = item.user.displayName,
                 profilePictureUrl = resolveApiAssetUrl(item.user.profilePictureUrl),
                 status = classifyParticipantWithUser(item, event),
-                arrivedSubtitle = "Already there",
             )
         }
 
 fun friendRowForParticipantStatus(
+    context: Context,
     displayName: String,
     status: ParticipantStatus,
     profilePictureUrl: String? = null,
-    arrivedSubtitle: String = "Arrived",
 ): FriendRowUi = when (status) {
     is ParticipantStatus.Arrived -> participantToFriendRow(
         displayName = displayName,
-        subtitle = arrivedSubtitle,
-        pillText = status.statusPillText(),
+        subtitle = context.getString(R.string.msg_already_there),
+        pillText = context.getString(R.string.msg_status_arrived_badge),
         pillVariant = PillVariant.Dark,
         profilePictureUrl = profilePictureUrl,
     )
     is ParticipantStatus.InTransit -> participantToFriendRow(
         displayName = displayName,
-        subtitle = status.travelEtaSubtitle(),
-        pillText = status.statusPillText(),
+        subtitle = status.etaMinutes?.let { context.getString(R.string.msg_min_away, it) } ?: context.getString(R.string.msg_arrival_unavailable),
+        pillText = context.getString(R.string.msg_status_in_transit_badge),
         pillVariant = PillVariant.Light,
         profilePictureUrl = profilePictureUrl,
     )
     is ParticipantStatus.Delayed -> participantToFriendRow(
         displayName = displayName,
-        subtitle = status.travelEtaSubtitle(),
-        pillText = status.statusPillText(),
+        subtitle = status.etaMinutes?.let { context.getString(R.string.msg_min_away, it) } ?: context.getString(R.string.msg_arrival_unavailable),
+        pillText = context.getString(R.string.msg_status_delayed_badge),
         pillVariant = PillVariant.Amber,
         profilePictureUrl = profilePictureUrl,
     )

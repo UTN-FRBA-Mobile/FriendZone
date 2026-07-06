@@ -1,8 +1,10 @@
 package com.example.friendzone.presentation.events
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.friendzone.BuildConfig
+import com.example.friendzone.R
 import com.example.friendzone.data.remote.websocket.EventSocketManager
 import com.example.friendzone.data.remote.websocket.SocketEventType
 import com.example.friendzone.domain.model.Event
@@ -21,6 +23,7 @@ import com.example.friendzone.domain.util.isLive
 import com.example.friendzone.domain.util.isPastEvent
 import com.example.friendzone.domain.util.parseStartsAt
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -55,6 +58,7 @@ class EventsViewModel @Inject constructor(
     private val locationRepository: LocationRepository,
     private val eventSocketManager: EventSocketManager,
     private val authRepository: AuthRepository,
+    @ApplicationContext private val context: Context,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<EventsUiState>(EventsUiState.Loading)
     val uiState: StateFlow<EventsUiState> = _uiState.asStateFlow()
@@ -83,7 +87,6 @@ class EventsViewModel @Inject constructor(
         viewModelScope.launch {
             authRepository.currentUser.collect { user ->
                 currentUserId = user?.id
-                // Cargar eventos DESPUÉS de obtener el usuario
                 if (currentUserId != null) {
                     loadEvents()
                 }
@@ -142,12 +145,12 @@ class EventsViewModel @Inject constructor(
                 is ApiResult.Success -> {
                     _isInvitationActionLoading.value = false
                     _selectedInvitation.value = null
-                    _snackbarMessage.value = if (accept) "Joined event" else "Declined"
+                    _snackbarMessage.value = if (accept) context.getString(R.string.msg_joined_event) else context.getString(R.string.msg_declined)
                     loadEvents()
                 }
                 is ApiResult.Error -> {
                     _isInvitationActionLoading.value = false
-                    _snackbarMessage.value = result.error.displayMessage()
+                    _snackbarMessage.value = result.error.displayMessage(context)
                 }
                 ApiResult.Loading -> Unit
             }
@@ -202,7 +205,7 @@ class EventsViewModel @Inject constructor(
 
         if (eventsResult is ApiResult.Error) {
             if (_uiState.value !is EventsUiState.Data) {
-                _uiState.value = EventsUiState.Error(eventsResult.error.displayMessage())
+                _uiState.value = EventsUiState.Error(eventsResult.error.displayMessage(context))
             }
             return
         }
@@ -273,10 +276,11 @@ class EventsViewModel @Inject constructor(
                             classifyParticipantWithUser(item, event) is ParticipantStatus.Delayed
                     }
                     event.toListItemUi(
+                        context = context,
                         confirmedCount = confirmed,
                         pendingCount = pending,
                         onTheWayCount = onTheWay,
-                        friendPreviews = buildFriendPreviews(event, participants),
+                        friendPreviews = buildFriendPreviews(context, event, participants),
                         isPastItem = event.isPastEvent(BuildConfig.EVENT_PAST_THRESHOLD_HOURS),
                         startsAtEpoch = event.parseStartsAt().epochSecond,
                         organizerId = event.organizerId,
@@ -285,6 +289,7 @@ class EventsViewModel @Inject constructor(
                 } else {
                     val (avatars, extra) = buildAvatarPreview(participants)
                     event.toListItemUi(
+                        context = context,
                         confirmedCount = confirmed,
                         pendingCount = pending,
                         participantAvatars = avatars,
@@ -316,11 +321,11 @@ class EventsViewModel @Inject constructor(
             _actionState.value = EventActionState.Loading
             when (val result = eventRepository.delete(eventId)) {
                 is ApiResult.Success -> {
-                    _actionState.value = EventActionState.Success("Event deleted")
+                    _actionState.value = EventActionState.Success(context.getString(R.string.msg_event_deleted))
                     loadEvents()
                 }
                 is ApiResult.Error -> {
-                    _actionState.value = EventActionState.Error(result.error.displayMessage())
+                    _actionState.value = EventActionState.Error(result.error.displayMessage(context))
                 }
                 ApiResult.Loading -> Unit
             }
@@ -332,11 +337,11 @@ class EventsViewModel @Inject constructor(
             _actionState.value = EventActionState.Loading
             when (val result = eventRepository.leave(eventId)) {
                 is ApiResult.Success -> {
-                    _actionState.value = EventActionState.Success("Left event")
+                    _actionState.value = EventActionState.Success(context.getString(R.string.msg_left_event))
                     loadEvents()
                 }
                 is ApiResult.Error -> {
-                    _actionState.value = EventActionState.Error(result.error.displayMessage())
+                    _actionState.value = EventActionState.Error(result.error.displayMessage(context))
                 }
                 ApiResult.Loading -> Unit
             }

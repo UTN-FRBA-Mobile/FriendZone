@@ -52,6 +52,11 @@ class UserRepositoryImpl @Inject constructor(
         DtoMapper.toUser(usersApi.deleteProfilePicture())
     }
 
+    override suspend fun deleteAccount(): ApiResult<Unit> = safeApiCall {
+        usersApi.deleteAccount()
+        Unit
+    }
+
     override suspend fun search(query: String): ApiResult<List<User>> = safeApiCall {
         usersApi.search(query).map(DtoMapper::toUser)
     }

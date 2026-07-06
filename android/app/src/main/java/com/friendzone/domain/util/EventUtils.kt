@@ -123,20 +123,6 @@ fun classifyParticipant(
     }
 }
 
-fun ParticipantStatus.travelEtaSubtitle(): String = when (this) {
-    is ParticipantStatus.InTransit ->
-        etaMinutes?.let { "$it min away" } ?: "Arrival time unavailable"
-    is ParticipantStatus.Delayed ->
-        etaMinutes?.let { "$it min away" } ?: "Arrival time unavailable"
-    is ParticipantStatus.Arrived -> error("Arrived participants do not have travel ETA subtitles")
-}
-
-fun ParticipantStatus.statusPillText(): String = when (this) {
-    is ParticipantStatus.Arrived -> "✓ Arrived"
-    is ParticipantStatus.InTransit -> "In Transit"
-    is ParticipantStatus.Delayed -> "Delayed"
-}
-
 fun classifyParticipantWithUser(
     item: ParticipantWithUser,
     event: Event,
@@ -148,7 +134,16 @@ private val dateFormatter = DateTimeFormatter.ofPattern("EEEE, MMMM d, h:mm a")
 
 fun formatEventDate(startsAt: String): String = dateFormatter.format(Instant.parse(startsAt))
 
-fun formatRelativeTimeLabel(startsAt: String, now: Instant = Instant.now()): Pair<String, String> {
+sealed class RelativeTimeLabel {
+    data object Today : RelativeTimeLabel()
+    data object Tomorrow : RelativeTimeLabel()
+    data object Yesterday : RelativeTimeLabel()
+    data class InDays(val days: Long) : RelativeTimeLabel()
+    data class DaysAgo(val days: Long) : RelativeTimeLabel()
+    data object NextWeek : RelativeTimeLabel()
+}
+
+fun getRelativeTimeLabel(startsAt: String, now: Instant = Instant.now()): Pair<String, RelativeTimeLabel> {
     val instant = Instant.parse(startsAt)
     val zone = ZoneId.systemDefault()
     val eventDate = instant.atZone(zone).toLocalDate()
@@ -161,12 +156,12 @@ fun formatRelativeTimeLabel(startsAt: String, now: Instant = Instant.now()): Pai
         else -> "📅"
     }
     val label = when {
-        daysBetween == 0L -> "Today"
-        daysBetween == 1L -> "Tomorrow"
-        daysBetween in 2L..6L -> "In $daysBetween days"
-        daysBetween == -1L -> "Yesterday"
-        daysBetween < -1L -> "${-daysBetween} days ago"
-        else -> "Next week"
+        daysBetween == 0L -> RelativeTimeLabel.Today
+        daysBetween == 1L -> RelativeTimeLabel.Tomorrow
+        daysBetween == -1L -> RelativeTimeLabel.Yesterday
+        daysBetween in 2L..6L -> RelativeTimeLabel.InDays(daysBetween)
+        daysBetween < -1L -> RelativeTimeLabel.DaysAgo(-daysBetween)
+        else -> RelativeTimeLabel.NextWeek
     }
     return icon to label
 }

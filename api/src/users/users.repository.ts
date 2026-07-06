@@ -99,4 +99,13 @@ export class UsersRepository {
       .returning();
     return user;
   }
+
+  async delete(id: string): Promise<User | undefined> {
+    const deletedRows = await this.db
+      .delete(users)
+      .where(eq(users.id, id))
+      .returning();
+
+    return deletedRows.length > 0 ? deletedRows[0] : undefined;
+  }
 }

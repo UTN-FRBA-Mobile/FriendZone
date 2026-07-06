@@ -59,12 +59,12 @@ import com.example.friendzone.presentation.components.FriendZoneTopBar
 import com.example.friendzone.domain.util.resolveApiAssetUrl
 import com.example.friendzone.presentation.components.ProfileIconItem
 import com.example.friendzone.presentation.invite.InviteFriendsBottomSheet
-import com.example.friendzone.ui.theme.FzBackground
-import com.example.friendzone.ui.theme.FzBorderGray
-import com.example.friendzone.ui.theme.FzPrimary
-import com.example.friendzone.ui.theme.FzTextMain
-import com.example.friendzone.ui.theme.FzTextSecondary
-import com.example.friendzone.ui.theme.FzSurface
+import com.example.friendzone.ui.theme.Background
+import com.example.friendzone.ui.theme.BorderGray
+import com.example.friendzone.ui.theme.Primary
+import com.example.friendzone.ui.theme.Surface
+import com.example.friendzone.ui.theme.TextMain
+import com.example.friendzone.ui.theme.TextSecondary
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -119,7 +119,7 @@ fun FriendsScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(FzBackground),
+                .background(Background),
         ) {
             FriendZoneTopBar(
                 title = stringResource(R.string.header_friends),
@@ -224,9 +224,9 @@ private fun SegmentChip(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val bg = if (selected) FzPrimary else FzSurface
-    val fg = if (selected) Color.White else FzTextSecondary
-    val border = if (selected) FzPrimary else FzBorderGray
+    val bg = if (selected) Primary else Surface
+    val fg = if (selected) Color.White else TextSecondary
+    val border = if (selected) Primary else BorderGray
     Text(
         text = label,
         modifier = modifier
@@ -284,16 +284,16 @@ private fun FriendsListContent(
                     }
                     is LookupResult.NotFound -> {
                         Spacer(modifier = Modifier.height(8.dp))
-                        Text(stringResource(R.string.msg_no_user_found), color = FzTextSecondary, style = MaterialTheme.typography.bodySmall)
+                        Text(stringResource(R.string.msg_no_user_found), color = TextSecondary, style = MaterialTheme.typography.bodySmall)
                     }
                     is LookupResult.Error -> {
                         Spacer(modifier = Modifier.height(8.dp))
-                        Text(lookupResult.message, color = FzTextSecondary, style = MaterialTheme.typography.bodySmall)
+                        Text(lookupResult.message, color = TextSecondary, style = MaterialTheme.typography.bodySmall)
                     }
                     null -> Unit
                 }
                 Spacer(modifier = Modifier.height(24.dp))
-                Text(stringResource(R.string.label_your_friends), style = MaterialTheme.typography.labelLarge, color = FzTextMain)
+                Text(stringResource(R.string.label_your_friends), style = MaterialTheme.typography.labelLarge, color = TextMain)
                 Spacer(modifier = Modifier.height(12.dp))
             }
         }
@@ -305,7 +305,7 @@ private fun FriendsListContent(
                         .padding(32.dp),
                     contentAlignment = Alignment.Center,
                 ) {
-                    CircularProgressIndicator(color = FzPrimary)
+                    CircularProgressIndicator(color = Primary)
                 }
             }
         } else if (friends.isEmpty()) {
@@ -313,7 +313,7 @@ private fun FriendsListContent(
                 Text(
                     stringResource(R.string.msg_no_friends),
                     modifier = Modifier.padding(horizontal = 16.dp),
-                    color = FzTextSecondary,
+                    color = TextSecondary,
                     style = MaterialTheme.typography.bodyMedium,
                 )
             }
@@ -335,8 +335,8 @@ private fun LookupUserRow(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(FzSurface)
-            .border(1.dp, FzBorderGray, RoundedCornerShape(16.dp))
+            .background(Surface)
+            .border(1.dp, BorderGray, RoundedCornerShape(16.dp))
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -346,20 +346,20 @@ private fun LookupUserRow(
         )
         Spacer(modifier = Modifier.width(10.dp))
         Column(modifier = Modifier.weight(1f)) {
-            Text(user.displayName, style = MaterialTheme.typography.bodyMedium, color = FzTextMain)
-            Text("@${user.username}", style = MaterialTheme.typography.bodySmall, color = FzTextSecondary)
+            Text(user.displayName, style = MaterialTheme.typography.bodyMedium, color = TextMain)
+            Text("@${user.username}", style = MaterialTheme.typography.bodySmall, color = TextSecondary)
         }
         if (isSending) {
-            CircularProgressIndicator(modifier = Modifier.size(24.dp), color = FzPrimary, strokeWidth = 2.dp)
+            CircularProgressIndicator(modifier = Modifier.size(24.dp), color = Primary, strokeWidth = 2.dp)
         } else {
             IconButton(
                 onClick = onAddClick,
                 modifier = Modifier
                     .size(36.dp)
                     .clip(CircleShape)
-                    .background(FzPrimary),
+                    .background(Primary),
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Send request", tint = Color.White)
+                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.content_desc_send_request), tint = Color.White)
             }
         }
     }
@@ -372,8 +372,8 @@ private fun FriendListRow(user: User) {
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp)
             .clip(RoundedCornerShape(16.dp))
-            .background(FzSurface)
-            .border(1.dp, FzBorderGray, RoundedCornerShape(16.dp))
+            .background(Surface)
+            .border(1.dp, BorderGray, RoundedCornerShape(16.dp))
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -383,8 +383,8 @@ private fun FriendListRow(user: User) {
         )
         Spacer(modifier = Modifier.width(10.dp))
         Column {
-            Text(user.displayName, style = MaterialTheme.typography.bodyMedium, color = FzTextMain)
-            Text("@${user.username}", style = MaterialTheme.typography.bodySmall, color = FzTextSecondary)
+            Text(user.displayName, style = MaterialTheme.typography.bodyMedium, color = TextMain)
+            Text("@${user.username}", style = MaterialTheme.typography.bodySmall, color = TextSecondary)
         }
     }
 }
@@ -409,7 +409,7 @@ private fun RequestsListContent(
                             .padding(32.dp),
                         contentAlignment = Alignment.Center,
                     ) {
-                        CircularProgressIndicator(color = FzPrimary)
+                        CircularProgressIndicator(color = Primary)
                     }
                 }
             }
@@ -421,7 +421,7 @@ private fun RequestsListContent(
                             .padding(32.dp),
                         contentAlignment = Alignment.Center,
                     ) {
-                        Text(stringResource(R.string.msg_no_pending_requests), color = FzTextSecondary)
+                        Text(stringResource(R.string.msg_no_pending_requests), color = TextSecondary)
                     }
                 }
             }
@@ -449,8 +449,8 @@ private fun RequestRow(
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 12.dp)
             .clip(RoundedCornerShape(16.dp))
-            .background(FzSurface)
-            .border(1.dp, FzBorderGray, RoundedCornerShape(16.dp))
+            .background(Surface)
+            .border(1.dp, BorderGray, RoundedCornerShape(16.dp))
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -460,14 +460,14 @@ private fun RequestRow(
         )
         Spacer(modifier = Modifier.width(10.dp))
         Column(modifier = Modifier.weight(1f)) {
-            Text(request.requester.displayName, style = MaterialTheme.typography.bodyMedium, color = FzTextMain)
-            Text("@${request.requester.username}", style = MaterialTheme.typography.bodySmall, color = FzTextSecondary)
+            Text(request.requester.displayName, style = MaterialTheme.typography.bodyMedium, color = TextMain)
+            Text("@${request.requester.username}", style = MaterialTheme.typography.bodySmall, color = TextSecondary)
         }
         Text(
             stringResource(R.string.btn_accept),
             modifier = Modifier
                 .clip(RoundedCornerShape(8.dp))
-                .background(FzPrimary)
+                .background(Primary)
                 .clickable(onClick = onAccept)
                 .padding(horizontal = 12.dp, vertical = 8.dp),
             color = Color.White,
@@ -478,10 +478,10 @@ private fun RequestRow(
             stringResource(R.string.btn_reject),
             modifier = Modifier
                 .clip(RoundedCornerShape(8.dp))
-                .border(1.dp, FzBorderGray, RoundedCornerShape(8.dp))
+                .border(1.dp, BorderGray, RoundedCornerShape(8.dp))
                 .clickable(onClick = onReject)
                 .padding(horizontal = 12.dp, vertical = 8.dp),
-            color = FzTextSecondary,
+            color = TextSecondary,
             style = MaterialTheme.typography.labelMedium,
         )
     }

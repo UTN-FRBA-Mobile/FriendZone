@@ -10,6 +10,7 @@
 
     <application
         android:name=".FriendZoneApp"
+        android:screenOrientation="portrait"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -19,6 +20,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.FriendZone"
+        android:localeConfig="@xml/locales_config"
         tools:targetApi="31">
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_channel_id"

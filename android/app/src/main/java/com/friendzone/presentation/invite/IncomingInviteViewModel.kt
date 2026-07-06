@@ -1,5 +1,6 @@
 package com.example.friendzone.presentation.invite
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.friendzone.domain.model.User
@@ -9,6 +10,7 @@ import com.example.friendzone.domain.repository.UserRepository
 import com.example.friendzone.domain.result.ApiResult
 import com.example.friendzone.domain.result.displayMessage
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -32,6 +34,7 @@ class IncomingInviteViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val userRepository: UserRepository,
     private val friendRepository: FriendRepository,
+    @ApplicationContext private val context: Context,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(IncomingInviteUiState())
     val uiState: StateFlow<IncomingInviteUiState> = _uiState.asStateFlow()
@@ -66,7 +69,7 @@ class IncomingInviteViewModel @Inject constructor(
                     }
                 }
                 is ApiResult.Error -> _uiState.update {
-                    it.copy(isLoading = false, errorMessage = result.error.displayMessage())
+                    it.copy(isLoading = false, errorMessage = result.error.displayMessage(context))
                 }
                 ApiResult.Loading -> Unit
             }
@@ -88,7 +91,7 @@ class IncomingInviteViewModel @Inject constructor(
                     it.copy(isAdding = false, added = true)
                 }
                 is ApiResult.Error -> _uiState.update {
-                    it.copy(isAdding = false, errorMessage = result.error.displayMessage())
+                    it.copy(isAdding = false, errorMessage = result.error.displayMessage(context))
                 }
                 ApiResult.Loading -> Unit
             }

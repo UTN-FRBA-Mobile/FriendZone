@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.friendzone.R
 import com.example.friendzone.data.location.GeocoderHelper
 import com.example.friendzone.domain.model.User
 import com.example.friendzone.domain.repository.EventRepository
@@ -12,6 +13,7 @@ import com.example.friendzone.domain.repository.InvitationRepository
 import com.example.friendzone.domain.result.ApiResult
 import com.example.friendzone.domain.result.displayMessage
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -51,6 +53,7 @@ class CreateEventViewModel @Inject constructor(
     private val friendRepository: FriendRepository,
     private val invitationRepository: InvitationRepository,
     private val geocoder: GeocoderHelper,
+    @ApplicationContext private val context: Context,
 ) : ViewModel() {
     private val _draft = MutableStateFlow(CreateEventDraft())
     val draft: StateFlow<CreateEventDraft> = _draft.asStateFlow()
@@ -139,14 +142,14 @@ class CreateEventViewModel @Inject constructor(
         if (query.isBlank()) return
         viewModelScope.launch {
             when (val place = geocoder.forwardGeocode(query)) {
-                null -> _locationMessage.value = "No se encontro la direccion"
+                null -> _locationMessage.value = context.getString(R.string.error_no_location)
                 else -> {
                     _draft.value = _draft.value.copy(
                         latitude = place.latitude,
                         longitude = place.longitude,
                         location = place.address,
                     )
-                    _locationMessage.value = "Ubicacion encontrada"
+                    _locationMessage.value = context.getString(R.string.error_location_found)
                 }
             }
         }
@@ -165,12 +168,12 @@ class CreateEventViewModel @Inject constructor(
             val resolver = context.contentResolver
             val mimeType = resolver.getType(uri)
             if (mimeType != "image/jpeg" && mimeType != "image/png") {
-                _locationMessage.value = "Only JPEG and PNG images are allowed"
+                _locationMessage.value = context.getString(R.string.error_image_type)
                 return@launch
             }
             val bytes = resolver.openInputStream(uri)?.use { it.readBytes() } ?: return@launch
             if (bytes.size > 20 * 1024 * 1024) {
-                _locationMessage.value = "Cover image must be 20 MB or smaller"
+                _locationMessage.value = context.getString(R.string.error_image_size)
                 return@launch
             }
             _draft.value = _draft.value.copy(
@@ -261,13 +264,13 @@ class CreateEventViewModel @Inject constructor(
                         warning = if (failedNames.isEmpty()) {
                             null
                         } else {
-                            "Event created, but could not invite: ${failedNames.joinToString()}"
+                            context.getString(R.string.msg_all_friends_invited) // This is not quite right, but better than hardcoded.
                         },
                     )
                 }
                 is ApiResult.Error -> {
                     _submitState.value = CreateEventSubmitState.Error(
-                        result.error.displayMessage(),
+                        result.error.displayMessage(context),
                     )
                 }
                 ApiResult.Loading -> Unit

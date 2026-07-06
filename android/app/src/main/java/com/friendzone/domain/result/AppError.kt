@@ -1,5 +1,8 @@
 package com.example.friendzone.domain.result
 
+import android.content.Context
+import com.example.friendzone.R
+
 sealed class AppError {
     data class Http(val code: Int, val message: String) : AppError()
     data object Unauthorized : AppError()
@@ -7,23 +10,23 @@ sealed class AppError {
     data class Unknown(val message: String) : AppError()
 }
 
-fun AppError.displayMessage(): String = when (this) {
-    is AppError.Http -> humanizeHttpError(code, message)
-    AppError.Unauthorized -> "Your session has expired. Please sign in again."
-    AppError.Network -> "Unable to connect. Check your internet connection and try again."
-    is AppError.Unknown -> message.ifBlank { "Something went wrong. Please try again." }
+fun AppError.displayMessage(context: Context): String = when (this) {
+    is AppError.Http -> humanizeHttpError(context, code, message)
+    AppError.Unauthorized -> context.getString(R.string.error_session_expired)
+    AppError.Network -> context.getString(R.string.error_network)
+    is AppError.Unknown -> message.ifBlank { context.getString(R.string.error_unknown) }
 }
 
-private fun humanizeHttpError(code: Int, rawMessage: String): String {
+private fun humanizeHttpError(context: Context, code: Int, rawMessage: String): String {
     val message = rawMessage.trim()
     if (message.isBlank() || isGenericHttpMessage(message)) {
-        return defaultHttpMessage(code)
+        return defaultHttpMessage(context, code)
     }
 
     return message
         .split("\n")
-        .joinToString("\n") { line -> humanizeApiLine(line.trim()) }
-        .ifBlank { defaultHttpMessage(code) }
+        .joinToString("\n") { line -> humanizeApiLine(context, line.trim()) }
+        .ifBlank { defaultHttpMessage(context, code) }
 }
 
 private fun isGenericHttpMessage(message: String): Boolean {
@@ -34,36 +37,36 @@ private fun isGenericHttpMessage(message: String): Boolean {
         lower.startsWith("http ")
 }
 
-private fun humanizeApiLine(line: String): String {
+private fun humanizeApiLine(context: Context, line: String): String {
     val lower = line.lowercase()
     return when {
         lower == "email already registered" ->
-            "This email is already registered. Try signing in instead."
+            context.getString(R.string.error_email_registered)
         lower == "username already taken" ->
-            "That username is already taken. Please choose another one."
+            context.getString(R.string.error_username_taken)
         lower == "invalid credentials" ->
-            "Email/username or password is incorrect."
+            context.getString(R.string.error_invalid_credentials)
         lower.contains("email must be an email") ->
-            "Please enter a valid email address."
+            context.getString(R.string.error_invalid_email)
         lower.contains("password must be longer than or equal to 8") ||
             lower.contains("password must be longer than") ->
-            "Password must be at least 8 characters."
+            context.getString(R.string.error_password_length)
         lower.contains("username must contain only letters, numbers, and underscores") ->
-            "Username can only contain letters, numbers, and underscores."
+            context.getString(R.string.error_username_format)
         lower.contains("username must be longer than or equal to 3") ->
-            "Username must be at least 3 characters."
+            context.getString(R.string.error_username_length)
         lower.contains("displayname should not be empty") ||
             lower.contains("displayname must be longer") ->
-            "Please enter your display name."
+            context.getString(R.string.error_display_name_required)
         else -> line.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
     }
 }
 
-private fun defaultHttpMessage(code: Int): String = when (code) {
-    400 -> "Some of the information you entered is invalid. Please review the form and try again."
-    401 -> "Your session has expired. Please sign in again."
-    409 -> "An account with this email or username already exists."
-    422 -> "Some of the information you entered is invalid. Please review the form and try again."
-    in 500..599 -> "Something went wrong on our end. Please try again in a moment."
-    else -> "Something went wrong. Please try again."
+private fun defaultHttpMessage(context: Context, code: Int): String = when (code) {
+    400 -> context.getString(R.string.error_invalid_info)
+    401 -> context.getString(R.string.error_session_expired)
+    409 -> context.getString(R.string.error_account_exists)
+    422 -> context.getString(R.string.error_invalid_info)
+    in 500..599 -> context.getString(R.string.error_server)
+    else -> context.getString(R.string.error_unknown)
 }

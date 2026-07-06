@@ -30,12 +30,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.friendzone.R
 import com.example.friendzone.presentation.components.FriendZonePrimaryButton
 import com.example.friendzone.presentation.components.FriendZoneTextField
-import com.example.friendzone.ui.theme.FzBackground
-import com.example.friendzone.ui.theme.FzPrimary
-import com.example.friendzone.ui.theme.FzPrimaryDark
-import com.example.friendzone.ui.theme.FzTextMain
-import com.example.friendzone.ui.theme.FzTextSecondary
-import com.example.friendzone.ui.theme.FzSurface
+import com.example.friendzone.ui.theme.Background
+import com.example.friendzone.ui.theme.Primary
+import com.example.friendzone.ui.theme.PrimaryDark
+import com.example.friendzone.ui.theme.TextMain
+import com.example.friendzone.ui.theme.TextSecondary
+import com.example.friendzone.ui.theme.Surface
 import com.example.friendzone.ui.theme.LoginCardTopShape
 
 @Composable
@@ -50,7 +50,7 @@ fun RegisterScreen(
             .fillMaxSize()
             .background(
                 Brush.verticalGradient(
-                    colors = listOf(FzPrimaryDark, FzPrimary, FzBackground),
+                    colors = listOf(PrimaryDark, Primary, Background),
                 ),
             )
             .verticalScroll(rememberScrollState())
@@ -72,33 +72,33 @@ fun RegisterScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(LoginCardTopShape)
-                .background(FzSurface)
+                .background(Surface)
                 .padding(horizontal = 24.dp, vertical = 32.dp),
         ) {
-            Text("Create account", style = MaterialTheme.typography.headlineMedium, color = FzTextMain)
+            Text(stringResource(R.string.title_create_account), style = MaterialTheme.typography.headlineMedium, color = TextMain)
             Spacer(modifier = Modifier.height(24.dp))
 
             FriendZoneTextField(
-                label = "Email",
+                label = stringResource(R.string.label_email),
                 value = uiState.email,
                 onValueChange = viewModel::onEmailChange,
-                placeholder = "you@example.com",
+                placeholder = stringResource(R.string.placeholder_email),
                 required = true,
             )
             Spacer(modifier = Modifier.height(16.dp))
             FriendZoneTextField(
-                label = "Username",
+                label = stringResource(R.string.label_username),
                 value = uiState.username,
                 onValueChange = viewModel::onUsernameChange,
-                placeholder = "johndoe",
+                placeholder = stringResource(R.string.placeholder_username),
                 required = true,
             )
             Spacer(modifier = Modifier.height(16.dp))
             FriendZoneTextField(
-                label = "Display name",
+                label = stringResource(R.string.label_display_name),
                 value = uiState.displayName,
                 onValueChange = viewModel::onDisplayNameChange,
-                placeholder = "John Doe",
+                placeholder = stringResource(R.string.placeholder_display_name),
                 required = true,
             )
             Spacer(modifier = Modifier.height(16.dp))
@@ -112,7 +112,7 @@ fun RegisterScreen(
             )
             Spacer(modifier = Modifier.height(16.dp))
             FriendZoneTextField(
-                label = "Confirm password",
+                label = stringResource(R.string.label_confirm_password),
                 value = uiState.confirmPassword,
                 onValueChange = viewModel::onConfirmPasswordChange,
                 placeholder = "········",
@@ -134,16 +134,16 @@ fun RegisterScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
             Text(
-                text = "Already have an account?",
+                text = stringResource(R.string.prompt_have_account),
                 style = MaterialTheme.typography.bodySmall,
-                color = FzTextSecondary,
+                color = TextSecondary,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth(),
             )
             Text(
                 text = stringResource(R.string.btn_login),
                 style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
-                color = FzPrimary,
+                color = Primary,
                 textAlign = TextAlign.Center,
                 modifier = Modifier
                     .fillMaxWidth()

@@ -38,6 +38,9 @@ interface UsersApi {
     @DELETE("users/me/profile-picture")
     suspend fun deleteProfilePicture(): UserDto
 
+    @DELETE("users/me")
+    suspend fun deleteAccount(): UserDto
+
     @GET("users/search")
     suspend fun search(@Query("q") query: String): List<UserDto>
 

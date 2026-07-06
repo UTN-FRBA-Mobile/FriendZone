@@ -15,8 +15,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
-import com.example.friendzone.ui.theme.FzPrimary
-import com.example.friendzone.ui.theme.FzPrimaryLight
+import com.example.friendzone.ui.theme.Primary
+import com.example.friendzone.ui.theme.PrimaryLight
 
 @Composable
 fun EventCoverAvatar(
@@ -28,7 +28,7 @@ fun EventCoverAvatar(
         modifier = modifier
             .size(size)
             .clip(CircleShape)
-            .background(FzPrimaryLight),
+            .background(PrimaryLight),
         contentAlignment = Alignment.Center,
     ) {
         if (coverImageUrl != null) {
@@ -44,7 +44,7 @@ fun EventCoverAvatar(
             Icon(
                 imageVector = Icons.Filled.Group,
                 contentDescription = null,
-                tint = FzPrimary,
+                tint = Primary,
                 modifier = Modifier.size(size * 0.55f),
             )
         }

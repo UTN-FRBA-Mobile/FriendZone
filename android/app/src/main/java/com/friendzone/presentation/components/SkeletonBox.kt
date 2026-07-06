@@ -17,8 +17,8 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.unit.dp
-import com.example.friendzone.ui.theme.FzBorderGray
-import com.example.friendzone.ui.theme.FzSurface2
+import com.example.friendzone.ui.theme.BorderGray
+import com.example.friendzone.ui.theme.Surface2
 
 @Composable
 fun SkeletonBox(
@@ -37,9 +37,9 @@ fun SkeletonBox(
     )
     val brush = Brush.linearGradient(
         colors = listOf(
-            FzSurface2,
-            FzBorderGray.copy(alpha = 0.55f),
-            FzSurface2,
+            Surface2,
+            BorderGray.copy(alpha = 0.55f),
+            Surface2,
         ),
         start = Offset(translateAnim - 300f, 0f),
         end = Offset(translateAnim, 0f),

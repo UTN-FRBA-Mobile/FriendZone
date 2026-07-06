@@ -62,12 +62,9 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.example.friendzone.R
-import com.example.friendzone.ui.theme.FzBorder
-import com.example.friendzone.ui.theme.FzGreen
-import com.example.friendzone.ui.theme.FzInk
-import com.example.friendzone.ui.theme.FzInk3
-import com.example.friendzone.ui.theme.FzSurface
-import com.example.friendzone.ui.theme.FzSurface2
+import com.example.friendzone.ui.theme.BorderGray
+import com.example.friendzone.ui.theme.TextMain
+import com.example.friendzone.ui.theme.Surface
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.CustomZoomButtonsController
@@ -86,10 +83,10 @@ data class EventMapPerson(
     val arrived: Boolean,
 )
 
-private val EventMarkerColor = Color(0xFF1C6B3A) // green, same as FzGreen
-private val PersonMarkerColor = Color(0xFFE0772D) // orange
-private val MyMarkerColor = Color(0xFF2D6CDF) // blue (used in the legend)
-private val ArrivedBadgeColor = Color(0xFF2FA05A) // green check badge for arrived people
+private val EventMarkerColor = Color(0xFF1C6B3A) 
+private val PersonMarkerColor = Color(0xFFE0772D) 
+private val MyMarkerColor = Color(0xFF2D6CDF) 
+private val ArrivedBadgeColor = Color(0xFF2FA05A) 
 
 /**
  * Miniatura del mapa centrada en la ubicacion del evento. Al tocarla se abre
@@ -109,7 +106,7 @@ fun EventMapThumbnail(
             .fillMaxWidth()
             .height(200.dp)
             .clip(RoundedCornerShape(12.dp))
-            .border(1.5.dp, FzBorder, RoundedCornerShape(12.dp)),
+            .border(1.5.dp, BorderGray, RoundedCornerShape(12.dp)),
     ) {
         AndroidView(
             factory = { mapView },
@@ -142,7 +139,7 @@ fun EventMapThumbnail(
                 .align(Alignment.BottomEnd)
                 .padding(10.dp)
                 .clip(RoundedCornerShape(10.dp))
-                .background(FzInk.copy(alpha = 0.8f))
+                .background(TextMain.copy(alpha = 0.8f))
                 .padding(horizontal = 12.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(6.dp),
@@ -153,7 +150,7 @@ fun EventMapThumbnail(
                 tint = Color.White,
                 modifier = Modifier.size(16.dp),
             )
-            Text("View map", color = Color.White, modifier = Modifier)
+            Text(stringResource(R.string.btn_view_live_map), color = Color.White, modifier = Modifier)
         }
     }
 }
@@ -209,7 +206,7 @@ fun EventMapDialog(
                 .fillMaxWidth(0.95f)
                 .fillMaxHeight(0.88f)
                 .clip(RoundedCornerShape(20.dp))
-                .background(FzSurface),
+                .background(Surface),
         ) {
             EventMapContent(
                 eventLatitude = eventLatitude,
@@ -233,15 +230,15 @@ fun EventMapDialog(
                     .padding(12.dp)
                     .size(40.dp)
                     .clip(CircleShape)
-                    .background(FzSurface)
-                    .border(1.dp, FzBorder, CircleShape)
+                    .background(Surface)
+                    .border(1.dp, BorderGray, CircleShape)
                     .clickable(onClick = onDismiss),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
                     imageVector = Icons.Filled.Close,
-                    contentDescription = "Close",
-                    tint = FzInk,
+                    contentDescription = stringResource(R.string.content_desc_close),
+                    tint = TextMain,
                     modifier = Modifier.size(22.dp),
                 )
             }
@@ -278,13 +275,13 @@ private fun ShareLocationToggle(
     Row(
         modifier = modifier
             .clip(RoundedCornerShape(14.dp))
-            .background(FzSurface.copy(alpha = 0.92f))
-            .border(1.dp, FzBorder, RoundedCornerShape(14.dp))
+            .background(Surface.copy(alpha = 0.92f))
+            .border(1.dp, BorderGray, RoundedCornerShape(14.dp))
             .padding(start = 14.dp, end = 6.dp, top = 4.dp, bottom = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Text(stringResource(R.string.msg_share_location), color = FzInk)
+        Text(stringResource(R.string.msg_share_location), color = TextMain)
         FriendZoneSwitch(checked = checked, onCheckedChange = onCheckedChange)
     }
 }
@@ -338,7 +335,7 @@ fun LocationPickerDialog(
                 .fillMaxWidth(0.95f)
                 .fillMaxHeight(0.88f)
                 .clip(RoundedCornerShape(20.dp))
-                .background(FzSurface),
+                .background(Surface),
         ) {
             AndroidView(
                 factory = { mapView },
@@ -355,13 +352,13 @@ fun LocationPickerDialog(
 
             Text(
                 text = stringResource(R.string.label_location),
-                color = FzInk,
+                color = TextMain,
                 modifier = Modifier
                     .align(Alignment.TopStart)
                     .padding(12.dp)
                     .clip(RoundedCornerShape(12.dp))
-                    .background(FzSurface.copy(alpha = 0.92f))
-                    .border(1.dp, FzBorder, RoundedCornerShape(12.dp))
+                    .background(Surface.copy(alpha = 0.92f))
+                    .border(1.dp, BorderGray, RoundedCornerShape(12.dp))
                     .padding(horizontal = 12.dp, vertical = 8.dp),
             )
 
@@ -371,15 +368,15 @@ fun LocationPickerDialog(
                     .padding(12.dp)
                     .size(40.dp)
                     .clip(CircleShape)
-                    .background(FzSurface)
-                    .border(1.dp, FzBorder, CircleShape)
+                    .background(Surface)
+                    .border(1.dp, BorderGray, CircleShape)
                     .clickable(onClick = onDismiss),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
                     imageVector = Icons.Filled.Close,
-                    contentDescription = "Close",
-                    tint = FzInk,
+                    contentDescription = stringResource(R.string.content_desc_close),
+                    tint = TextMain,
                     modifier = Modifier.size(22.dp),
                 )
             }
@@ -487,8 +484,8 @@ private fun EventMapContent(
                 .padding(16.dp)
                 .size(48.dp)
                 .clip(CircleShape)
-                .background(FzSurface)
-                .border(1.dp, FzBorder, CircleShape)
+                .background(Surface)
+                .border(1.dp, BorderGray, CircleShape)
                 .clickable {
                     val target = myLocationOverlay.myLocation
                         ?: GeoPoint(eventLatitude, eventLongitude)
@@ -499,8 +496,8 @@ private fun EventMapContent(
         ) {
             Icon(
                 imageVector = Icons.Filled.MyLocation,
-                contentDescription = "Center on my location",
-                tint = FzInk,
+                contentDescription = stringResource(R.string.content_desc_center_my_location),
+                tint = TextMain,
                 modifier = Modifier.size(24.dp),
             )
         }
@@ -532,15 +529,15 @@ private fun MapLegend(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .clip(RoundedCornerShape(12.dp))
-            .background(FzSurface.copy(alpha = 0.92f))
-            .border(1.dp, FzBorder, RoundedCornerShape(12.dp))
+            .background(Surface.copy(alpha = 0.92f))
+            .border(1.dp, BorderGray, RoundedCornerShape(12.dp))
             .padding(horizontal = 12.dp, vertical = 10.dp),
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-        LegendItem(MyMarkerColor, "Me")
-        LegendItem(EventMarkerColor, "Event")
-        LegendItem(PersonMarkerColor, "People")
-        LegendItem(ArrivedBadgeColor, "Arrived")
+        LegendItem(MyMarkerColor, stringResource(R.string.label_me))
+        LegendItem(EventMarkerColor, stringResource(R.string.header_event))
+        LegendItem(PersonMarkerColor, stringResource(R.string.label_people))
+        LegendItem(ArrivedBadgeColor, stringResource(R.string.tab_arrived))
     }
 }
 
@@ -554,7 +551,7 @@ private fun LegendItem(color: Color, label: String) {
                 .background(color),
         )
         Spacer(modifier = Modifier.width(8.dp))
-        Text(label, color = FzInk)
+        Text(label, color = TextMain)
     }
 }
 

@@ -37,6 +37,12 @@ export class UsersController {
     return user;
   }
 
+  @Delete('me')
+  @ApiOperation({ summary: 'Delete current user account' })
+  async deleteMe(@CurrentUser() user: SafeUser): Promise<SafeUser> {
+    return this.usersService.deleteAccount(user.id);
+  }
+
   @Patch('me')
   @ApiOperation({ summary: 'Update current user profile' })
   updateMe(

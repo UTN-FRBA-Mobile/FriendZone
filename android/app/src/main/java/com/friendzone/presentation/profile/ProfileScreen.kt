@@ -58,13 +58,13 @@ import com.example.friendzone.presentation.components.FriendZoneSwitch
 import com.example.friendzone.presentation.components.FriendZoneTopBar
 import com.example.friendzone.presentation.components.ProfileIconItem
 import com.example.friendzone.presentation.components.ProfileIconStyle
-import com.example.friendzone.ui.theme.FzBackground
-import com.example.friendzone.ui.theme.FzBorderGray
-import com.example.friendzone.ui.theme.FzPrimary
-import com.example.friendzone.ui.theme.FzTextMain
-import com.example.friendzone.ui.theme.FzTextSecondary
-import com.example.friendzone.ui.theme.FzError
-import com.example.friendzone.ui.theme.FzSurface
+import com.example.friendzone.ui.theme.Background
+import com.example.friendzone.ui.theme.BorderGray
+import com.example.friendzone.ui.theme.Primary
+import com.example.friendzone.ui.theme.TextMain
+import com.example.friendzone.ui.theme.TextSecondary
+import com.example.friendzone.ui.theme.ErrorColor
+import com.example.friendzone.ui.theme.Surface
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
 
@@ -139,7 +139,7 @@ fun ProfileScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(FzBackground)
+                .background(Background)
                 .verticalScroll(rememberScrollState()),
         ) {
             FriendZoneTopBar(
@@ -158,7 +158,7 @@ fun ProfileScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 if (uiState.isLoading && user == null) {
-                    CircularProgressIndicator(modifier = Modifier.padding(24.dp), color = FzPrimary)
+                    CircularProgressIndicator(modifier = Modifier.padding(24.dp), color = Primary)
                 } else {
                     val isPictureBusy = uiState.isUploadingPicture || uiState.isRemovingPicture
                     Box(
@@ -181,7 +181,7 @@ fun ProfileScreen(
                                     .align(Alignment.BottomEnd)
                                     .size(24.dp)
                                     .clip(CircleShape)
-                                    .background(FzPrimary)
+                                    .background(Primary)
                                     .border(2.dp, Color.White, CircleShape),
                                 contentAlignment = Alignment.Center,
                             ) {
@@ -213,19 +213,19 @@ fun ProfileScreen(
                     Text(
                         user?.displayName ?: "—",
                         style = MaterialTheme.typography.headlineMedium,
-                        color = FzTextMain,
+                        color = TextMain,
                     )
                     Text(
                         user?.email ?: "—",
                         style = MaterialTheme.typography.bodySmall,
-                        color = FzTextSecondary,
+                        color = TextSecondary,
                         modifier = Modifier.padding(top = 2.dp),
                     )
                     user?.username?.takeIf { it.isNotBlank() }?.let { username ->
                         Text(
                             "@$username",
                             style = MaterialTheme.typography.bodySmall,
-                            color = FzTextSecondary,
+                            color = TextSecondary,
                             modifier = Modifier.padding(top = 2.dp),
                         )
                     }
@@ -238,19 +238,19 @@ fun ProfileScreen(
                         modifier = Modifier
                             .width(1.dp)
                             .height(36.dp)
-                            .background(FzBorderGray),
+                            .background(BorderGray),
                     )
                     StatColumn(stringResource(R.string.header_events), uiState.eventsCount, uiState.isLoading)
                 }
             }
 
-            HorizontalDivider(color = FzBorderGray, modifier = Modifier.padding(horizontal = 16.dp))
+            HorizontalDivider(color = BorderGray, modifier = Modifier.padding(horizontal = 16.dp))
 
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
                     stringResource(R.string.label_location),
                     style = MaterialTheme.typography.labelLarge,
-                    color = FzTextMain,
+                    color = TextMain,
                     modifier = Modifier.padding(bottom = 12.dp),
                 )
                 SettingToggleRow(
@@ -269,7 +269,7 @@ fun ProfileScreen(
                 )
                 uiState.errorMessage?.let { message ->
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text(message, color = FzError)
+                    Text(message, color = ErrorColor)
                 }
             }
         }
@@ -300,7 +300,7 @@ fun ProfileScreen(
                         }
                         .padding(vertical = 14.dp),
                     style = MaterialTheme.typography.bodyLarge,
-                    color = FzTextMain,
+                    color = TextMain,
                 )
                 if (!user?.profilePictureUrl.isNullOrBlank()) {
                     Text(
@@ -317,7 +317,7 @@ fun ProfileScreen(
                             }
                             .padding(vertical = 14.dp),
                         style = MaterialTheme.typography.bodyLarge,
-                        color = FzError,
+                        color = ErrorColor,
                     )
                 }
             }
@@ -373,9 +373,9 @@ private fun StatColumn(label: String, value: Int?, isLoading: Boolean) {
                 else -> "0"
             },
             style = MaterialTheme.typography.titleLarge,
-            color = FzTextMain,
+            color = TextMain,
         )
-        Text(label, style = MaterialTheme.typography.labelSmall, color = FzTextSecondary)
+        Text(label, style = MaterialTheme.typography.labelSmall, color = TextSecondary)
     }
 }
 
@@ -391,14 +391,14 @@ private fun SettingToggleRow(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(FzSurface)
-            .border(1.dp, FzBorderGray, RoundedCornerShape(16.dp))
+            .background(Surface)
+            .border(1.dp, BorderGray, RoundedCornerShape(16.dp))
             .padding(horizontal = 14.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(modifier = Modifier.weight(1f)) {
-            Text(title, style = MaterialTheme.typography.bodyMedium, color = FzTextMain)
-            Text(subtitle, style = MaterialTheme.typography.bodySmall, color = FzTextSecondary)
+            Text(title, style = MaterialTheme.typography.bodyMedium, color = TextMain)
+            Text(subtitle, style = MaterialTheme.typography.bodySmall, color = TextSecondary)
         }
         FriendZoneSwitch(
             checked = checked,
